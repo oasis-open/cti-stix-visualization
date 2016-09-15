@@ -19,7 +19,7 @@
 
 <p>Statement of Purpose for this OASIS Open Repository (cti-stix-visualization) as <a href="https://lists.oasis-open.org/archives/cti/201609/msg00001.html">proposed</a> and <a href="https://www.oasis-open.org/committees/ballot.php?id=2971">approved</a> [<a href="https://issues.oasis-open.org/browse/TCADMIN-2433">bis</a>] by the TC:</p>
 
-<p>The STIX visualization is meant to provide producers and consumers of STIX content with a rapid way to visualize the objects in a STIX JSON file, and the relationships between those objects. The visualization is implemented in HTML, CSS, and JavaScript (using the D3.js library), and is suitable for standalone use &mdash; either on a hosted server or as a local file &mdash; or embedded into other applications. Regardless of how deployed, the JavaScript code in this repository does not transmit STIX data to any server; it is strictly processed within the browser in which the code is running, so it is suitable for data which the user does not wish to share.</p>
+<p>The STIX visualization is meant to provide producers and consumers of STIX content with a rapid way to visualize the objects in a STIX JSON file, and the relationships between those objects. The visualization is implemented in HTML, CSS, and JavaScript (using the <a href="https://d3js.org/">D3.js</a> library), and is suitable for standalone use &mdash; either on a hosted server or as a local file &mdash; or embedded into other applications. Regardless of how deployed, the JavaScript code in this repository does not transmit STIX data to any server; it is strictly processed within the browser in which the code is running, so it is suitable for data which the user does not wish to share.</p>
 
 </div>
 
