@@ -23,7 +23,7 @@
 
 </div>
 
-<div><h2><a id="purposeClarifications">Additions to Statement of Purpose</a></h2>
+<div><h2><a id="purposeClarifications">Additions to Statement of Purpose</a></h2></div>
 
 Visualizes STIX 2.0 content using d3. It's 100% browser-based, meaning that you
 can use it without sending all your data to the server (great!)
@@ -61,8 +61,6 @@ external JSON file. Hope for the best.
 
 The icons used in the generated graphs are by Bret Jordan, licensed under the
 Creative Commons Attribution-ShareAlike (CC BY-SA) License, Version 4.0.
-
-</div>
 
 <div>
 <h2><a id="maintainers">Maintainers</a></h2>
