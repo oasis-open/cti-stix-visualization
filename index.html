@@ -1,0 +1,56 @@
+<!-- Copyright (c) 2016, The MITRE Corporation. All rights reserved. -->
+<!-- See LICENSE.txt for complete terms. -->
+
+<html lang="en">
+
+  <head>
+    <title>STIX Viewer</title>
+    <link rel="stylesheet" type="text/css" href="application.css" />
+    <style>
+      .selected {
+        /* Drop-shadow SVG styling has to go here for compatibility reasons */
+        filter: url("#drop-shadow");
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1><span id="header">STIX Visualizer</span> <span id="chosen-files"></span></h1>
+
+    <div id="uploader">
+      <p>Drop some STIX 2.0 here!</p>
+      <input type="file" id="files" name="files" /><br>
+      <p>-- OR --</p>
+      <p>Fetch some STIX 2.0 from this URL!</p>
+      <input type="text" id="url" name="url" placeholder="Paste URL here" /><br>
+      <button id="fetch-url">Fetch</button>
+      <p>-- OR --</p>
+      <p>Paste some STIX 2.0 here!</p>
+      <textarea id="paste-area" name="pasted" placeholder="Copy/Paste JSON data here..."></textarea><br>
+      <button id="paste-parser">Parse</button>
+    </div>
+    <div id="canvas-container" class="hidden">
+      <div id="sidebar">
+        <div id="legend">
+          <h2>Legend</h2>
+          <ul id="legend-content"></ul>
+        </div>
+        <div id="selected">
+          <h2>Selected Node</h2>
+          <div id="selection">
+
+          </div>
+        </div>
+      </div>
+      <div id="canvas-wrapper">
+        <svg id="canvas"></svg>
+        <p>Nodes are draggable! (Node will 'pin' on mouseup)</p>
+        <p>Double-click a pinned node to unpin it!</p>
+      </div>
+    </div>
+  </body>
+
+  <script src="d3/d3.min.js"></script>
+  <script src="application.js"></script>
+
+</html>

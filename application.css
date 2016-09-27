@@ -1,0 +1,155 @@
+/* Copyright (c) 2016, The MITRE Corporation. All rights reserved.
+ * See LICENSE.txt for complete terms. */
+
+html, body {
+  padding: 0;
+  margin: 0;
+  font-family: "Helvetica", sans-serif;
+  font-weight: 300;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 300;
+  background-color: #fafafa;
+  margin: 0;
+  padding: 20px;
+}
+
+#uploader, #canvas-container {
+  position: absolute;
+  top: 81px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+svg {
+  border: solid 1px black;
+}
+
+#uploader {
+  text-align: center;
+  line-height: 1;
+  font-size: 36px;
+}
+
+#chosen-files {
+  margin-left: 15px;
+  font-size: 24px;
+  color: #333;
+}
+
+#canvas-wrapper {
+  margin: 25px;
+}
+
+#sidebar {
+  position: absolute;
+  right: 25px;
+  width: 350px;
+}
+
+#sidebar h2 {
+  text-align: center;
+  margin-top: 0;
+}
+
+#legend {
+  margin-top: 25px;
+  padding: 25px;
+  background-color: #fafafa;
+}
+
+#selected {
+  margin-top: 25px;
+  padding: 25px;
+  background-color: #fafafa;
+}
+
+#selection > div {
+  padding: .5em 0 .5em 2%;
+}
+
+#selection > .odd {
+  background-color: #e5e5e5;
+}
+
+#selection > div > div {
+  display: inline-block;
+  vertical-align: top;
+}
+
+#selection > div > .type {
+  width: 30%;
+  font-weight: bold;
+}
+
+#selection > div > .value {
+  width: 65%;
+}
+
+#paste-area {
+  height: 25em;
+  width: 40em;
+}
+
+h2 {
+  font-weight: 200;
+}
+
+line, .link {
+  stroke-width: 5;
+  stroke: #aaa;
+}
+
+ul {
+  list-style-type: none;
+  text-align: left;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  padding: 5px 0px;
+  margin: 0;
+}
+
+ul li div {
+  width: 37px;
+  height: 37px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+ul > li > p {
+  display: inline-block;
+  margin: 5px 10px;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
+.dimmed {
+  opacity: 0.9;
+}
+
+.pinned {
+  stroke: black;
+  stroke-width: 5;
+}
+
+.linkish:hover {
+  color: blue;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+/*.selected {
+  >>> This style is in the header of the index.html file for comptibility reasons! <<<
+  filter: url("#drop-shadow");
+}*/
