@@ -53,7 +53,7 @@ the page to go back to the input options.
 
 ### How can I use it?
 
-Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-vizualization).
+Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-visualization).
 Upload a JSON file, paste some valid JSON text, or provide the URL for an
 external JSON file. Hope for the best.
 
