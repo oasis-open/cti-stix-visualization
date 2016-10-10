@@ -1,7 +1,3 @@
-// Copyright (c) 2016, The MITRE Corporation. All rights reserved.
-// See LICENSE.txt for complete terms.
-
-
 // Config
 var d3Config = {
   color: d3.scale.category20(),
