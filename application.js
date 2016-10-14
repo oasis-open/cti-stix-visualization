@@ -380,8 +380,23 @@ function buildNodes(package) {
     if(package[key].constructor === Array) {
       if (!(relationshipsKeyRegex.exec(key))) { // Relationships are NOT ordinary SDOs
         parseSDOs(package[key]);
+
+        // Get embedded relationships
+        package[key].forEach(function(item) {
+          if ('created_by_ref' in item) {
+            relationships.push({'source_ref': item['id'],
+                                'target_ref': item['created_by_ref'],
+                                'relationship_type': 'created-by'});
+          } else if ('object_marking_refs' in item) {
+            item['object_marking_refs'].forEach(function(markingID) {
+              relationships.push({'source_ref': markingID,
+                                  'target_ref': item['id'],
+                                  'relationship_type': 'applies-to'});
+            });
+          }
+        });
       } else {
-        relationships = package[key];
+        relationships = relationships.concat(package[key]);
       }
     }
   });
