@@ -40,6 +40,16 @@ var labelGraph = {
 
 var idCache = {};
 
+/* ******************************************************
+ * Resizes the canvas based on the size of the window
+ * ******************************************************/
+function resizeCanvas() {
+  var cWidth = document.getElementById('sidebar').offsetLeft - 52;
+  var cHeight = window.innerHeight - document.getElementsByTagName('h1')[0].offsetHeight - 27;
+  canvas.style.width = cWidth;
+  canvas.style.height = cHeight;
+}
+
 /* ----------------------------------------------------- *
  * ******************************************************
  * This group of functions is for handling file "upload."
@@ -115,6 +125,7 @@ function addToGraph(package) {
 
   buildNodes(package);
   initGraph();
+  resizeCanvas();
 }
 
 /* ******************************************************
@@ -369,8 +380,23 @@ function buildNodes(package) {
     if(package[key].constructor === Array) {
       if (!(relationshipsKeyRegex.exec(key))) { // Relationships are NOT ordinary SDOs
         parseSDOs(package[key]);
+
+        // Get embedded relationships
+        package[key].forEach(function(item) {
+          if ('created_by_ref' in item) {
+            relationships.push({'source_ref': item['id'],
+                                'target_ref': item['created_by_ref'],
+                                'relationship_type': 'created-by'});
+          } else if ('object_marking_refs' in item) {
+            item['object_marking_refs'].forEach(function(markingID) {
+              relationships.push({'source_ref': markingID,
+                                  'target_ref': item['id'],
+                                  'relationship_type': 'applies-to'});
+            });
+          }
+        });
       } else {
-        relationships = package[key];
+        relationships = relationships.concat(package[key]);
       }
     }
   });
@@ -555,3 +581,4 @@ document.getElementById('fetch-url').addEventListener('click', handleFetchJson, 
 document.getElementById('header').addEventListener('click', resetPage, false);
 uploader.addEventListener('dragover', handleDragOver, false);
 uploader.addEventListener('drop', handleFileDrop, false);
+window.onresize = resizeCanvas;

@@ -84,6 +84,7 @@ svg {
 
 #selection > div > .value {
   width: 65%;
+  word-wrap: break-word;
 }
 
 #paste-area {
