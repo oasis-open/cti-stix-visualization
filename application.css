@@ -13,6 +13,15 @@ h1 {
   padding: 20px;
 }
 
+h1 img {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  top: 25px;
+  right: 25px;
+  border: 0;
+}
+
 #uploader, #canvas-container {
   position: absolute;
   top: 81px;

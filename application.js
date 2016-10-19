@@ -223,7 +223,10 @@ function initGraph() {
   node.on('click', function(d, i) { handleSelected(d, this) }); // If they're holding shift, release
 
   // Fix on click/drag, unfix on double click
-  force.drag().on('dragstart', function(d, i) { handlePin(d, this, true) });//d.fixed = true });
+  force.drag().on('dragstart', function(d, i) {
+    d3.event.sourceEvent.stopPropagation(); // silence other listeners
+    handlePin(d, this, true)
+  });//d.fixed = true });
   node.on('dblclick', function(d, i) { handlePin(d, this, false) });//d.fixed = false });
 
   // Right click will greatly dim the node and associated edges
@@ -294,11 +297,12 @@ function initGraph() {
     .scaleExtent([0.25, 5])
     .on("zoom", function() {
       svg.attr("transform",
-        "translate(" + d3.event.translate + ")" +
+        "translate(" + d3.event.translate + ") " +
         "scale(" + d3.event.scale + ")"
       )
     })
-  );
+  )
+  .on("dblclick.zoom", null);
 }
 
 /* ******************************************************
