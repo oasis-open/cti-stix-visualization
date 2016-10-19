@@ -25,7 +25,8 @@ relationshipsKeyRegex = /(r|R)elationships?/; // Added by Matt
 var force = d3.layout.force().charge(-400).linkDistance(d3Config.linkMultiplier * d3Config.nodeSize).size([width, height]);
 // Determines the "float and repel" behavior of the text labels
 var labelForce = d3.layout.force().gravity(0).linkDistance(25).linkStrength(8).charge(-120).size([width, height]);
-var svg = d3.select('svg');
+var svgTop = d3.select('svg');
+var svg = svgTop.append("g");
 var typeGroups = {};
 var typeIndex = 0;
 
@@ -287,6 +288,17 @@ function initGraph() {
 			});
 		}); 
   });
+
+  // Code to handle zooming and dragging the viewing area
+  svgTop.call(d3.behavior.zoom()
+    .scaleExtent([0.25, 5])
+    .on("zoom", function() {
+      svg.attr("transform",
+        "translate(" + d3.event.translate + ")" +
+        "scale(" + d3.event.scale + ")"
+      )
+    })
+  );
 }
 
 /* ******************************************************
