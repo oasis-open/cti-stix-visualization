@@ -215,7 +215,7 @@ function initGraph() {
       .attr("r", d3Config.nodeSize)
       .style("fill", function(d) { return d3Config.color(d.typeGroup); });
     node.append("image")
-      .attr("xlink:href", function(d) { return "icons/stix2_" + d.type.replace('-', '_') + "_icon_tiny_round_v1.png"; })
+      .attr("xlink:href", function(d) { return "icons/stix2_" + d.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png"; })
       .attr("x", "-" + (d3Config.nodeSize + 0.5) + "px")
       .attr("y", "-" + (d3Config.nodeSize + 1.5)  + "px")
       .attr("width", d3Config.iconSize + "px")
@@ -425,7 +425,7 @@ function buildNodes(package) {
     var li = document.createElement('li');
     var val = document.createElement('p');
     var key = document.createElement('div');
-    key.style.backgroundImage = "url('icons/stix2_" + typeName.replace('-', '_') + "_icon_tiny_round_v1.png')";
+    key.style.backgroundImage = "url('icons/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png')";
     val.innerText = typeName.charAt(0).toUpperCase() + typeName.substr(1).toLowerCase(); // Capitalize it
     li.appendChild(key);
     li.appendChild(val);
