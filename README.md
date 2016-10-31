@@ -57,6 +57,8 @@ Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.git
 Upload a JSON file, paste some valid JSON text, or provide the URL for an
 external JSON file. Hope for the best.
 
+If you wish to integrate the visualizer into your own web application, just include stix2viz.js on your page. Then use `vizInit()` followed by `vizPackage()` to visualize your STIX content. Finally, use `vizReset` if you need to clear the graph.
+
 ### Acknowlegements
 
 The icons used in the generated graphs are by Bret Jordan, licensed under the
