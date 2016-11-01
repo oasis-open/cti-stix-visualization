@@ -167,7 +167,7 @@ function initGraph() {
   linktext.enter().append("g").attr("class", "linklabelholder")
      .append("text")
      .attr("class", "linklabel")
-   .style("font-size", "13px")
+     .style("font-size", "13px")
      .attr("text-anchor", "start")
      .style("fill","#000")
    .append("textPath")
@@ -176,6 +176,7 @@ function initGraph() {
     .text(function(d) {
       return d.label;
     });
+  var linklabels = svg.selectAll('.linklabel');
 
   var node = svg.selectAll("g.node")
       .data(currentGraph.nodes)
@@ -260,7 +261,20 @@ function initGraph() {
       this.attr("transform", function(d) {
         return "translate(" + d.x + "," + d.y + ")";
       });
-    }); 
+    });
+
+    linklabels.attr('transform',function(d,i) {
+      if (d.target.x < d.source.x) {
+        bbox = this.getBBox();
+        rx = bbox.x+bbox.width/2;
+        ry = bbox.y+bbox.height/2;
+        console.log('here');
+        return 'rotate(180 '+rx+' '+ry+')';
+      }
+      else {
+        return 'rotate(0)';
+      }
+    })
   });
 
   // Code to handle zooming and dragging the viewing area
