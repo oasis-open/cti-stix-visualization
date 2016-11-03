@@ -77,27 +77,42 @@ function vizInit(canvas, config, legendCb, selectedCb) {
  * produce valid JSON, fails gracefully and alerts the user.
  * 
  * Parameters:
- *     - package: string of valid STIX 2 content
+ *     - content: string of valid STIX 2 content
  *     - callback: optional function to call before building the graph
  * ******************************************************/
-function vizPackage(package, callback) {
-  try {
-    var parsed = JSON.parse(package); // Saving this to a variable stops the rest of the function from executing on parse failure
-    if (typeof callback !== 'undefined') callback();
-    addToGraph(parsed);
-  } catch (err) {
-    alert("Something went wrong!\n\nError:\n" + err);
+function vizStix(content, callback) {
+  var parsed;
+  if (typeof content === 'string' || content instanceof String) {
+    try {
+      parsed = JSON.parse(content); // Saving this to a variable stops the rest of the function from executing on parse failure
+    } catch (err) {
+      alert("Something went wrong!\n\nError:\n" + err);
+      return;
+    }
   }
+  else if (isStixObj(content)) {
+    parsed = content;
+  }
+  else {
+    alert("Something went wrong!\n\nError:\n Input is neither parseable JSON nor a STIX object");
+    return;
+  }
+  if (typeof callback !== 'undefined') callback();
+  buildNodes(parsed);
+  initGraph();
 }
 
-function addToGraph(package) {
-  // Turn header into a "home" "link"
-  var header = document.getElementById('header');
-  header.classList.add('linkish');
-
-  buildNodes(package);
-  initGraph();
-  resizeCanvas();
+/* ******************************************************
+ * Returns true if the JavaScript object passed in has 
+ * properties required by all STIX objects.
+ * ******************************************************/
+function isStixObj(obj) {
+  if ('type' in obj && 'id' in obj && 'created' in obj
+                    && 'modified' in obj && 'version' in obj) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 /* ******************************************************
@@ -268,7 +283,6 @@ function initGraph() {
         bbox = this.getBBox();
         rx = bbox.x+bbox.width/2;
         ry = bbox.y+bbox.height/2;
-        console.log('here');
         return 'rotate(180 '+rx+' '+ry+')';
       }
       else {

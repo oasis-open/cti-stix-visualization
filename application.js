@@ -16,6 +16,11 @@ function resizeCanvas() {
   canvas.style.height = cHeight;
 }
 
+function vizCallback() {
+  resizeCanvas();
+  hideMessages();
+}
+
 /* ----------------------------------------------------- *
  * ******************************************************
  * This group of functions is for handling file "upload."
@@ -40,12 +45,12 @@ function handleFiles(files) {
   // files is a FileList of File objects (in our case, just one)
   for (var i = 0, f; f = files[i]; i++) {
     document.getElementById('chosen-files').innerText += f.name + " ";
-    hideMessages();
 
     var r = new FileReader();
-    r.onload = function(e) {vizPackage(e.target.result)};
+    r.onload = function(e) {vizStix(e.target.result, vizCallback)};
     r.readAsText(f);
   }
+  linkifyHeader();
 }
 /* ---------------------------------------------------- */
 
@@ -54,7 +59,8 @@ function handleFiles(files) {
  * ******************************************************/
 function handleTextarea() {
   content = document.getElementById('paste-area').value;
-  vizPackage(content, hideMessages);
+  vizStix(content, vizCallback);
+  linkifyHeader();
 }
 
 /* ******************************************************
@@ -65,8 +71,9 @@ function handleTextarea() {
 function handleFetchJson() {
   var url = document.getElementById("url").value;
   fetchJsonAjax(url, function(content) {
-    vizPackage(content, hideMessages);
+    vizStix(content, vizCallback);
   });
+  linkifyHeader();
 }
 
 /* ******************************************************
@@ -159,6 +166,14 @@ function populateSelected(d) {
 function hideMessages() {
   uploader.classList.toggle("hidden");
   canvasContainer.classList.toggle("hidden");
+}
+
+/* ******************************************************
+ * Turns header into a "home" "link"
+ * ******************************************************/
+function linkifyHeader() {
+  var header = document.getElementById('header');
+  header.classList.add('linkish');
 }
 
 /* ******************************************************
