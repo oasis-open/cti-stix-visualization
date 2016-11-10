@@ -463,5 +463,7 @@ function vizReset() {
 
   idCache = {};
 
-  svgTop[0][0].innerHTML = ""; // empty the svg
+  force.stop();
+  labelForce.stop();
+  svg.remove();
 }

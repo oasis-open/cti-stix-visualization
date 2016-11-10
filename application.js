@@ -16,9 +16,20 @@ function resizeCanvas() {
   canvas.style.height = cHeight;
 }
 
+/* ******************************************************
+ * Will be called right before the graph is built.
+ * ******************************************************/
 function vizCallback() {
   resizeCanvas();
   hideMessages();
+}
+
+/* ******************************************************
+ * Initializes the graph, then renders it.
+ * ******************************************************/
+function vizStixWrapper(content) {
+  vizInit(canvas, {}, populateLegend, populateSelected);
+  vizStix(content, vizCallback);
 }
 
 /* ----------------------------------------------------- *
@@ -47,7 +58,7 @@ function handleFiles(files) {
     document.getElementById('chosen-files').innerText += f.name + " ";
 
     var r = new FileReader();
-    r.onload = function(e) {vizStix(e.target.result, vizCallback)};
+    r.onload = function(e) {vizStixWrapper(e.target.result)};
     r.readAsText(f);
   }
   linkifyHeader();
@@ -59,7 +70,7 @@ function handleFiles(files) {
  * ******************************************************/
 function handleTextarea() {
   content = document.getElementById('paste-area').value;
-  vizStix(content, vizCallback);
+  vizStixWrapper(content)
   linkifyHeader();
 }
 
@@ -71,7 +82,7 @@ function handleTextarea() {
 function handleFetchJson() {
   var url = document.getElementById("url").value;
   fetchJsonAjax(url, function(content) {
-    vizStix(content, vizCallback);
+    vizStixWrapper(content)
   });
   linkifyHeader();
 }
