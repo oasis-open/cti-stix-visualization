@@ -15,11 +15,11 @@ var typeIndex = 0;
 var currentGraph = {
   nodes: [],
   edges: []
-}
+};
 var labelGraph = {
   nodes: [],
   edges: []
-}
+};
 
 var idCache = {};
 
@@ -107,8 +107,8 @@ function vizStix(content, callback) {
  * properties required by all STIX objects.
  * ******************************************************/
 function isStixObj(obj) {
-  if ('type' in obj && 'id' in obj && 'created' in obj
-                    && 'modified' in obj && 'version' in obj) {
+  if ('type' in obj && 'id' in obj && 'created' in obj &&
+                    'modified' in obj && 'version' in obj) {
     return true;
   } else {
     return false;
@@ -175,7 +175,7 @@ function initGraph() {
       .style("stroke-width", "3px")
       .attr("marker-end", "url(#end)")// Add the arrow to the end of the link
       .attr('id', function(d, i) { return "link_" + i; })
-      .on('click', function(d, i) { handleSelected(d, this) });
+      .on('click', function(d, i) { handleSelected(d, this); });
 
   // Create the text labels that will be attatched to the paths
   var linktext = svg.append("svg:g").selectAll("g.linklabelholder").data(currentGraph.edges);
@@ -207,14 +207,14 @@ function initGraph() {
       .attr("y", "-" + (d3Config.nodeSize + 1.5)  + "px")
       .attr("width", d3Config.iconSize + "px")
       .attr("height", d3Config.iconSize + "px");
-  node.on('click', function(d, i) { handleSelected(d, this) }); // If they're holding shift, release
+  node.on('click', function(d, i) { handleSelected(d, this); }); // If they're holding shift, release
 
   // Fix on click/drag, unfix on double click
   force.drag().on('dragstart', function(d, i) {
     d3.event.sourceEvent.stopPropagation(); // silence other listeners
-    handlePin(d, this, true)
+    handlePin(d, this, true);
   });//d.fixed = true });
-  node.on('dblclick', function(d, i) { handlePin(d, this, false) });//d.fixed = false });
+  node.on('dblclick', function(d, i) { handlePin(d, this, false); });//d.fixed = false });
 
   // Right click will greatly dim the node and associated edges
   // >>>>>>> Does not currently work <<<<<<<
@@ -226,12 +226,12 @@ function initGraph() {
       d.dimmed = true;
       d.attr("class", "node dimmed");
     }
-  })
+  });
 
   var anchorNode = svg.selectAll("g.anchorNode").data(labelForce.nodes()).enter().append("svg:g").attr("class", "anchorNode");
   anchorNode.append("svg:circle").attr("r", 0).style("fill", "#FFF");
         anchorNode.append("svg:text").text(function(d, i) {
-        return i % 2 == 0 ? "" : nameFor(d.node);
+        return i % 2 === 0 ? "" : nameFor(d.node);
     }).style("fill", "#555").style("font-family", "Arial").style("font-size", 12);
 
   // Code in the "tick" function determines where the elements
@@ -254,7 +254,7 @@ function initGraph() {
 
     anchorNode.each(function(d, i) {
       labelForce.start();
-      if(i % 2 == 0) {
+      if(i % 2 === 0) {
         d.x = d.node.x;
         d.y = d.node.y;
       } else {
@@ -288,7 +288,7 @@ function initGraph() {
       else {
         return 'rotate(0)';
       }
-    })
+    });
   });
 
   // Code to handle zooming and dragging the viewing area
@@ -298,7 +298,7 @@ function initGraph() {
       svg.attr("transform",
         "translate(" + d3.event.translate + ") " +
         "scale(" + d3.event.scale + ")"
-      )
+      );
     })
   )
   .on("dblclick.zoom", null);
@@ -391,7 +391,7 @@ function parseSDOs(container) {
     // So, in theory, each of these should be an SDO. To be sure, we'll check to make sure it has an `id` and `type`. If not, raise an error and ignore it.
     var maybeSdo = container[i];
     if(maybeSdo.id === undefined || maybeSdo.type === undefined) {
-      console.error("Should this be an SDO???", maybeSdo)
+      console.error("Should this be an SDO???", maybeSdo);
     } else {
       addSdo(maybeSdo);
     }
@@ -405,7 +405,7 @@ function parseSDOs(container) {
  * ******************************************************/
 function addSdo(sdo) {
   if(idCache[sdo.id]) {
-    console.log("Already added, skipping!", sdo)
+    console.log("Already added, skipping!", sdo);
   } else {
     if(typeGroups[sdo.type] === undefined) {
       typeGroups[sdo.type] = typeIndex++;
@@ -455,11 +455,11 @@ function vizReset() {
   currentGraph = {
     nodes: [],
     edges: []
-  }
+  };
   labelGraph = {
     nodes: [],
     edges: []
-  }
+  };
 
   idCache = {};
 
