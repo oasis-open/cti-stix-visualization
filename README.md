@@ -41,7 +41,7 @@ If you want to load another JSON file, just click on the title at the top of the
 
 Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-visualization). Upload a JSON file, paste some valid JSON text, or provide the URL for an external JSON file. Hope for the best.
 
-If you wish to integrate the visualizer into your own web application, just include stix2viz.js on your page. Then use `vizInit()` followed by `vizPackage()` to visualize your STIX content. Finally, use `vizReset` if you need to clear the graph.
+If you wish to integrate the visualizer into your own web application, just include stix2viz.js on your page. Then use `vizInit(mySvgElement)` followed by `vizStix(content)` to visualize your STIX content. Finally, use `vizReset()` if you need to clear the graph.
 
 ### Acknowlegements
 
