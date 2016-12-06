@@ -305,13 +305,66 @@ function initGraph() {
 }
 
 /* ******************************************************
+ * Screens out D3 chart data from the presentation.
+ * Also makes values more readable.
+ * Called as the 2nd parameter to JSON.stringify().
+ * ******************************************************/
+function replacer(key, value) {
+  var blacklist = ["typeGroup", "index", "weight", "x", "y", "px", "py", "fixed", "dimmed"];
+  if (blacklist.indexOf(key) >= 0) {
+    return undefined;
+  }
+  // Some of the potential values are not very readable (IDs
+  // and object references). Let's see if we can fix that.
+  // Lots of assumptions being made about the structure of the JSON here...
+  if (Array.isArray(value)) {
+    if (key === 'kill_chain_phases') {
+      var newValue = [];
+      value.forEach(function (item) {
+        newValue.push(item.phase_name)
+      });
+      return newValue;
+    } else {
+      return value.join(", ")
+    }
+  } else if (/--/.exec(value) && !(key === "id")) {
+    if (!(idCache[value] === null || idCache[value] === undefined)) {
+      return currentGraph.nodes[idCache[value]].name; // IDs are gross, so let's display something more readable if we can (unless it's actually the node id)
+    }
+  } else if (key === 'definition') {
+    return JSON.stringify(value);
+  }
+  return value;
+}
+
+/* ******************************************************
  * Adds class "selected" to last graph element clicked
  * and removes it from all other elements.
  *
  * Takes datum and element as input.
  * ******************************************************/
 function handleSelected(d, el) {
-  selectedCallback(d);
+  jsonString = JSON.stringify(d, replacer, 2); // get only the STIX values
+  purified = JSON.parse(jsonString); // make a new JSON object from the STIX values
+  
+  // Pretty up the keys
+  for (var key in purified) {
+    if (d.hasOwnProperty(key)) {
+      var keyString = key;
+      if (refRegex.exec(key)) { // key is "created_by_ref"... let's pretty that up
+        keyString = key.replace(/_(ref)?/g, " ").trim();
+      } else {
+        keyString = keyString.replace(/_/g, ' ');
+      }
+      keyString = keyString.charAt(0).toUpperCase() + keyString.substr(1).toLowerCase() // Capitalize it
+      keyString += ":";
+
+      purified[keyString] = purified[key];
+      delete purified[key];
+    }
+  }
+
+  selectedCallback(purified);
   d3.select('.selected').classed('selected', false);
   d3.select(el).classed('selected', true);
 }
