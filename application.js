@@ -112,24 +112,12 @@ function populateLegend(typeGroups) {
  * Takes datum as input
  * ******************************************************/
 function populateSelected(d) {
-  jsonString = JSON.stringify(d, replacer, 2); // get only the STIX values
-  purified = JSON.parse(jsonString); // make a new JSON object from the STIX values
-  
   // Remove old values from HTML
   selectedContainer.innerHTML = "";
   
   var counter = 0;
-  
-  Object.keys(purified).forEach(function(key) { // Make new HTML elements and display them
-    var keyString = key;
-    if (refRegex.exec(key)) { // key is "created_by_ref"... let's pretty that up
-      keyString = key.replace(/_(ref)?/g, " ").trim();
-    } else {
-      keyString = keyString.replace(/_/g, ' ');
-    }
-    keyString = keyString.charAt(0).toUpperCase() + keyString.substr(1).toLowerCase() // Capitalize it
-    keyString += ":";
-    
+
+  Object.keys(d).forEach(function(key) { // Make new HTML elements and display them
     // Create new, empty HTML elements to be filled and injected
     var div = document.createElement('div');
     var type = document.createElement('div');
@@ -142,22 +130,9 @@ function populateSelected(d) {
     type.classList.add("type");
     val.classList.add("value");
 
-    // Some of the potential values are not very readable (IDs
-    // and object references). Let's see if we can fix that.
-    var value = purified[key];
-    // Lots of assumptions being made about the structure of the JSON here...
-    if (Array.isArray(value)) {
-      value = value.join(", ")
-    } else if (typeof(value) === 'object') {
-      value = value.name;
-    } else if (/--/.exec(value) && !(keyString === "Id:")) {
-      if (!(idCache[value] === null || idCache[value] === undefined)) {
-        value = currentGraph.nodes[idCache[value]].name; // IDs are gross, so let's display something more readable if we can (unless it's actually the node id)
-      }
-    }
-
     // Add the text to the new inner html elements
-    type.innerText = keyString;
+    var value = d[key];
+    type.innerText = key;
     val.innerText = value;
     
     // Add new divs to "Selected Node"
@@ -185,18 +160,6 @@ function hideMessages() {
 function linkifyHeader() {
   var header = document.getElementById('header');
   header.classList.add('linkish');
-}
-
-/* ******************************************************
- * Screens out D3 chart data from the presentation.
- * Called as the 2nd parameter to JSON.stringify().
- * ******************************************************/
-function replacer(key, value) {
-  var blacklist = ["typeGroup", "index", "weight", "x", "y", "px", "py", "fixed", "dimmed"];
-  if (blacklist.indexOf(key) >= 0) {
-    return undefined;
-  }
-  return value;
 }
 
  /* *****************************************************
