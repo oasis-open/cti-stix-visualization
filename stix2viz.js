@@ -399,11 +399,38 @@ function buildNodes(package) {
             relationships.push({'source_ref': item['id'],
                                 'target_ref': item['created_by_ref'],
                                 'relationship_type': 'created-by'});
-          } else if ('object_marking_refs' in item) {
+          }
+          if ('object_marking_refs' in item) {
             item['object_marking_refs'].forEach(function(markingID) {
               relationships.push({'source_ref': markingID,
                                   'target_ref': item['id'],
                                   'relationship_type': 'applies-to'});
+            });
+          }
+          if ('object_refs' in item) {
+            item['object_refs'].forEach(function(objID) {
+              relationships.push({'source_ref': item['id'],
+                                  'target_ref': objID,
+                                  'relationship_type': 'refers-to'});
+            });
+          }
+          if ('sighting_of_ref' in item) {
+            relationships.push({'source_ref': item['id'],
+                                'target_ref': item['sighting_of_ref'],
+                                'relationship_type': 'sighting-of'});
+          }
+          if ('observed_data_refs' in item) {
+            item['observed_data_refs'].forEach(function(objID) {
+              relationships.push({'source_ref': item['id'],
+                                  'target_ref': objID,
+                                  'relationship_type': 'observed'});
+            });
+          }
+          if ('where_sighted_refs' in item) {
+            item['where_sighted_refs'].forEach(function(objID) {
+              relationships.push({'source_ref': objID,
+                                  'target_ref': item['id'],
+                                  'relationship_type': 'saw'});
             });
           }
         });
