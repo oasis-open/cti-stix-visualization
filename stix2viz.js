@@ -387,58 +387,55 @@ function handlePin(d, el, pinBool) {
  * ******************************************************/
 function buildNodes(package) {
   var relationships = [];
-  // Iterate through each key on the package. If it's an array, assume every item is an SDO.
-  Object.keys(package).forEach(function(key) {
-    if(package[key].constructor === Array) {
-      if (!(relationshipsKeyRegex.exec(key))) { // Relationships are NOT ordinary SDOs
-        parseSDOs(package[key]);
+  if(package.hasOwnProperty('objects')) {
+    parseSDOs(package['objects']);
 
-        // Get embedded relationships
-        package[key].forEach(function(item) {
-          if ('created_by_ref' in item) {
-            relationships.push({'source_ref': item['id'],
-                                'target_ref': item['created_by_ref'],
-                                'relationship_type': 'created-by'});
-          }
-          if ('object_marking_refs' in item) {
-            item['object_marking_refs'].forEach(function(markingID) {
-              relationships.push({'source_ref': markingID,
-                                  'target_ref': item['id'],
-                                  'relationship_type': 'applies-to'});
-            });
-          }
-          if ('object_refs' in item) {
-            item['object_refs'].forEach(function(objID) {
-              relationships.push({'source_ref': item['id'],
-                                  'target_ref': objID,
-                                  'relationship_type': 'refers-to'});
-            });
-          }
-          if ('sighting_of_ref' in item) {
-            relationships.push({'source_ref': item['id'],
-                                'target_ref': item['sighting_of_ref'],
-                                'relationship_type': 'sighting-of'});
-          }
-          if ('observed_data_refs' in item) {
-            item['observed_data_refs'].forEach(function(objID) {
-              relationships.push({'source_ref': item['id'],
-                                  'target_ref': objID,
-                                  'relationship_type': 'observed'});
-            });
-          }
-          if ('where_sighted_refs' in item) {
-            item['where_sighted_refs'].forEach(function(objID) {
-              relationships.push({'source_ref': objID,
-                                  'target_ref': item['id'],
-                                  'relationship_type': 'saw'});
-            });
-          }
-        });
-      } else {
-        relationships = relationships.concat(package[key]);
+    // Get embedded relationships
+    package['objects'].forEach(function(item) {
+      if (item['type'] === 'relationship') {
+        relationships.push(item);
+        return;
       }
-    }
-  });
+      if ('created_by_ref' in item) {
+        relationships.push({'source_ref': item['id'],
+                            'target_ref': item['created_by_ref'],
+                            'relationship_type': 'created-by'});
+      }
+      if ('object_marking_refs' in item) {
+        item['object_marking_refs'].forEach(function(markingID) {
+          relationships.push({'source_ref': markingID,
+                              'target_ref': item['id'],
+                              'relationship_type': 'applies-to'});
+        });
+      }
+      if ('object_refs' in item) {
+        item['object_refs'].forEach(function(objID) {
+          relationships.push({'source_ref': item['id'],
+                              'target_ref': objID,
+                              'relationship_type': 'refers-to'});
+        });
+      }
+      if ('sighting_of_ref' in item) {
+        relationships.push({'source_ref': item['id'],
+                            'target_ref': item['sighting_of_ref'],
+                            'relationship_type': 'sighting-of'});
+      }
+      if ('observed_data_refs' in item) {
+        item['observed_data_refs'].forEach(function(objID) {
+          relationships.push({'source_ref': item['id'],
+                              'target_ref': objID,
+                              'relationship_type': 'observed'});
+        });
+      }
+      if ('where_sighted_refs' in item) {
+        item['where_sighted_refs'].forEach(function(objID) {
+          relationships.push({'source_ref': objID,
+                              'target_ref': item['id'],
+                              'relationship_type': 'saw'});
+        });
+      }
+    });
+  };
 
   addRelationships(relationships);
 
@@ -485,7 +482,9 @@ function parseSDOs(container) {
  * ******************************************************/
 function addSdo(sdo) {
   if(idCache[sdo.id]) {
-    console.log("Already added, skipping!", sdo);
+    console.log("Skipping already added object!", sdo);
+  } else if(sdo.type === 'relationship') {
+    console.log("Skipping relationship object!", sdo);
   } else {
     if(typeGroups[sdo.type] === undefined) {
       typeGroups[sdo.type] = typeIndex++;
