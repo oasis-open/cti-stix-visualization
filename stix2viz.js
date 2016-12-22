@@ -3,7 +3,7 @@
 var d3Config;
 var legendCallback;
 var selectedCallback;
-refRegex = /_ref$/;
+refRegex = /_refs*$/;
 relationshipsKeyRegex = /(r|R)elationships?/; // Added by Matt
 var force; // Determines the "float and repel" behavior of the nodes
 var labelForce; // Determines the "float and repel" behavior of the text labels
@@ -317,6 +317,7 @@ function replacer(key, value) {
   // Some of the potential values are not very readable (IDs
   // and object references). Let's see if we can fix that.
   // Lots of assumptions being made about the structure of the JSON here...
+  var dictlist = ['definition', 'objects'];
   if (Array.isArray(value)) {
     if (key === 'kill_chain_phases') {
       var newValue = [];
@@ -324,14 +325,22 @@ function replacer(key, value) {
         newValue.push(item.phase_name)
       });
       return newValue;
+    } else if (key === 'granular_markings') {
+      var newValue = [];
+      value.forEach(function (item) {
+        newValue.push(JSON.stringify(item));
+      });
+      return newValue.join(", ");
     } else {
-      return value.join(", ")
+      return value.join(", ");
     }
   } else if (/--/.exec(value) && !(key === "id")) {
     if (!(idCache[value] === null || idCache[value] === undefined)) {
-      return currentGraph.nodes[idCache[value]].name; // IDs are gross, so let's display something more readable if we can (unless it's actually the node id)
+      // IDs are gross, so let's display something more readable if we can
+      // (unless it's actually the node id)
+      return currentGraph.nodes[idCache[value]].name;
     }
-  } else if (key === 'definition') {
+  } else if (dictlist.indexOf(key) >= 0) {
     return JSON.stringify(value);
   }
   return value;
@@ -352,7 +361,7 @@ function handleSelected(d, el) {
     if (d.hasOwnProperty(key)) {
       var keyString = key;
       if (refRegex.exec(key)) { // key is "created_by_ref"... let's pretty that up
-        keyString = key.replace(/_(ref)?/g, " ").trim();
+        keyString = key.replace(/_(refs*)?/g, " ").trim();
       } else {
         keyString = keyString.replace(/_/g, ' ');
       }
