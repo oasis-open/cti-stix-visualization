@@ -107,8 +107,8 @@ function vizStix(content, callback) {
  * properties required by all STIX objects.
  * ******************************************************/
 function isStixObj(obj) {
-  if ('type' in obj && 'id' in obj && 'created' in obj &&
-                    'modified' in obj && 'version' in obj) {
+  if ('type' in obj && 'id' in obj && (('created' in obj &&
+                      'modified' in obj) || (obj.type === 'bundle'))) {
     return true;
   } else {
     return false;
