@@ -3,7 +3,7 @@
 var d3Config;
 var legendCallback;
 var selectedCallback;
-refRegex = /_ref$/;
+refRegex = /_refs*$/;
 relationshipsKeyRegex = /(r|R)elationships?/; // Added by Matt
 var force; // Determines the "float and repel" behavior of the nodes
 var labelForce; // Determines the "float and repel" behavior of the text labels
@@ -107,8 +107,8 @@ function vizStix(content, callback) {
  * properties required by all STIX objects.
  * ******************************************************/
 function isStixObj(obj) {
-  if ('type' in obj && 'id' in obj && 'created' in obj &&
-                    'modified' in obj && 'version' in obj) {
+  if ('type' in obj && 'id' in obj && (('created' in obj &&
+                      'modified' in obj) || (obj.type === 'bundle'))) {
     return true;
   } else {
     return false;
@@ -317,6 +317,7 @@ function replacer(key, value) {
   // Some of the potential values are not very readable (IDs
   // and object references). Let's see if we can fix that.
   // Lots of assumptions being made about the structure of the JSON here...
+  var dictlist = ['definition', 'objects'];
   if (Array.isArray(value)) {
     if (key === 'kill_chain_phases') {
       var newValue = [];
@@ -324,14 +325,22 @@ function replacer(key, value) {
         newValue.push(item.phase_name)
       });
       return newValue;
+    } else if (key === 'granular_markings') {
+      var newValue = [];
+      value.forEach(function (item) {
+        newValue.push(JSON.stringify(item));
+      });
+      return newValue.join(", ");
     } else {
-      return value.join(", ")
+      return value.join(", ");
     }
   } else if (/--/.exec(value) && !(key === "id")) {
     if (!(idCache[value] === null || idCache[value] === undefined)) {
-      return currentGraph.nodes[idCache[value]].name; // IDs are gross, so let's display something more readable if we can (unless it's actually the node id)
+      // IDs are gross, so let's display something more readable if we can
+      // (unless it's actually the node id)
+      return currentGraph.nodes[idCache[value]].name;
     }
-  } else if (key === 'definition') {
+  } else if (dictlist.indexOf(key) >= 0) {
     return JSON.stringify(value);
   }
   return value;
@@ -352,7 +361,7 @@ function handleSelected(d, el) {
     if (d.hasOwnProperty(key)) {
       var keyString = key;
       if (refRegex.exec(key)) { // key is "created_by_ref"... let's pretty that up
-        keyString = key.replace(/_(ref)?/g, " ").trim();
+        keyString = key.replace(/_(refs*)?/g, " ").trim();
       } else {
         keyString = keyString.replace(/_/g, ' ');
       }
@@ -387,31 +396,55 @@ function handlePin(d, el, pinBool) {
  * ******************************************************/
 function buildNodes(package) {
   var relationships = [];
-  // Iterate through each key on the package. If it's an array, assume every item is an SDO.
-  Object.keys(package).forEach(function(key) {
-    if(package[key].constructor === Array) {
-      if (!(relationshipsKeyRegex.exec(key))) { // Relationships are NOT ordinary SDOs
-        parseSDOs(package[key]);
+  if(package.hasOwnProperty('objects')) {
+    parseSDOs(package['objects']);
 
-        // Get embedded relationships
-        package[key].forEach(function(item) {
-          if ('created_by_ref' in item) {
-            relationships.push({'source_ref': item['id'],
-                                'target_ref': item['created_by_ref'],
-                                'relationship_type': 'created-by'});
-          } else if ('object_marking_refs' in item) {
-            item['object_marking_refs'].forEach(function(markingID) {
-              relationships.push({'source_ref': markingID,
-                                  'target_ref': item['id'],
-                                  'relationship_type': 'applies-to'});
-            });
-          }
-        });
-      } else {
-        relationships = relationships.concat(package[key]);
+    // Get embedded relationships
+    package['objects'].forEach(function(item) {
+      if (item['type'] === 'relationship') {
+        relationships.push(item);
+        return;
       }
-    }
-  });
+      if ('created_by_ref' in item) {
+        relationships.push({'source_ref': item['id'],
+                            'target_ref': item['created_by_ref'],
+                            'relationship_type': 'created-by'});
+      }
+      if ('object_marking_refs' in item) {
+        item['object_marking_refs'].forEach(function(markingID) {
+          relationships.push({'source_ref': markingID,
+                              'target_ref': item['id'],
+                              'relationship_type': 'applies-to'});
+        });
+      }
+      if ('object_refs' in item) {
+        item['object_refs'].forEach(function(objID) {
+          relationships.push({'source_ref': item['id'],
+                              'target_ref': objID,
+                              'relationship_type': 'refers-to'});
+        });
+      }
+      if ('sighting_of_ref' in item) {
+        relationships.push({'source_ref': item['id'],
+                            'target_ref': item['sighting_of_ref'],
+                            'relationship_type': 'sighting-of'});
+      }
+      if ('observed_data_refs' in item) {
+        item['observed_data_refs'].forEach(function(objID) {
+          relationships.push({'source_ref': item['id'],
+                              'target_ref': objID,
+                              'relationship_type': 'observed'});
+        });
+      }
+      if ('where_sighted_refs' in item) {
+        item['where_sighted_refs'].forEach(function(objID) {
+          relationships.push({'source_ref': objID,
+                              'target_ref': item['id'],
+                              'relationship_type': 'saw'});
+        });
+      }
+    });
+  };
 
   addRelationships(relationships);
 
@@ -458,7 +491,9 @@ function parseSDOs(container) {
  * ******************************************************/
 function addSdo(sdo) {
   if(idCache[sdo.id]) {
-    console.log("Already added, skipping!", sdo);
+    console.log("Skipping already added object!", sdo);
+  } else if(sdo.type === 'relationship') {
+    console.log("Skipping relationship object!", sdo);
   } else {
     if(typeGroups[sdo.type] === undefined) {
       typeGroups[sdo.type] = typeIndex++;
