@@ -10,8 +10,9 @@ styles = window.getComputedStyle(uploader);
  * Resizes the canvas based on the size of the window
  * ******************************************************/
 function resizeCanvas() {
-  var cWidth = document.getElementById('sidebar').offsetLeft - 52;
+  var cWidth = document.getElementById('legend').offsetLeft - 52;
   var cHeight = window.innerHeight - document.getElementsByTagName('h1')[0].offsetHeight - 27;
+  document.getElementById('canvas-wrapper').style.width = cWidth;
   canvas.style.width = cWidth;
   canvas.style.height = cHeight;
 }
@@ -20,8 +21,8 @@ function resizeCanvas() {
  * Will be called right before the graph is built.
  * ******************************************************/
 function vizCallback() {
-  resizeCanvas();
   hideMessages();
+  resizeCanvas();
 }
 
 /* ******************************************************
@@ -199,10 +200,26 @@ function fetchJsonAjax(url, cfunc) {
   xhttp.send();
 }
 
+function selectedNodeClick() {
+  selected = document.getElementById('selected');
+  if (selected.className.indexOf('clicked') === -1) {
+    selected.className += " clicked";
+    selected.style.position = 'absolute';
+    selected.style.left = '25px';
+    selected.style.width = window.innerWidth - 110;
+    selected.style.top = document.getElementById('legend').offsetHeight + 25;
+    selected.scrollIntoView(true);
+  } else {
+    selected.className = "sidebar"
+    selected.removeAttribute("style")
+  }
+}
+
 /* ******************************************************
  * When the page is ready, setup the visualization and bind events
  * ******************************************************/
-document.addEventListener("DOMContentLoaded", function(event) { 
+// document.addEventListener("DOMContentLoaded", function(event) { 
+window.onload = function() { 
   vizInit(canvas, {}, populateLegend, populateSelected);
 
   document.getElementById('files').addEventListener('change', handleFileSelect, false);
@@ -212,4 +229,5 @@ document.addEventListener("DOMContentLoaded", function(event) {
   uploader.addEventListener('dragover', handleDragOver, false);
   uploader.addEventListener('drop', handleFileDrop, false);
   window.onresize = resizeCanvas;
-});
+  document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
+};

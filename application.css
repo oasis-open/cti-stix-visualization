@@ -48,15 +48,16 @@ svg {
 
 #canvas-wrapper {
   margin: 25px;
+  float: left;
 }
 
-#sidebar {
-  position: absolute;
+.sidebar {
   right: 25px;
   width: 350px;
+  float: right;
 }
 
-#sidebar h2 {
+.sidebar h2 {
   text-align: center;
   margin-top: 0;
 }
@@ -71,6 +72,7 @@ svg {
   margin-top: 25px;
   padding: 25px;
   background-color: #fafafa;
+  cursor: pointer;
 }
 
 #selection > div {

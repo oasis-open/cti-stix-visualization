@@ -78,7 +78,7 @@ function vizInit(canvas, config, legendCb, selectedCb) {
  * 
  * Parameters:
  *     - content: string of valid STIX 2 content
- *     - callback: optional function to call before building the graph
+ *     - callback: optional function to call after building the graph
  * ******************************************************/
 function vizStix(content, callback) {
   var parsed;
@@ -97,9 +97,9 @@ function vizStix(content, callback) {
     alert("Something went wrong!\n\nError:\n Input is neither parseable JSON nor a STIX object");
     return;
   }
-  if (typeof callback !== 'undefined') callback();
   buildNodes(parsed);
   initGraph();
+  if (typeof callback !== 'undefined') callback();
 }
 
 /* ******************************************************
@@ -325,7 +325,7 @@ function replacer(key, value) {
         newValue.push(item.phase_name)
       });
       return newValue;
-    } else if (key === 'granular_markings') {
+    } else if (key === 'granular_markings' || key === 'external_references') {
       var newValue = [];
       value.forEach(function (item) {
         newValue.push(JSON.stringify(item));
