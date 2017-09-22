@@ -200,6 +200,36 @@ function fetchJsonAjax(url, cfunc) {
   xhttp.send();
 }
 
+/* ******************************************************
+ * AJAX 'GET' request from `?url=` parameter
+ * 
+ * Will check the URL during `window.onload` to determine
+ * if `?url=` parameter is provided
+ * ******************************************************/
+function fetchJsonFromUrl() {
+  var url = window.location.href;
+
+  // If `?` is not provided, load page normally
+  if (/\?/.test(url)) {
+    // Regex to see if `url` parameter has a valid url value
+    var regex = /\?url=https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i;
+    var res = regex.exec(url);
+    if (res != null) {
+      // Get the value from the `url` parameter
+      req_url = res[0].substring(5);
+
+      // Fetch JSON from the url
+      fetchJsonAjax(req_url, function(content) {
+        vizStixWrapper(content)
+      });
+      linkifyHeader();
+
+    } else {
+      alert("ERROR: Invalid url - Request must start with '?url=http[s]://' and be a valid domain");
+    }
+  }
+}
+
 function selectedNodeClick() {
   selected = document.getElementById('selected');
   if (selected.className.indexOf('clicked') === -1) {
@@ -230,4 +260,5 @@ window.onload = function() {
   uploader.addEventListener('drop', handleFileDrop, false);
   window.onresize = resizeCanvas;
   document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
+  fetchJsonFromUrl();
 };
