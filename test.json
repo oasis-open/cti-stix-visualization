@@ -73,13 +73,6 @@
       ]
     },
     {
-      "type": "location",
-      "id": "location--07608992-927e-434c-9cbd-bf45274290a0",
-      "created": "2017-07-18T22:00:30.405Z",
-      "modified": "2017-07-18T22:00:30.405Z",
-      "country": "China"
-    },
-    {
       "type": "indicator",
       "id": "indicator--691d06b5-aa1d-46ec-97d6-e59ef9411b8a",
       "created": "2017-07-18T22:00:30.406Z",
