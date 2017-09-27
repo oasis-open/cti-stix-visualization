@@ -185,15 +185,23 @@ function resetPage() {
  * Takes a URL and a callback function as input.
  * ******************************************************/
 function fetchJsonAjax(url, cfunc) {
+  var regex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i;
+  if (!regex.test(url)) {
+    alert("ERROR: Double check url provided");
+  }
+
   var xhttp;
   if (window.XMLHttpRequest) {
     xhttp = new XMLHttpRequest();
   } else {
     xhttp = new ActiveXObject("Microsoft.XMLHTTP"); // For IE5 and IE6 luddites
   }
+
   xhttp.onreadystatechange = function() {
     if (xhttp.readyState == 4 && xhttp.status == 200) {
       cfunc(xhttp.responseText);
+    } else if (xhttp.status != 200 && xhttp.status != 0) {
+      alert("ERROR: " + xhttp.status + ": " + xhttp.statusText + " - Double check url provided");
     }
   }
   xhttp.open("GET", url, true);

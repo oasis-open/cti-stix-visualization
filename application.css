@@ -40,6 +40,10 @@ svg {
   font-size: 36px;
 }
 
+#uploader a {
+  font-size: 20px;
+}
+
 #chosen-files {
   margin-left: 15px;
   font-size: 24px;
