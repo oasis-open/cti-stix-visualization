@@ -209,6 +209,11 @@ require(["domReady!", "stix2jupyter/stix2viz/stix2viz"], function (document, sti
      * Takes a URL and a callback function as input.
      * ******************************************************/
     function fetchJsonAjax(url, cfunc) {
+      var regex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i;
+      if (!regex.test(url)) {
+        alert("ERROR: Double check url provided");
+      }
+
       var xhttp;
       if (window.XMLHttpRequest) {
         xhttp = new XMLHttpRequest();
@@ -218,10 +223,42 @@ require(["domReady!", "stix2jupyter/stix2viz/stix2viz"], function (document, sti
       xhttp.onreadystatechange = function() {
         if (xhttp.readyState == 4 && xhttp.status == 200) {
           cfunc(xhttp.responseText);
+        } else if (xhttp.status != 200 && xhttp.status != 0) {
+          alert("ERROR: " + xhttp.status + ": " + xhttp.statusText + " - Double check url provided");
         }
       }
       xhttp.open("GET", url, true);
       xhttp.send();
+    }
+
+    /* ******************************************************
+     * AJAX 'GET' request from `?url=` parameter
+     *
+     * Will check the URL during `window.onload` to determine
+     * if `?url=` parameter is provided
+     * ******************************************************/
+    function fetchJsonFromUrl() {
+      var url = window.location.href;
+
+      // If `?` is not provided, load page normally
+      if (/\?/.test(url)) {
+        // Regex to see if `url` parameter has a valid url value
+        var regex = /\?url=https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i;
+        var res = regex.exec(url);
+        if (res != null) {
+          // Get the value from the `url` parameter
+          req_url = res[0].substring(5);
+
+          // Fetch JSON from the url
+          fetchJsonAjax(req_url, function(content) {
+            vizStixWrapper(content)
+          });
+          linkifyHeader();
+
+        } else {
+          alert("ERROR: Invalid url - Request must start with '?url=http[s]://' and be a valid domain");
+        }
+      }
     }
 
     function selectedNodeClick() {
@@ -250,4 +287,5 @@ require(["domReady!", "stix2jupyter/stix2viz/stix2viz"], function (document, sti
     uploader.addEventListener('drop', handleFileDrop, false);
     window.onresize = resizeCanvas;
     document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
+    fetchJsonFromUrl();
 });
