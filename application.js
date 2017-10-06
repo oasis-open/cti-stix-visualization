@@ -1,272 +1,253 @@
-// Init some stuff
-// MATT: For optimization purposes, look into moving these to local variables
-selectedContainer = document.getElementById('selection');
-uploader = document.getElementById('uploader');
-canvasContainer = document.getElementById('canvas-container');
-canvas = document.getElementById('canvas');
-styles = window.getComputedStyle(uploader);
-
-/* ******************************************************
- * Resizes the canvas based on the size of the window
- * ******************************************************/
-function resizeCanvas() {
-  var cWidth = document.getElementById('legend').offsetLeft - 52;
-  var cHeight = window.innerHeight - document.getElementsByTagName('h1')[0].offsetHeight - 27;
-  document.getElementById('canvas-wrapper').style.width = cWidth;
-  canvas.style.width = cWidth;
-  canvas.style.height = cHeight;
-}
-
-/* ******************************************************
- * Will be called right before the graph is built.
- * ******************************************************/
-function vizCallback() {
-  hideMessages();
-  resizeCanvas();
-}
-
-/* ******************************************************
- * Initializes the graph, then renders it.
- * ******************************************************/
-function vizStixWrapper(content) {
-  vizInit(canvas, {}, populateLegend, populateSelected);
-  vizStix(content, vizCallback);
-}
-
-/* ----------------------------------------------------- *
- * ******************************************************
- * This group of functions is for handling file "upload."
- * They take an event as input and parse the file on the
- * front end.
- * ******************************************************/
-function handleFileSelect(evt) {
-  handleFiles(evt.target.files);
-}
-function handleFileDrop(evt) {
-  evt.stopPropagation();
-  evt.preventDefault();
-
-  handleFiles(evt.dataTransfer.files);
-}
-function handleDragOver(evt) {
-  evt.stopPropagation();
-  evt.preventDefault();
-  evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-}
-function handleFiles(files) {
-  // files is a FileList of File objects (in our case, just one)
-  for (var i = 0, f; f = files[i]; i++) {
-    document.getElementById('chosen-files').innerText += f.name + " ";
-
-    var r = new FileReader();
-    r.onload = function(e) {vizStixWrapper(e.target.result)};
-    r.readAsText(f);
-  }
-  linkifyHeader();
-}
-/* ---------------------------------------------------- */
-
-/* ******************************************************
- * Handles content pasted to the text area.
- * ******************************************************/
-function handleTextarea() {
-  content = document.getElementById('paste-area').value;
-  vizStixWrapper(content)
-  linkifyHeader();
-}
-
-/* ******************************************************
- * Fetches STIX 2.0 data from an external URL (supplied
- * user) via AJAX. Server-side Access-Control-Allow-Origin
- * must allow cross-domain requests for this to work.
- * ******************************************************/
-function handleFetchJson() {
-  var url = document.getElementById("url").value;
-  fetchJsonAjax(url, function(content) {
-    vizStixWrapper(content)
-  });
-  linkifyHeader();
-}
-
-/* ******************************************************
- * Adds icons and information to the legend.
- *
- * Takes an array of type names as input
- * ******************************************************/
-function populateLegend(typeGroups) {
-  var ul = document.getElementById('legend-content');
-  typeGroups.forEach(function(typeName) {
-    var li = document.createElement('li');
-    var val = document.createElement('p');
-    var key = document.createElement('div');
-    key.style.backgroundImage = "url('icons/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png')";
-    val.innerText = typeName.charAt(0).toUpperCase() + typeName.substr(1).toLowerCase(); // Capitalize it
-    li.appendChild(key);
-    li.appendChild(val);
-    ul.appendChild(li);
-  });
-}
-
-/* ******************************************************
- * Adds information to the selected node table.
- *
- * Takes datum as input
- * ******************************************************/
-function populateSelected(d) {
-  // Remove old values from HTML
-  selectedContainer.innerHTML = "";
-  
-  var counter = 0;
-
-  Object.keys(d).forEach(function(key) { // Make new HTML elements and display them
-    // Create new, empty HTML elements to be filled and injected
-    var div = document.createElement('div');
-    var type = document.createElement('div');
-    var val = document.createElement('div');
-    
-    // Assign classes for proper styling
-    if ((counter % 2) != 0) {
-      div.classList.add("odd"); // every other row will have a grey background
+/*
+Stix2viz and d3 are packaged in a way that makes them work as Jupyter
+notebook extensions.  Part of the extension installation process involves
+copying them to a different location, where they're available via a special
+"nbextensions" path.  This path is hard-coded into their "require" module
+IDs.  Perhaps it's better to use abstract names, and add special config
+in all cases to map the IDs to real paths, thus keeping the modules free
+of usage-specific hard-codings.  But packaging in a way I know works in
+Jupyter (an already complicated environment), and having only this config
+here, seemed simpler.  At least, for now.  Maybe later someone can structure
+these modules and apps in a better way.
+*/
+require.config({
+    paths: {
+      "nbextensions/stix2viz/d3": "stix2jupyter/d3/d3"
     }
-    type.classList.add("type");
-    val.classList.add("value");
+});
 
-    // Add the text to the new inner html elements
-    var value = d[key];
-    type.innerText = key;
-    val.innerText = value;
-    
-    // Add new divs to "Selected Node"
-    div.appendChild(type);
-    div.appendChild(val);
-    selectedContainer.appendChild(div);
+require(["domReady!", "stix2jupyter/stix2viz/stix2viz"], function (document, stix2viz) {
 
-    // increment the class counter
-    counter += 1;
-  });
-}
 
-/* ******************************************************
- * Hides the data entry container and displays the graph
- * container
- * ******************************************************/
-function hideMessages() {
-  uploader.classList.toggle("hidden");
-  canvasContainer.classList.toggle("hidden");
-}
+    // Init some stuff
+    // MATT: For optimization purposes, look into moving these to local variables
+    selectedContainer = document.getElementById('selection');
+    uploader = document.getElementById('uploader');
+    canvasContainer = document.getElementById('canvas-container');
+    canvas = document.getElementById('canvas');
+    styles = window.getComputedStyle(uploader);
 
-/* ******************************************************
- * Turns header into a "home" "link"
- * ******************************************************/
-function linkifyHeader() {
-  var header = document.getElementById('header');
-  header.classList.add('linkish');
-}
-
- /* *****************************************************
-  * Returns the page to its original load state
-  * *****************************************************/
-function resetPage() {
-  var header = document.getElementById('header');
-  if (header.classList.contains('linkish')) {
-    hideMessages();
-    vizReset();
-    document.getElementById('files').value = ""; // reset the files input
-    document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
-    document.getElementById('legend-content').innerHTML = ""; // reset the legend in the sidebar
-
-    header.classList.remove('linkish');
-  }
-}
-
-/* ******************************************************
- * Generic AJAX 'GET' request.
- * 
- * Takes a URL and a callback function as input.
- * ******************************************************/
-function fetchJsonAjax(url, cfunc) {
-  var regex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i;
-  if (!regex.test(url)) {
-    alert("ERROR: Double check url provided");
-  }
-
-  var xhttp;
-  if (window.XMLHttpRequest) {
-    xhttp = new XMLHttpRequest();
-  } else {
-    xhttp = new ActiveXObject("Microsoft.XMLHTTP"); // For IE5 and IE6 luddites
-  }
-
-  xhttp.onreadystatechange = function() {
-    if (xhttp.readyState == 4 && xhttp.status == 200) {
-      cfunc(xhttp.responseText);
-    } else if (xhttp.status != 200 && xhttp.status != 0) {
-      alert("ERROR: " + xhttp.status + ": " + xhttp.statusText + " - Double check url provided");
+    /* ******************************************************
+     * Resizes the canvas based on the size of the window
+     * ******************************************************/
+    function resizeCanvas() {
+      var cWidth = document.getElementById('legend').offsetLeft - 52;
+      var cHeight = window.innerHeight - document.getElementsByTagName('h1')[0].offsetHeight - 27;
+      document.getElementById('canvas-wrapper').style.width = cWidth;
+      canvas.style.width = cWidth;
+      canvas.style.height = cHeight;
     }
-  }
-  xhttp.open("GET", url, true);
-  xhttp.send();
-}
 
-/* ******************************************************
- * AJAX 'GET' request from `?url=` parameter
- * 
- * Will check the URL during `window.onload` to determine
- * if `?url=` parameter is provided
- * ******************************************************/
-function fetchJsonFromUrl() {
-  var url = window.location.href;
+    /* ******************************************************
+     * Will be called right before the graph is built.
+     * ******************************************************/
+    function vizCallback() {
+      hideMessages();
+      resizeCanvas();
+    }
 
-  // If `?` is not provided, load page normally
-  if (/\?/.test(url)) {
-    // Regex to see if `url` parameter has a valid url value
-    var regex = /\?url=https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/i;
-    var res = regex.exec(url);
-    if (res != null) {
-      // Get the value from the `url` parameter
-      req_url = res[0].substring(5);
+    /* ******************************************************
+     * Initializes the graph, then renders it.
+     * ******************************************************/
+    function vizStixWrapper(content) {
+      cfg = {
+        iconDir: "stix2jupyter/stix2viz/icons"
+      }
+      stix2viz.vizInit(canvas, cfg, populateLegend, populateSelected);
+      stix2viz.vizStix(content, vizCallback);
+    }
 
-      // Fetch JSON from the url
-      fetchJsonAjax(req_url, function(content) {
+    /* ----------------------------------------------------- *
+     * ******************************************************
+     * This group of functions is for handling file "upload."
+     * They take an event as input and parse the file on the
+     * front end.
+     * ******************************************************/
+    function handleFileSelect(evt) {
+      handleFiles(evt.target.files);
+    }
+    function handleFileDrop(evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+
+      handleFiles(evt.dataTransfer.files);
+    }
+    function handleDragOver(evt) {
+      evt.stopPropagation();
+      evt.preventDefault();
+      evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+    }
+    function handleFiles(files) {
+      // files is a FileList of File objects (in our case, just one)
+      for (var i = 0, f; f = files[i]; i++) {
+        document.getElementById('chosen-files').innerText += f.name + " ";
+
+        var r = new FileReader();
+        r.onload = function(e) {vizStixWrapper(e.target.result)};
+        r.readAsText(f);
+      }
+      linkifyHeader();
+    }
+    /* ---------------------------------------------------- */
+
+    /* ******************************************************
+     * Handles content pasted to the text area.
+     * ******************************************************/
+    function handleTextarea() {
+      content = document.getElementById('paste-area').value;
+      vizStixWrapper(content)
+      linkifyHeader();
+    }
+
+    /* ******************************************************
+     * Fetches STIX 2.0 data from an external URL (supplied
+     * user) via AJAX. Server-side Access-Control-Allow-Origin
+     * must allow cross-domain requests for this to work.
+     * ******************************************************/
+    function handleFetchJson() {
+      var url = document.getElementById("url").value;
+      fetchJsonAjax(url, function(content) {
         vizStixWrapper(content)
       });
       linkifyHeader();
-
-    } else {
-      alert("ERROR: Invalid url - Request must start with '?url=http[s]://' and be a valid domain");
     }
-  }
-}
 
-function selectedNodeClick() {
-  selected = document.getElementById('selected');
-  if (selected.className.indexOf('clicked') === -1) {
-    selected.className += " clicked";
-    selected.style.position = 'absolute';
-    selected.style.left = '25px';
-    selected.style.width = window.innerWidth - 110;
-    selected.style.top = document.getElementById('legend').offsetHeight + 25;
-    selected.scrollIntoView(true);
-  } else {
-    selected.className = "sidebar"
-    selected.removeAttribute("style")
-  }
-}
+    /* ******************************************************
+     * Adds icons and information to the legend.
+     *
+     * Takes an array of type names as input
+     * ******************************************************/
+    function populateLegend(typeGroups) {
+      var ul = document.getElementById('legend-content');
+      typeGroups.forEach(function(typeName) {
+        var li = document.createElement('li');
+        var val = document.createElement('p');
+        var key = document.createElement('div');
+        key.style.backgroundImage = "url('stix2jupyter/stix2viz/icons/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png')";
+        val.innerText = typeName.charAt(0).toUpperCase() + typeName.substr(1).toLowerCase(); // Capitalize it
+        li.appendChild(key);
+        li.appendChild(val);
+        ul.appendChild(li);
+      });
+    }
 
-/* ******************************************************
- * When the page is ready, setup the visualization and bind events
- * ******************************************************/
-// document.addEventListener("DOMContentLoaded", function(event) { 
-window.onload = function() { 
-  vizInit(canvas, {}, populateLegend, populateSelected);
+    /* ******************************************************
+     * Adds information to the selected node table.
+     *
+     * Takes datum as input
+     * ******************************************************/
+    function populateSelected(d) {
+      // Remove old values from HTML
+      selectedContainer.innerHTML = "";
 
-  document.getElementById('files').addEventListener('change', handleFileSelect, false);
-  document.getElementById('paste-parser').addEventListener('click', handleTextarea, false);
-  document.getElementById('fetch-url').addEventListener('click', handleFetchJson, false);
-  document.getElementById('header').addEventListener('click', resetPage, false);
-  uploader.addEventListener('dragover', handleDragOver, false);
-  uploader.addEventListener('drop', handleFileDrop, false);
-  window.onresize = resizeCanvas;
-  document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
-  fetchJsonFromUrl();
-};
+      var counter = 0;
+
+      Object.keys(d).forEach(function(key) { // Make new HTML elements and display them
+        // Create new, empty HTML elements to be filled and injected
+        var div = document.createElement('div');
+        var type = document.createElement('div');
+        var val = document.createElement('div');
+
+        // Assign classes for proper styling
+        if ((counter % 2) != 0) {
+          div.classList.add("odd"); // every other row will have a grey background
+        }
+        type.classList.add("type");
+        val.classList.add("value");
+
+        // Add the text to the new inner html elements
+        var value = d[key];
+        type.innerText = key;
+        val.innerText = value;
+
+        // Add new divs to "Selected Node"
+        div.appendChild(type);
+        div.appendChild(val);
+        selectedContainer.appendChild(div);
+
+        // increment the class counter
+        counter += 1;
+      });
+    }
+
+    /* ******************************************************
+     * Hides the data entry container and displays the graph
+     * container
+     * ******************************************************/
+    function hideMessages() {
+      uploader.classList.toggle("hidden");
+      canvasContainer.classList.toggle("hidden");
+    }
+
+    /* ******************************************************
+     * Turns header into a "home" "link"
+     * ******************************************************/
+    function linkifyHeader() {
+      var header = document.getElementById('header');
+      header.classList.add('linkish');
+    }
+
+     /* *****************************************************
+      * Returns the page to its original load state
+      * *****************************************************/
+    function resetPage() {
+      var header = document.getElementById('header');
+      if (header.classList.contains('linkish')) {
+        hideMessages();
+        stix2viz.vizReset();
+        document.getElementById('files').value = ""; // reset the files input
+        document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
+        document.getElementById('legend-content').innerHTML = ""; // reset the legend in the sidebar
+
+        header.classList.remove('linkish');
+      }
+    }
+
+    /* ******************************************************
+     * Generic AJAX 'GET' request.
+     *
+     * Takes a URL and a callback function as input.
+     * ******************************************************/
+    function fetchJsonAjax(url, cfunc) {
+      var xhttp;
+      if (window.XMLHttpRequest) {
+        xhttp = new XMLHttpRequest();
+      } else {
+        xhttp = new ActiveXObject("Microsoft.XMLHTTP"); // For IE5 and IE6 luddites
+      }
+      xhttp.onreadystatechange = function() {
+        if (xhttp.readyState == 4 && xhttp.status == 200) {
+          cfunc(xhttp.responseText);
+        }
+      }
+      xhttp.open("GET", url, true);
+      xhttp.send();
+    }
+
+    function selectedNodeClick() {
+      selected = document.getElementById('selected');
+      if (selected.className.indexOf('clicked') === -1) {
+        selected.className += " clicked";
+        selected.style.position = 'absolute';
+        selected.style.left = '25px';
+        selected.style.width = window.innerWidth - 110;
+        selected.style.top = document.getElementById('legend').offsetHeight + 25;
+        selected.scrollIntoView(true);
+      } else {
+        selected.className = "sidebar"
+        selected.removeAttribute("style")
+      }
+    }
+
+    /* ******************************************************
+     * When the page is ready, setup the visualization and bind events
+     * ******************************************************/
+    document.getElementById('files').addEventListener('change', handleFileSelect, false);
+    document.getElementById('paste-parser').addEventListener('click', handleTextarea, false);
+    document.getElementById('fetch-url').addEventListener('click', handleFetchJson, false);
+    document.getElementById('header').addEventListener('click', resetPage, false);
+    uploader.addEventListener('dragover', handleDragOver, false);
+    uploader.addEventListener('drop', handleFileDrop, false);
+    window.onresize = resizeCanvas;
+    document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
+});
