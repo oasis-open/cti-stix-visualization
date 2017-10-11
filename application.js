@@ -12,11 +12,11 @@ these modules and apps in a better way.
 */
 require.config({
     paths: {
-      "nbextensions/stix2viz/d3": "stix2jupyter/d3/d3"
+      "nbextensions/stix2viz/d3": "stix2viz/d3/d3"
     }
 });
 
-require(["domReady!", "stix2jupyter/stix2viz/stix2viz"], function (document, stix2viz) {
+require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2viz) {
 
 
     // Init some stuff
@@ -51,7 +51,7 @@ require(["domReady!", "stix2jupyter/stix2viz/stix2viz"], function (document, sti
      * ******************************************************/
     function vizStixWrapper(content) {
       cfg = {
-        iconDir: "stix2jupyter/stix2viz/icons"
+        iconDir: "stix2viz/stix2viz/icons"
       }
       stix2viz.vizInit(canvas, cfg, populateLegend, populateSelected);
       stix2viz.vizStix(content, vizCallback);
@@ -123,7 +123,7 @@ require(["domReady!", "stix2jupyter/stix2viz/stix2viz"], function (document, sti
         var li = document.createElement('li');
         var val = document.createElement('p');
         var key = document.createElement('div');
-        key.style.backgroundImage = "url('stix2jupyter/stix2viz/icons/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png')";
+        key.style.backgroundImage = "url('stix2viz/stix2viz/icons/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png')";
         val.innerText = typeName.charAt(0).toUpperCase() + typeName.substr(1).toLowerCase(); // Capitalize it
         li.appendChild(key);
         li.appendChild(val);
