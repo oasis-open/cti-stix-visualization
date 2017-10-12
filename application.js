@@ -226,6 +226,11 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         } else if (xhttp.status != 200 && xhttp.status != 0) {
           alert("ERROR: " + xhttp.status + ": " + xhttp.statusText + " - Double check url provided");
         }
+
+        xhttp.onerror = function() {
+          alert("ERROR: No 'Access-Control-Allow-Origin' header is present on the requested resource. \
+\nA GitHub Gist can be created to host RAW JSON data to prevent this.");
+        };
       }
       xhttp.open("GET", url, true);
       xhttp.send();
