@@ -202,8 +202,15 @@ function fetchJsonAjax(url, cfunc) {
       cfunc(xhttp.responseText);
     } else if (xhttp.status != 200 && xhttp.status != 0) {
       alert("ERROR: " + xhttp.status + ": " + xhttp.statusText + " - Double check url provided");
+      return;
     }
+
+    xhttp.onerror = function() {
+      alert("ERROR: No 'Access-Control-Allow-Origin' header is present on the requested resource. \
+\nA GitHub Gist can be created to host RAW JSON data to prevent this.");
+    };
   }
+
   xhttp.open("GET", url, true);
   xhttp.send();
 }
