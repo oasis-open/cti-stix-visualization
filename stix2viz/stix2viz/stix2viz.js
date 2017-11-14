@@ -46,7 +46,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       d3Config = {};
       if (typeof config === 'undefined') config = {};
       if ('color' in config) { d3Config.color = config.color; }
-      else { d3Config.color = d3.scale.category20(); }
+      else { d3Config.color = d3.scaleOrdinal(d3.schemeCategory20); }
       if ('nodeSize' in config) { d3Config.nodeSize = config.nodeSize; }
       else { d3Config.nodeSize = 17.5; }
       if ('iconSize' in config) { d3Config.iconSize = config.iconSize; }
@@ -67,8 +67,27 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
 
       canvas.style.width = d3Config.width;
       canvas.style.height = d3Config.height;
-      force = d3.layout.force().charge(-400).linkDistance(d3Config.linkMultiplier * d3Config.nodeSize).size([d3Config.width, d3Config.height]);
+
+
+      /*force = d3.layout.force().charge(-400).linkDistance(d3Config.linkMultiplier * d3Config.nodeSize).size([d3Config.width, d3Config.height]);
       labelForce = d3.layout.force().gravity(0).linkDistance(25).linkStrength(8).charge(-120).size([d3Config.width, d3Config.height]);
+      */
+
+      force = d3.forceSimulation()
+      .force("charge", d3.forceManyBody(-400))
+      .force("center", d3.forceCenter(d3Config.width / 2, d3Config.height / 2))
+      .force("link", d3.forceLink().distance(d3Config.linkMultiplier * d3Config.nodeSize))
+      .force("collide", d3.forceCollide().radius(100));
+
+
+      labelForce = d3.forceSimulation()
+      .force("charge", d3.forceManyBody(-120))
+      .force("center", d3.forceCenter(d3Config.width / 4 , d3Config.height / 4))
+      .force("collide", d3.forceCollide().radius(100))
+      .force("link", d3.forceLink().distance(25))
+      .force("strength", d3.forceManyBody().strength(8))
+      .force("collide", d3.forceCollide().radius(100));
+
       svgTop = d3.select('#' + canvas.id);
       svg = svgTop.append("g");
     }
@@ -121,9 +140,9 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Generates the components on the chart from the JSON data
      * ******************************************************/
     function initGraph() {
-      force.nodes(currentGraph.nodes).links(currentGraph.edges).start();
-      labelForce.nodes(labelGraph.nodes).links(labelGraph.edges).start();
-
+      force.nodes(currentGraph.nodes).force("link").links(currentGraph.edges);
+      labelForce.nodes(labelGraph.nodes).force("link").links(labelGraph.edges);
+      
       // build the arrow.
       // (Only builds one arrow which is then referenced by the marker-end
       // attribute of the lines)
@@ -199,7 +218,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           .data(currentGraph.nodes)
         .enter().append("g")
           .attr("class", "node")
-          .call(force.drag); // <-- What does the "call()" function do?
+          .call(d3.drag()); // <-- What does the "call()" function do?
         node.append("circle")
           .attr("r", d3Config.nodeSize)
           .style("fill", function(d) { return d3Config.color(d.typeGroup); });
@@ -211,8 +230,22 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           .attr("height", d3Config.iconSize + "px");
       node.on('click', function(d, i) { handleSelected(d, this); }); // If they're holding shift, release
 
+            // Code to handle zooming and dragging the viewing area
+      svgTop.call(d3.zoom()
+        .scaleExtent([0.25, 5])
+        .on("zoom", function() {
+         svg.attr("transform",
+            "translate(" + d3.event.translate + ") " +
+            "scale(" + d3.event.scale + ")"
+          )
+         width = +svg.attr("width")
+         height = +svg.attr("height");
+        })
+      )
+      .on("dblclick.zoom", null);
+
       // Fix on click/drag, unfix on double click
-      force.drag().on('dragstart', function(d, i) {
+      d3.drag().on('drag', function(d, i) {
         d3.event.sourceEvent.stopPropagation(); // silence other listeners
         handlePin(d, this, true);
       });//d.fixed = true });
@@ -249,13 +282,12 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         });
 
         node.call(function() {
-          this.attr("transform", function(d) {
+          node.attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
           });
         });
 
         anchorNode.each(function(d, i) {
-          labelForce.start();
           if(i % 2 === 0) {
             d.x = d.node.x;
             d.y = d.node.y;
@@ -275,7 +307,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         });
 
         anchorNode.call(function() {
-          this.attr("transform", function(d) {
+          anchorNode.attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
           });
         });
@@ -293,18 +325,10 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         });
       });
 
-      // Code to handle zooming and dragging the viewing area
-      svgTop.call(d3.behavior.zoom()
-        .scaleExtent([0.25, 5])
-        .on("zoom", function() {
-          svg.attr("transform",
-            "translate(" + d3.event.translate + ") " +
-            "scale(" + d3.event.scale + ")"
-          );
-        })
-      )
-      .on("dblclick.zoom", null);
-    }
+
+   
+
+   }
 
     /* ******************************************************
      * Screens out D3 chart data from the presentation.
