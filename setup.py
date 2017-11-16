@@ -7,6 +7,10 @@ setup(
     packages=find_packages(),
     install_requires=["jupyter>=1.0.0"],
     package_data={
-        "stix2viz": ["stix2viz/icons/*"],
+        "stix2viz": [
+            "d3/*",
+            "stix2viz/icons/*",
+            "stix2viz/stix2viz.js",
+        ],
     }
 )
