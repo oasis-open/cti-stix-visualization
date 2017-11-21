@@ -7,8 +7,7 @@ of STIX 2 content within Jupyter notebooks.
 Installation
 ------------
 
-1. ``pip install stix2-viz`` (this won't work until the package is actually
-    published to PyPI).
+1. ``pip install stix2-viz``
 2. ``jupyter nbextension install stix2viz --py``
 3. ``jupyter nbextension enable stix2viz --py``
 
