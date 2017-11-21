@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="stix2-viz",
     description="Visualize STIX content",
-    version="0.1",
+    version="0.1.0",
     packages=find_packages(),
     install_requires=["jupyter>=1.0.0"],
     package_data={
