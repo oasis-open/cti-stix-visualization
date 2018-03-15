@@ -53,7 +53,6 @@ Initially, the associated TC members have designated one or more persons to serv
 
   * [Greg Back](mailto:gback@mitre.org); GitHub ID: [https://github.com/gtback](https://github.com/gtback); WWW: [MITRE](https://www.mitre.org)
   * [Ivan Kirillov](mailto:ikirillov@mitre.org); GitHub ID: [https://github.com/ikiril01](https://github.com/ikiril01); WWW: [MITRE](https://www.mitre.org)
-  * [Jesse Buonanno](mailto:jbuonanno@mitre.org); GitHub ID: [https://github.com/bojak4616](https://github.com/bojak4616); WWW: [MITRE](https://www.mitre.org)
 
 ## <a id="aboutOpenRepos">About OASIS Open Repositories</a>
 
