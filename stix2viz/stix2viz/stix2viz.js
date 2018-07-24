@@ -124,28 +124,9 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       force.nodes(currentGraph.nodes).links(currentGraph.edges).start();
       labelForce.nodes(labelGraph.nodes).links(labelGraph.edges).start();
 
-      // build the arrow.
-      // (Only builds one arrow which is then referenced by the marker-end
-      // attribute of the lines)
-      // code shamelessly cribbed from: http://stackoverflow.com/questions/28050434/introducing-arrowdirected-in-force-directed-graph-d3
-      var defs = svg.append("svg:defs");
-      defs.selectAll("marker")
-          .data(["end"])      // Different link/path types can be defined here
-        .enter().append("svg:marker")    // This section adds in the arrows
-          .attr("id", String)
-          .attr("viewBox", "0 -5 10 10")
-          .attr("refX", d3Config.nodeSize + 3)
-          .attr("refY", 0)
-          .attr("markerWidth", 6)
-          .attr("markerHeight", 6)
-          .attr("orient", "auto")
-          .style("stroke-width", 0)
-        .append("svg:path")
-          .attr("d", "M0,-5L10,0L0,5");
-
       // create filter with id #drop-shadow
       // height=130% so that the shadow is not clipped
-      var filter = defs.append("filter")
+      var filter = svg.append("svg:defs").append("filter")
           .attr("id", "drop-shadow")
           .attr("height", "200%")
           .attr("width", "200%")
@@ -174,8 +155,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       var link = svg.selectAll('path.link').data(currentGraph.edges).enter().append('path')
           .attr('class', 'link')
           .style("stroke", "#aaa")
+          .style('fill', "#aaa")
           .style("stroke-width", "3px")
-          .attr("marker-end", "url(#end)")// Add the arrow to the end of the link
           .attr('id', function(d, i) { return "link_" + i; })
           .on('click', function(d, i) { handleSelected(d, this); });
 
@@ -241,12 +222,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       // elements to be animated)
       force.on("tick", function() {
 
-        link.attr("d", function(d) {
-        var dx = d.target.x - d.source.x,
-            dy = d.target.y - d.source.y;
-            dr = 0; // Change this to make paths curved
-        return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
-        });
+        link.attr("d", function(d) { return drawArrow(d); });
 
         node.call(function() {
           this.attr("transform", function(d) {
@@ -304,6 +280,116 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         })
       )
       .on("dblclick.zoom", null);
+    }
+
+    /* ******************************************************
+     * Draws an arrow between two points.
+     * ******************************************************/
+    function drawArrow(d) {
+      return drawLine(d) + drawArrowHead(d);
+    }
+
+    /* ******************************************************
+     * Draws a line between two points
+     * ******************************************************/
+    function drawLine(d) {
+      return startAt(d.source) + lineTo(d.target);
+    }
+
+    /* ******************************************************
+     * Draws an arrow head.
+     * ******************************************************/
+    function drawArrowHead(d) {
+      var arrowTipPoint = calculateArrowTipPoint(d);
+      return startAt(arrowTipPoint)
+        + lineTo(calculateArrowBaseRightCornerPoint(d, arrowTipPoint))
+        + lineTo(calculateArrowBaseLeftCornerPoint(d, arrowTipPoint))
+        + lineTo(arrowTipPoint)
+        + closePath();
+    }
+
+    /* ******************************************************
+     * Creates the SVG for a starting point.
+     * ******************************************************/
+    function startAt(startPoint) {
+      return 'M' + startPoint.x + ',' + startPoint.y;
+    }
+
+    /* ******************************************************
+     * Creates the SVG for line to a point.
+     * ******************************************************/
+    function lineTo(endPoint) {
+      return 'L' + endPoint.x + ',' + endPoint.y;
+    }
+
+    /* ******************************************************
+     * Calculates the point at which the arrow tip should be.
+     * ******************************************************/
+    function calculateArrowTipPoint(d) {
+      var nodeRadius = Math.max(d3Config.iconSize, d3Config.nodeSize) / 2;
+      return translatePoint(d.target, calculateUnitVectorAlongLine(d), -(d3Config.nodeSize + 3));
+    }
+
+    /* ******************************************************
+     * Calculates the point at which the right corner of the
+     * base of the arrow head should be.
+     * ******************************************************/
+    function calculateArrowBaseRightCornerPoint(d, arrowTipPoint) {
+      var arrowBaseWidth = 13;
+      var unitVector = calculateUnitVectorAlongLine(d);
+      var arrowBasePoint = calculateArrowBaseCentrePoint(d, arrowTipPoint);
+      return translatePoint(arrowBasePoint, calculateNormal(unitVector), -arrowBaseWidth / 2);
+    }
+
+    /* ******************************************************
+     * Calculates the point at which the left corner of the
+     * base of the arrow head should be.
+     * ******************************************************/
+    function calculateArrowBaseLeftCornerPoint(d, arrowTipPoint) {
+      var arrowBaseWidth = 13;
+      var unitVector = calculateUnitVectorAlongLine(d);
+      var arrowBasePoint = calculateArrowBaseCentrePoint(d, arrowTipPoint);
+      return translatePoint(arrowBasePoint, calculateNormal(unitVector), arrowBaseWidth / 2);
+    }
+
+    /* ******************************************************
+     * Calculates the point at the centre of the base of the
+     * arrow head.
+     * ******************************************************/
+    function calculateArrowBaseCentrePoint(d, arrowTipPoint) {
+      var arrowHeadLength = 13;
+      return translatePoint(arrowTipPoint, calculateUnitVectorAlongLine(d), -arrowHeadLength);
+    }
+
+    /* ******************************************************
+     * Translates a point.
+     * ******************************************************/
+    function translatePoint(startPoint, directionUnitVector, distance) {
+      return { x: startPoint.x + distance * directionUnitVector.x, y: startPoint.y + distance * directionUnitVector.y };
+    }
+
+    /* ******************************************************
+     * Calculates a unit vector along a particular line.
+     * ******************************************************/
+    function calculateUnitVectorAlongLine(d) {
+      var dx = d.target.x - d.source.x;
+      var dy = d.target.y - d.source.y;
+      var dr = Math.sqrt(dx * dx + dy * dy);
+      return { x: dx / dr, y: dy / dr };
+    }
+
+    /* ******************************************************
+     * Calculates a normal to a unit vector.
+     * ******************************************************/
+    function calculateNormal(unitVector) {
+      return { x: -unitVector.y, y: unitVector.x };
+    }
+
+    /* ******************************************************
+     * Closes an SVG path.
+     * ******************************************************/
+    function closePath() {
+      return 'Z';
     }
 
     /* ******************************************************
