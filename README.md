@@ -51,7 +51,7 @@ Initially, the associated TC members have designated one or more persons to serv
 
 **<a id="currentMaintainers">Current Maintainers of this TC Open Repository</a>**
 
-  * [Greg Back](mailto:gback@mitre.org); GitHub ID: [https://github.com/gtback](https://github.com/gtback); WWW: [MITRE](https://www.mitre.org)
+  * [Chris Lenk](mailto:clenk@mitre.org); GitHub ID: [https://github.com/clenk](https://github.com/clenk); WWW: [MITRE](https://www.mitre.org)
   * [Ivan Kirillov](mailto:ikirillov@mitre.org); GitHub ID: [https://github.com/ikiril01](https://github.com/ikiril01); WWW: [MITRE](https://www.mitre.org)
 
 ## <a id="aboutOpenRepos">About OASIS TC Open Repositories</a>
