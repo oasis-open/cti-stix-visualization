@@ -25,9 +25,21 @@ If you want to load another JSON file, just click on the title at the top of the
 
 ### How can I use it?
 
-Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-visualization). Upload a JSON file, paste some valid JSON text, or provide the URL for an external JSON file. The URL for an external JSON file can be provided on the main page or as a URL paramater: https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json.
+Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-visualization). Upload a JSON file, paste some valid JSON text, or provide the URL for an external JSON file. The URL for an external JSON file can be provided on the main page or as a URL parameter: https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json.
 
-If you wish to integrate the visualizer into your own web application, just include stix2viz.js on your page. Then use `vizInit(mySvgElement)` followed by `vizStix(content)` to visualize your STIX content. Finally, use `vizReset()` if you need to clear the graph.
+You can integrate the visualizer into your own web application.  The visualizer is implemented as an [AMD](https://en.wikipedia.org/wiki/Asynchronous_module_definition) module.  The module exports three functions: `vizInit`, `vizStix` and `vizReset`.  Use `vizInit(mySvgElement)` followed by `vizStix(content)` to visualize your STIX content. Finally, use `vizReset()` if you need to clear the graph.
+
+#### Technical Details
+
+Documenting AMD is beyond the scope of this document.  There are various implementations of it; this repository includes [requirejs](https://requirejs.org/).  Importing and using AMD modules generally looks like:
+
+```javascript
+require(["module1", "module2"], function(module1, module2) {
+    /* Do stuff with the modules */
+});
+```
+
+So you need to add your AMD implementation to your web page, and then use modules as above.  With respect to stix2viz, you may need further configuration to ensure the module is found, especially since it was written to work as a Jupyter notebook extension.  You may consult [index.html](index.html) and [application.js](application.js) for inspiration.
 
 ### Acknowlegements
 
