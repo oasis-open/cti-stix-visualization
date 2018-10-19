@@ -81,15 +81,16 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Parameters:
      *     - content: string of valid STIX 2 content
      *     - callback: optional function to call after building the graph
+     *     - callback: optional function to call if an error is encountered while parsing input
      * ******************************************************/
-    function vizStix(content, callback) {
+    function vizStix(content, callback, onError) {
       var parsed;
       if (typeof content === 'string' || content instanceof String) {
         try {
           parsed = JSON.parse(content); // Saving this to a variable stops the rest of the function from executing on parse failure
         } catch (err) {
           alert("Something went wrong!\n\nError:\n" + err);
-          document.getElementById('chosen-files').innerText = "";
+          if (typeof onError !== 'undefined') onError();
           return;
         }
       }

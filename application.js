@@ -47,6 +47,14 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     }
 
     /* ******************************************************
+     * Will be called if there's a problem parsing input.
+     * ******************************************************/
+    function errorCallback() {
+      document.getElementById('chosen-files').innerText = "";
+      document.getElementById("files").value = "";
+    }
+
+    /* ******************************************************
      * Initializes the graph, then renders it.
      * ******************************************************/
     function vizStixWrapper(content) {
@@ -54,7 +62,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         iconDir: "stix2viz/stix2viz/icons"
       }
       stix2viz.vizInit(canvas, cfg, populateLegend, populateSelected);
-      stix2viz.vizStix(content, vizCallback);
+      stix2viz.vizStix(content, vizCallback, errorCallback());
     }
 
     /* ----------------------------------------------------- *

@@ -10,16 +10,6 @@
         /* Drop-shadow SVG styling has to go here for compatibility reasons */
         filter: url("#drop-shadow");
       }
-      .selectFileButton {
-        font: bold 20px Arial;
-        background-color: #eeeeee;
-        color: #333333;
-        padding: 2px 6px 2px 6px;
-        border-top: 1px solid #CCCCCC;
-        border-right: 1px solid #333333;
-        border-bottom: 1px solid #333333;
-        border-left: 1px solid #CCCCCC;
-      }
     </style>
   </head>
 
@@ -29,8 +19,7 @@
 
     <div id="uploader">
       <p>Drop some STIX 2.0 here!</p>
-      <input type="file" id="files" name="files" class="hidden"/><br>
-      <span class="displaySelectedFileName"><label for="files" class="selectFileButton">Select a file</label></span>
+      <input type="file" id="files" name="files" /><br>
       <p>-- OR --</p>
       <p>Fetch some STIX 2.0 from this URL!</p>
       <input type="text" id="url" name="url" placeholder="Paste URL here" /><br>
