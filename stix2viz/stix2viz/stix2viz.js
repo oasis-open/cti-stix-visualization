@@ -89,6 +89,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           parsed = JSON.parse(content); // Saving this to a variable stops the rest of the function from executing on parse failure
         } catch (err) {
           alert("Something went wrong!\n\nError:\n" + err);
+          document.getElementById('chosen-files').innerText = "";
           return;
         }
       }
