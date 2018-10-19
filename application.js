@@ -79,9 +79,9 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     }
     function handleFiles(files) {
       // files is a FileList of File objects (in our case, just one)
+
       for (var i = 0, f; f = files[i]; i++) {
         document.getElementById('chosen-files').innerText += f.name + " ";
-
         var r = new FileReader();
         r.onload = function(e) {vizStixWrapper(e.target.result)};
         r.readAsText(f);
