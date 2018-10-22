@@ -87,7 +87,29 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       var parsed;
       if (typeof content === 'string' || content instanceof String) {
         try {
-          parsed = JSON.parse(content); // Saving this to a variable stops the rest of the function from executing on parse failure
+          if (content[0] === '[' && content[content.length - 1] === ']') {
+            // Convert content from a string to a proper JavaScript array
+            content = JSON.parse("[" + content.slice(1, content.length - 1) + "]");
+            const allStixObjs = content.reduce((accumulator, currentObj) => {
+              return accumulator && (isStixObj(currentObj));
+            }, true);
+  
+            if (allStixObjs) {
+              parsed = {
+                "type": "bundle",
+                "id": "bundle--made_from_array_of_objects",
+                "spec_version": "2.0",
+                "objects": content
+              };
+            }
+            else {
+              alert("Something went wrong!\n\nError:\n Input is not a JavaScript array of proper STIX objects");
+              return;
+            }
+          }
+          else {
+            parsed = JSON.parse(content); // Saving this to a variable stops the rest of the function from executing on parse failure
+          }
         } catch (err) {
           alert("Something went wrong!\n\nError:\n" + err);
           if (typeof onError !== 'undefined') onError();
