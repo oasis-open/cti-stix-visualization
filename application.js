@@ -62,7 +62,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         iconDir: "stix2viz/stix2viz/icons"
       }
       stix2viz.vizInit(canvas, cfg, populateLegend, populateSelected);
-      stix2viz.vizStix(content, vizCallback, errorCallback());
+      stix2viz.vizStix(content, vizCallback, errorCallback);
     }
 
     /* ----------------------------------------------------- *
