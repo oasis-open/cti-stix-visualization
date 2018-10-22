@@ -63,6 +63,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       }
       stix2viz.vizInit(canvas, cfg, populateLegend, populateSelected);
       stix2viz.vizStix(content, vizCallback, errorCallback());
+      document.getElementById('selection').innerHTML = ""; // reset the selected node in the sidebar
     }
 
     /* ----------------------------------------------------- *
