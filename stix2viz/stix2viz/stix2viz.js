@@ -87,7 +87,24 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       var parsed;
       if (typeof content === 'string' || content instanceof String) {
         try {
-          parsed = JSON.parse(content); // Saving this to a variable stops the rest of the function from executing on parse failure
+          if (content[0] === '[' && content[content.length - 1] === ']') {
+            // Convert content from a string to a proper JavaScript array
+            content = JSON.parse("[" + content.slice(1, content.length - 1) + "]");
+            const allStixObjs = arrHasAllStixObjs(content);
+  
+            if (allStixObjs) {
+              parsed = {
+                "objects": content
+              };
+            }
+            else {
+              alert("Something went wrong!\n\nError:\n Input is not a JavaScript array of proper STIX objects");
+              return;
+            }
+          }
+          else {
+            parsed = JSON.parse(content); // Saving this to a variable stops the rest of the function from executing on parse failure
+          }
         } catch (err) {
           alert("Something went wrong!\n\nError:\n" + err);
           if (typeof onError !== 'undefined') onError();
@@ -117,6 +134,17 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       } else {
         return false;
       }
+    }
+
+    /* ******************************************************
+     * Returns true if the JavaScript array passed in has
+     * only objects such that each object has properties 
+     * required by all STIX objects. 
+     * ******************************************************/
+    function arrHasAllStixObjs(arr) {
+      return arr.reduce((accumulator, currentObj) => {
+        return accumulator && (isStixObj(currentObj));
+      }, true);
     }
 
     /* ******************************************************
