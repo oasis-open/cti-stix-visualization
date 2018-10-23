@@ -90,15 +90,10 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           if (content[0] === '[' && content[content.length - 1] === ']') {
             // Convert content from a string to a proper JavaScript array
             content = JSON.parse("[" + content.slice(1, content.length - 1) + "]");
-            const allStixObjs = content.reduce((accumulator, currentObj) => {
-              return accumulator && (isStixObj(currentObj));
-            }, true);
+            const allStixObjs = arrHasAllStixObjs(content);
   
             if (allStixObjs) {
               parsed = {
-                "type": "bundle",
-                "id": "bundle--made_from_array_of_objects",
-                "spec_version": "2.0",
                 "objects": content
               };
             }
@@ -139,6 +134,17 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       } else {
         return false;
       }
+    }
+
+    /* ******************************************************
+     * Returns true if the JavaScript array passed in has
+     * only objects such that each object has properties 
+     * required by all STIX objects. 
+     * ******************************************************/
+    function arrHasAllStixObjs(arr) {
+      return arr.reduce((accumulator, currentObj) => {
+        return accumulator && (isStixObj(currentObj));
+      }, true);
     }
 
     /* ******************************************************

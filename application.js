@@ -63,7 +63,6 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       }
       stix2viz.vizInit(canvas, cfg, populateLegend, populateSelected);
       stix2viz.vizStix(content, vizCallback, errorCallback);
-      document.getElementById('selection').innerHTML = ""; // reset the selected node in the sidebar
     }
 
     /* ----------------------------------------------------- *
@@ -207,6 +206,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         document.getElementById('files').value = ""; // reset the files input
         document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
         document.getElementById('legend-content').innerHTML = ""; // reset the legend in the sidebar
+        document.getElementById('selection').innerHTML = ""; // reset the selected node in the sidebar
 
         header.classList.remove('linkish');
       }
