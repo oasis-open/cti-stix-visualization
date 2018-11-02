@@ -131,7 +131,11 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         var li = document.createElement('li');
         var val = document.createElement('p');
         var key = document.createElement('div');
-        key.style.backgroundImage = "url('stix2viz/stix2viz/icons/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png')";
+        if (typeName.substr(0,2) === 'x-') {
+          key.style.backgroundImage = "url('stix2viz/stix2viz/icons/stix2_custom_object_icon_tiny_round_v1.png')";
+        } else {
+          key.style.backgroundImage = "url('stix2viz/stix2viz/icons/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png')";
+        }
         val.innerText = typeName.charAt(0).toUpperCase() + typeName.substr(1).toLowerCase(); // Capitalize it
         li.appendChild(key);
         li.appendChild(val);
