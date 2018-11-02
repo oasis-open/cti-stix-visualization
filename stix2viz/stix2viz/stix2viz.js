@@ -213,9 +213,12 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           .call(force.drag); // <-- What does the "call()" function do?
         node.append("circle")
           .attr("r", d3Config.nodeSize)
-          .style("fill", function(d) { return d3Config.color(d.typeGroup); });
+          .style("fill", function(d) { return d3Config.color(d.typeGroup); });        
         node.append("image")
-          .attr("xlink:href", function(d) { return d3Config.iconDir + "/stix2_" + d.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png"; })
+          .attr("xlink:href", function(d) { 
+            if (d.type.substr(0,2) === 'x-') { return d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.png"; }
+            return d3Config.iconDir + "/stix2_" + d.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png"; 
+          })
           .attr("x", "-" + (d3Config.nodeSize + 0.5) + "px")
           .attr("y", "-" + (d3Config.nodeSize + 1.5)  + "px")
           .attr("width", d3Config.iconSize + "px")
@@ -572,10 +575,19 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
 
     /* ******************************************************
      * Adds a name to an SDO Node
+     * If the displayed text should be an object property besides
+     *  its name or its type:
+     *  (1) Go to the object's JSON code
+     *  (2) Specify an additional key of "display_property"
+     *  (3) For the associated value, specify the name of the desired
+     *      object property, in quotations
+     *  (e.g.) "display_property": "custom_property_value"
      * ******************************************************/
     function nameFor(sdo) {
       if(sdo.type === 'relationship') {
         return "rel: " + (sdo.value);
+      } else if (sdo.display_property !== undefined) {
+        return sdo[sdo.display_property].substr(0,100) + '...'; // For space-saving
       } else if (sdo.name !== undefined) {
         return sdo.name;
       } else {
