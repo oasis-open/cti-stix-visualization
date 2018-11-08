@@ -80,10 +80,11 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      *
      * Parameters:
      *     - content: string of valid STIX 2 content
+     *     - customConfig: 
      *     - callback: optional function to call after building the graph
      *     - callback: optional function to call if an error is encountered while parsing input
      * ******************************************************/
-    function vizStix(content, callback, onError) {
+    function vizStix(content, customConfig, callback, onError) {
       var parsed;
       if (typeof content === 'string' || content instanceof String) {
         try {
@@ -118,8 +119,20 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         alert("Something went wrong!\n\nError:\n Input is neither parseable JSON nor a STIX object");
         return;
       }
+
+      var parsedCustomConfig;
+      try {
+        if (customConfig !== undefined && customConfig !== "") {
+          parsedCustomConfig = JSON.parse(customConfig);
+        }
+      } catch (err) {
+        alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
+        if (typeof onError !== 'undefined') onError();
+        return;
+      }
+
       buildNodes(parsed);
-      initGraph();
+      initGraph(parsedCustomConfig);
       if (typeof callback !== 'undefined') callback();
     }
 
@@ -150,7 +163,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     /* ******************************************************
      * Generates the components on the chart from the JSON data
      * ******************************************************/
-    function initGraph() {
+    function initGraph(customConfig) {
       force.nodes(currentGraph.nodes).links(currentGraph.edges).start();
       labelForce.nodes(labelGraph.nodes).links(labelGraph.edges).start();
 
@@ -216,7 +229,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           .style("fill", function(d) { return d3Config.color(d.typeGroup); });        
         node.append("image")
           .attr("xlink:href", function(d) { 
-            if (d.type.substr(0,2) === 'x-') { return d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.png"; }
+            if (d.type.substr(0,2) === 'x-') { return d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg"; }
             return d3Config.iconDir + "/stix2_" + d.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png"; 
           })
           .attr("x", "-" + (d3Config.nodeSize + 0.5) + "px")
@@ -247,7 +260,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       var anchorNode = svg.selectAll("g.anchorNode").data(labelForce.nodes()).enter().append("svg:g").attr("class", "anchorNode");
       anchorNode.append("svg:circle").attr("r", 0).style("fill", "#FFF");
             anchorNode.append("svg:text").text(function(d, i) {
-            return i % 2 === 0 ? "" : nameFor(d.node);
+            return i % 2 === 0 ? "" : nameFor(d.node, customConfig);
         }).style("fill", "#555").style("font-family", "Arial").style("font-size", 12);
 
       // Code in the "tick" function determines where the elements
@@ -583,13 +596,18 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      *      object property, in quotations
      *  (e.g.) "display_property": "custom_property_value"
      * ******************************************************/
-    function nameFor(sdo) {
+    function nameFor(sdo, customConfig) {
       if(sdo.type === 'relationship') {
         return "rel: " + (sdo.value);
-      } else if (sdo.display_property !== undefined) {
-        return sdo[sdo.display_property].substr(0,100) + '...'; // For space-saving
+      } else if (customConfig !== undefined && sdo.type in customConfig) {
+        let customStr = sdo[customConfig[sdo.type].display_property];
+
+        if (customStr.length <= 100) { return customStr; }
+        else { return customStr.substr(0,100) + '...'; } // For space-saving
       } else if (sdo.name !== undefined) {
         return sdo.name;
+      } else if (sdo.value !== undefined) {
+        return sdo.value;
       } else {
         return sdo.type;
       }
