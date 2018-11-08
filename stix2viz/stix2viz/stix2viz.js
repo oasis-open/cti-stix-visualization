@@ -121,25 +121,15 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       }
 
       var parsedCustomConfig;
-      // try {
-      //   if (customConfig !== undefined || customConfig !== "") {
-      //     parsedCustomConfig = JSON.parse(customConfig);
-      //   }
-      // } catch (err) {
-      //   alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
-      //   if (typeof onError !== 'undefined') onError();
-      //   return;
-      // }
-      console.log('&&&&&&&&&&&&&&&&&&&&&&&&&');
-      if (customConfig === undefined) {
-        console.log('customConfig is undefined');
-      } else if (customConfig === "") {
-        console.log('customConfig is empty string');
-      } else {
-        parsedCustomConfig = JSON.parse(customConfig);
-        console.log(customConfig);
+      try {
+        if (customConfig !== undefined && customConfig !== "") {
+          parsedCustomConfig = JSON.parse(customConfig);
+        }
+      } catch (err) {
+        alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
+        if (typeof onError !== 'undefined') onError();
+        return;
       }
-      console.log('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&');
 
       buildNodes(parsed);
       initGraph(parsedCustomConfig);
@@ -607,16 +597,13 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      *  (e.g.) "display_property": "custom_property_value"
      * ******************************************************/
     function nameFor(sdo, customConfig) {
-      console.log('-----------------------------');
-      console.log(sdo.type);
-      console.log('-----------------------------');
-      console.log('LOOK FOR THIS');
-      console.log(typeof customConfig);
-      console.log('-----------------------------');
       if(sdo.type === 'relationship') {
         return "rel: " + (sdo.value);
       } else if (customConfig !== undefined && sdo.type in customConfig) {
-        return sdo[customConfig[sdo.type].display_property].substr(0,100) + '...'; // ... is for space-saving
+        let customStr = sdo[customConfig[sdo.type].display_property];
+
+        if (customStr.length <= 100) { return customStr; }
+        else { return customStr.substr(0,100) + '...'; } // For space-saving
       } else if (sdo.name !== undefined) {
         return sdo.name;
       } else if (sdo.value !== undefined) {
