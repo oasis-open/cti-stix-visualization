@@ -58,6 +58,9 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
      * Initializes the graph, then renders it.
      * ******************************************************/
     function vizStixWrapper(content, customConfig) {
+      console.log('*********************************');
+      console.log(customConfig);
+      console.log('*********************************');
       cfg = {
         iconDir: "stix2viz/stix2viz/icons"
       }
