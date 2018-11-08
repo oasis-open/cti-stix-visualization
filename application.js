@@ -57,12 +57,12 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     /* ******************************************************
      * Initializes the graph, then renders it.
      * ******************************************************/
-    function vizStixWrapper(content) {
+    function vizStixWrapper(content, customConfig) {
       cfg = {
         iconDir: "stix2viz/stix2viz/icons"
       }
       stix2viz.vizInit(canvas, cfg, populateLegend, populateSelected);
-      stix2viz.vizStix(content, vizCallback, errorCallback);
+      stix2viz.vizStix(content, customConfig, vizCallback, errorCallback);
     }
 
     /* ----------------------------------------------------- *
@@ -102,8 +102,9 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
      * Handles content pasted to the text area.
      * ******************************************************/
     function handleTextarea() {
-      content = document.getElementById('paste-area').value;
-      vizStixWrapper(content)
+      customConfig = document.getElementById('paste-area-custom-config').value;
+      content = document.getElementById('paste-area-stix-json').value;
+      vizStixWrapper(content, customConfig)
       linkifyHeader();
     }
 

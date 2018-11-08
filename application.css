@@ -102,7 +102,12 @@ svg {
   word-wrap: break-word;
 }
 
-#paste-area {
+#paste-area-stix-json {
+  height: 25em;
+  width: 40em;
+}
+
+#paste-area-custom-config {
   height: 25em;
   width: 40em;
 }
