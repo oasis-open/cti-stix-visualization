@@ -226,11 +226,10 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           .call(force.drag); // <-- What does the "call()" function do?
         node.append("circle")
           .attr("r", d3Config.nodeSize)
-          .style("fill", function(d) { return d3Config.color(d.typeGroup); });        
+          .style("fill", function(d) { return d3Config.color(d.typeGroup); });
         node.append("image")
-          .attr("xlink:href", function(d) { 
-            if (d.type.substr(0,2) === 'x-') { return d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg"; }
-            return d3Config.iconDir + "/stix2_" + d.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png"; 
+          .attr("xlink:href", function(d) {
+              return iconFor(d, customConfig);
           })
           .attr("x", "-" + (d3Config.nodeSize + 0.5) + "px")
           .attr("y", "-" + (d3Config.nodeSize + 1.5)  + "px")
@@ -587,19 +586,30 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     }
 
     /* ******************************************************
-     * Adds a name to an SDO Node
-     * If the displayed text should be an object property besides
-     *  its name or its type:
-     *  (1) Go to the object's JSON code
-     *  (2) Specify an additional key of "display_property"
-     *  (3) For the associated value, specify the name of the desired
-     *      object property, in quotations
-     *  (e.g.) "display_property": "custom_property_value"
+     * Parses the JSON input and builds the arrays used by
+     * initGraph().
+     * ******************************************************/
+    function imageExists(imageUrl) {
+        var image = new Image();
+        image.src = imageUrl;
+        if (image.complete || image.width != 0) {
+          return true;
+        } else {
+            return false;
+        }
+    }
+
+    /* ******************************************************
+     * Returns the name to use for an SDO Node
+     *
+     * Determines what name to use in the following order:
+     * 1) A display_property set in the config
+     * 2) The SDO's "name" property
+     * 3) the SDO's "value" property
+     * 4) the SDO's "type" property
      * ******************************************************/
     function nameFor(sdo, customConfig) {
-      if(sdo.type === 'relationship') {
-        return "rel: " + (sdo.value);
-      } else if (customConfig !== undefined && sdo.type in customConfig) {
+      if (customConfig !== undefined && sdo.type in customConfig) {
         let customStr = sdo[customConfig[sdo.type].display_property];
 
         if (customStr.length <= 100) { return customStr; }
@@ -611,6 +621,30 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       } else {
         return sdo.type;
       }
+    }
+
+    /* ******************************************************
+     * Returns the icon to use for an SDO Node
+     *
+     * Determines which icon to use in the following order:
+     * 1) A display_icon set in the config
+     * 2) A default icon bundled with this library
+     * 3) A default "custom object" icon
+     * ******************************************************/
+    function iconFor(sdo, customConfig) {
+      if (customConfig !== undefined && sdo.type in customConfig) {
+        let customIcon = customConfig[sdo.type].display_icon;
+
+        if (customIcon !== undefined) {
+          if (imageExists(customIcon)) { return customIcon; }
+          else if (imageExists(d3Config.iconDir + '/' + customIcon)) { return d3Config.iconDir + '/' + customIcon; }
+        }
+      }
+      if (sdo.type !== undefined) {
+        typeIcon = d3Config.iconDir + "/stix2_" + sdo.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png";
+        if (imageExists(typeIcon)) { return typeIcon; }
+      }
+      return d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg"
     }
 
     /* ******************************************************

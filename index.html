@@ -24,12 +24,15 @@
       <p>Fetch some STIX 2.0 from this URL!</p>
       <input type="text" id="url" name="url" placeholder="Paste URL here" /><br>
       <button id="fetch-url">Fetch</button>
+      <p>-- OR --</p>
       <p>Pass it as a url parameter, like so:</p><a href="https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json">https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json</a>
       <p>-- OR --</p>
       <p>Paste some STIX 2.0 here!</p>
-      <textarea id="paste-area-custom-config" name="pasted" placeholder="Copy/Paste, in JSON format, (if you want to specify this) your custom config for the graph as such: &#10;{&#10;&#34;object_type&#34;: &#10;&#9;{&#10;&#9;&#9;&#34;display_property&#34;: &#60;nameOfProperty&#62;, &#10;&#9;&#9;&#34;display_icon&#34;: &#60;nameOfIconFile&#62;&#10;&#9;}&#10;}&#10;&#10;Please note that the above properties are the only currently-supported customizations, and at least 1 of them has to be specified."></textarea>
       <textarea id="paste-area-stix-json" name="pasted" placeholder="Copy/Paste JSON data here..."></textarea><br>
       <button id="paste-parser">Parse</button>
+      <br />
+      <p>-- Configuration --</p>
+      <textarea id="paste-area-custom-config" name="pasted" placeholder="Copy/Paste, in JSON format, (if you want to specify this) your custom config for the graph as such: &#10;{&#10;&#34;object_type&#34;: &#10;&#9;{&#10;&#9;&#9;&#34;display_property&#34;: &#60;nameOfProperty&#62;, &#10;&#9;&#9;&#34;display_icon&#34;: &#60;nameOfIconFile&#62;&#10;&#9;}&#10;}&#10;&#10;Please note that the above properties are the only currently-supported customizations, and at least 1 of them has to be specified."></textarea>
     </div>
     <div id="canvas-container" class="hidden">
       <div id="canvas-wrapper">
