@@ -24,6 +24,27 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     };
 
     var idCache = {};
+    var sdoList = [
+        'attack-pattern',
+        'bundle',
+        'campaign',
+        'course-of-action',
+        'identity',
+        'incident',
+        'indicator',
+        'infrastructure',
+        'intrusion-set',
+        'malware',
+        'marking-definition',
+        'observed-data',
+        'relationship',
+        'report',
+        'sighting',
+        'threat-actor',
+        'tool',
+        'victim',
+        'vulnerability'
+    ]
 
     /* ******************************************************
      * Set up variables to be used by the visualizer.
@@ -627,24 +648,21 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Returns the icon to use for an SDO Node
      *
      * Determines which icon to use in the following order:
-     * 1) A display_icon set in the config
-     * 2) A default icon bundled with this library
+     * 1) A display_icon set in the config (must be in the icon directory)
+     * 2) A default icon for the SDO type, bundled with this library
      * 3) A default "custom object" icon
      * ******************************************************/
     function iconFor(sdo, customConfig) {
       if (customConfig !== undefined && sdo.type in customConfig) {
         let customIcon = customConfig[sdo.type].display_icon;
-
         if (customIcon !== undefined) {
-          if (imageExists(customIcon)) { return customIcon; }
-          else if (imageExists(d3Config.iconDir + '/' + customIcon)) { return d3Config.iconDir + '/' + customIcon; }
+          return d3Config.iconDir + '/' + customIcon;
         }
       }
-      if (sdo.type !== undefined) {
-        typeIcon = d3Config.iconDir + "/stix2_" + sdo.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png";
-        if (imageExists(typeIcon)) { return typeIcon; }
+      if (sdo.type !== undefined && sdoList.indexOf(sdo.type) != -1) {
+        return d3Config.iconDir + "/stix2_" + sdo.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png";
       }
-      return d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg"
+      return d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg";
     }
 
     /* ******************************************************
