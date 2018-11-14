@@ -3,6 +3,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     // Init some stuff
     // MATT: For optimization purposes, look into moving these to local variables
     var d3Config;
+    var customConfig;
     var legendCallback;
     var selectedCallback;
     refRegex = /_refs*$/;
@@ -101,11 +102,11 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      *
      * Parameters:
      *     - content: string of valid STIX 2 content
-     *     - customConfig: 
+     *     - config: 
      *     - callback: optional function to call after building the graph
      *     - callback: optional function to call if an error is encountered while parsing input
      * ******************************************************/
-    function vizStix(content, customConfig, callback, onError) {
+    function vizStix(content, config, callback, onError) {
       var parsed;
       if (typeof content === 'string' || content instanceof String) {
         try {
@@ -141,10 +142,9 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         return;
       }
 
-      var parsedCustomConfig;
       try {
-        if (customConfig !== undefined && customConfig !== "") {
-          parsedCustomConfig = JSON.parse(customConfig);
+        if (config !== undefined && config !== "") {
+          customConfig = JSON.parse(config);
         }
       } catch (err) {
         alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
@@ -153,7 +153,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       }
 
       buildNodes(parsed);
-      initGraph(parsedCustomConfig);
+      initGraph(customConfig);
       if (typeof callback !== 'undefined') callback();
     }
 
@@ -184,7 +184,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     /* ******************************************************
      * Generates the components on the chart from the JSON data
      * ******************************************************/
-    function initGraph(customConfig) {
+    function initGraph() {
       force.nodes(currentGraph.nodes).links(currentGraph.edges).start();
       labelForce.nodes(labelGraph.nodes).links(labelGraph.edges).start();
 
@@ -250,7 +250,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           .style("fill", function(d) { return d3Config.color(d.typeGroup); });
         node.append("image")
           .attr("xlink:href", function(d) {
-              return iconFor(d, customConfig);
+              return iconFor(d.type, customConfig);
           })
           .attr("x", "-" + (d3Config.nodeSize + 0.5) + "px")
           .attr("y", "-" + (d3Config.nodeSize + 1.5)  + "px")
@@ -629,7 +629,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * 3) the SDO's "value" property
      * 4) the SDO's "type" property
      * ******************************************************/
-    function nameFor(sdo, customConfig) {
+    function nameFor(sdo) {
       if (customConfig !== undefined && sdo.type in customConfig) {
         let customStr = sdo[customConfig[sdo.type].display_property];
 
@@ -652,15 +652,15 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * 2) A default icon for the SDO type, bundled with this library
      * 3) A default "custom object" icon
      * ******************************************************/
-    function iconFor(sdo, customConfig) {
-      if (customConfig !== undefined && sdo.type in customConfig) {
-        let customIcon = customConfig[sdo.type].display_icon;
+    function iconFor(typeName) {
+      if (customConfig !== undefined && typeName in customConfig) {
+        let customIcon = customConfig[typeName].display_icon;
         if (customIcon !== undefined) {
           return d3Config.iconDir + '/' + customIcon;
         }
       }
-      if (sdo.type !== undefined && sdoList.indexOf(sdo.type) != -1) {
-        return d3Config.iconDir + "/stix2_" + sdo.type.replace(/\-/g, '_') + "_icon_tiny_round_v1.png";
+      if (typeName !== undefined && sdoList.indexOf(typeName) != -1) {
+        return d3Config.iconDir + "/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png";
       }
       return d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg";
     }
@@ -759,7 +759,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     module = {
         "vizInit": vizInit,
         "vizReset": vizReset,
-        "vizStix": vizStix
+        "vizStix": vizStix,
+        "iconFor": iconFor
     };
 
     return module;

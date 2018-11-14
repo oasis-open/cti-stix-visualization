@@ -134,13 +134,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         var li = document.createElement('li');
         var val = document.createElement('p');
         var key = document.createElement('div');
-        try {
-          // TODO: Check here to see if a custom icon was specified. If so, extract it and use it. If not, try the below
-          key.style.backgroundImage = "url('stix2viz/stix2viz/icons/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png')";
-        } catch (err) {
-          key.style.backgroundImage = "url('stix2viz/stix2viz/icons/stix2_custom_object_icon_tiny_round_v1.png')";
-        }
-        
+        key.style.backgroundImage = "url('" + stix2viz.iconFor(typeName) + "')";
         val.innerText = typeName.charAt(0).toUpperCase() + typeName.substr(1).toLowerCase(); // Capitalize it
         li.appendChild(key);
         li.appendChild(val);
