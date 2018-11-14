@@ -130,11 +130,17 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
      * ******************************************************/
     function populateLegend(typeGroups) {
       var ul = document.getElementById('legend-content');
-      typeGroups.forEach(function(typeName) {
+      var color = d3.scale.category20();
+      typeGroups.forEach(function(typeName, index) {
         var li = document.createElement('li');
         var val = document.createElement('p');
         var key = document.createElement('div');
-        key.style.backgroundImage = "url('" + stix2viz.iconFor(typeName) + "')";
+        var keyImg = document.createElement('img');
+        keyImg.src = stix2viz.iconFor(typeName);
+        keyImg.width = "37";
+        keyImg.height = "37";
+        keyImg.style.background = "radial-gradient(" + color(index) + " 16px,transparent 16px)";
+        key.appendChild(keyImg);
         val.innerText = typeName.charAt(0).toUpperCase() + typeName.substr(1).toLowerCase(); // Capitalize it
         li.appendChild(key);
         li.appendChild(val);

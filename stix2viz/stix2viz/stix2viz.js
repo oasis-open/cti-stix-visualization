@@ -153,7 +153,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       }
 
       buildNodes(parsed);
-      initGraph(customConfig);
+      initGraph();
       if (typeof callback !== 'undefined') callback();
     }
 
