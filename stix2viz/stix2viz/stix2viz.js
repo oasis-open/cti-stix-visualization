@@ -610,11 +610,14 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Uses regex to check whether the specified value for 
      *  display_icon in customConfig is a valid URL. 
      * 
-     * The regex expression below came from here:
+     * Note: The protocol MUST be supplied in the image URL
+     *  (e.g. https)
+     * 
+     * The regex expression below is based on:
      * https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url 
      * ******************************************************/
     function validUrl(imageUrl) {
-      var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+      var pattern = new RegExp('^(https?:\\/\\/)'+ // protocol
                            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|'+ // domain name
                            '((\\d{1,3}\\.){3}\\d{1,3}))'+ // ip (v4) address
                            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ //port
