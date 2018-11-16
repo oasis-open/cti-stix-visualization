@@ -607,21 +607,12 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     }
 
     /* ******************************************************
-     * Parses the JSON input and builds the arrays used by
-     * initGraph().
+     * Uses regex to check whether the specified value for 
+     *  display_icon in customConfig is a valid URL. 
+     * 
+     * The regex expression below came from here:
+     * https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url 
      * ******************************************************/
-    function imageExists(imageUrl) {
-        var image = new Image();
-        image.src = imageUrl;
-        if (image.complete || image.naturalWidth > 0) {
-          return true;
-        } else {
-          return false;
-        }
-    }
-
-    // The regex expression below came from here: 
-    // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
     function validUrl(imageUrl) {
       var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
                            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|'+ // domain name
