@@ -607,17 +607,23 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     }
 
     /* ******************************************************
-     * Parses the JSON input and builds the arrays used by
-     * initGraph().
+     * Uses regex to check whether the specified value for 
+     *  display_icon in customConfig is a valid URL. 
+     * 
+     * Note: The protocol MUST be supplied in the image URL
+     *  (e.g. https)
+     * 
+     * The regex expression below is based on:
+     * https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url 
      * ******************************************************/
-    function imageExists(imageUrl) {
-        var image = new Image();
-        image.src = imageUrl;
-        if (image.complete || image.width != 0) {
-          return true;
-        } else {
-            return false;
-        }
+    function validUrl(imageUrl) {
+      var pattern = new RegExp('^(https?:\\/\\/)'+ // protocol
+                           '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|'+ // domain name
+                           '((\\d{1,3}\\.){3}\\d{1,3}))'+ // ip (v4) address
+                           '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ //port
+                           '(\\?[;&amp;a-z\\d%_.~+=-]*)?'+ // query string
+                           '(\\#[-a-z\\d_]*)?$','i');
+      return pattern.test(imageUrl);
     }
 
     /* ******************************************************
@@ -656,7 +662,11 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       if (customConfig !== undefined && typeName in customConfig) {
         let customIcon = customConfig[typeName].display_icon;
         if (customIcon !== undefined) {
-          return d3Config.iconDir + '/' + customIcon;
+          if (validUrl(customIcon)) {
+            return customIcon;
+          } else {
+            return d3Config.iconDir + '/' + customIcon;
+          }
         }
       }
       if (typeName !== undefined && sdoList.indexOf(typeName) != -1) {
