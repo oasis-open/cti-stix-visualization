@@ -18,7 +18,7 @@ def display(data, width=800, height=600):
             stix2viz.vizStix({data});
         }});
     </script>
-    """.format(id=_COUNTER, data=str(data), width=width, height=height)
+    """.format(id=_COUNTER, data=str(data).strip(), width=width, height=height)
 
     _COUNTER += 1
     return HTML(h)

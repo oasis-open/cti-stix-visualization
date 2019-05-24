@@ -104,41 +104,16 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      *     - content: string of valid STIX 2 content
      *     - config: 
      *     - callback: optional function to call after building the graph
-     *     - callback: optional function to call if an error is encountered while parsing input
+     *     - onError: optional function to call if an error is encountered while parsing input
      * ******************************************************/
     function vizStix(content, config, callback, onError) {
-      var parsed;
-      if (typeof content === 'string' || content instanceof String) {
-        try {
-          if (content[0] === '[' && content[content.length - 1] === ']') {
-            // Convert content from a string to a proper JavaScript array
-            content = JSON.parse("[" + content.slice(1, content.length - 1) + "]");
-            const allStixObjs = arrHasAllStixObjs(content);
-  
-            if (allStixObjs) {
-              parsed = {
-                "objects": content
-              };
-            }
-            else {
-              alert("Something went wrong!\n\nError:\n Input is not a JavaScript array of proper STIX objects");
-              return;
-            }
-          }
-          else {
-            parsed = JSON.parse(content); // Saving this to a variable stops the rest of the function from executing on parse failure
-          }
-        } catch (err) {
-          alert("Something went wrong!\n\nError:\n" + err);
-          if (typeof onError !== 'undefined') onError();
-          return;
-        }
+      try {
+        // Saving this to a variable stops the rest of the function from executing on parse failure
+        parsed = parseContent(content);
       }
-      else if (isStixObj(content)) {
-        parsed = content;
-      }
-      else {
-        alert("Something went wrong!\n\nError:\n Input is neither parseable JSON nor a STIX object");
+      catch (err) {
+        alert("Something went wrong!\n\nError:\n" + err);
+        if (typeof onError !== 'undefined') onError();
         return;
       }
 
@@ -157,6 +132,29 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       if (typeof callback !== 'undefined') callback();
     }
 
+    function parseContent(content) {
+      if (typeof content === 'string' || content instanceof String) {
+        return parseContent(JSON.parse(content));
+      }
+      else if (content.constructor === Array) {
+        if (arrHasAllStixObjs(content)) {
+          return {
+            "objects": content
+          };
+        }
+        else {
+          throw "Input contains one or more invalid STIX objects";
+        }
+
+      }
+      else if (isStixObj(content)) {
+        return content;
+      }
+      else {
+        throw "Input is neither parseable JSON nor a STIX object";
+      }
+    }
+
     /* ******************************************************
      * Returns true if the JavaScript object passed in has
      * properties required by all STIX objects.
@@ -172,8 +170,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
 
     /* ******************************************************
      * Returns true if the JavaScript array passed in has
-     * only objects such that each object has properties 
-     * required by all STIX objects. 
+     * only objects such that each object has properties
+     * required by all STIX objects.
      * ******************************************************/
     function arrHasAllStixObjs(arr) {
       return arr.reduce((accumulator, currentObj) => {
