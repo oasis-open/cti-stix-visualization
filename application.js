@@ -20,7 +20,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
 
 
     // Init some stuff
-    // MATT: For optimization purposes, look into moving these to local variables
+    // For optimization purposes, look into moving these to local variables
+    var visualizer;
     selectedContainer = document.getElementById('selection');
     uploader = document.getElementById('uploader');
     canvasContainer = document.getElementById('canvas-container');
@@ -61,8 +62,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       cfg = {
         iconDir: "stix2viz/stix2viz/icons"
       }
-      stix2viz.vizInit(canvas, cfg, populateLegend, populateSelected);
-      stix2viz.vizStix(content, customConfig, vizCallback, errorCallback);
+      visualizer = new stix2viz.Viz(canvas, cfg, populateLegend, populateSelected);
+      visualizer.vizStix(content, customConfig, vizCallback, errorCallback);
     }
 
     /* ----------------------------------------------------- *
@@ -136,7 +137,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         var val = document.createElement('p');
         var key = document.createElement('div');
         var keyImg = document.createElement('img');
-        keyImg.src = stix2viz.iconFor(typeName);
+        keyImg.src = visualizer.iconFor(typeName);
         keyImg.width = "37";
         keyImg.height = "37";
         keyImg.style.background = "radial-gradient(" + color(index) + " 16px,transparent 16px)";
@@ -211,7 +212,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       var header = document.getElementById('header');
       if (header.classList.contains('linkish')) {
         hideMessages();
-        stix2viz.vizReset();
+        visualizer.vizReset();
         document.getElementById('files').value = ""; // reset the files input
         document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
         document.getElementById('legend-content').innerHTML = ""; // reset the legend in the sidebar

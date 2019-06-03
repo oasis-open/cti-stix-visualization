@@ -13,9 +13,9 @@ def display(data, width=800, height=600):
     <script type="text/javascript">
         require(["nbextensions/stix2viz/stix2viz"], function(stix2viz) {{
             chart = $('#chart{id}')[0];
-            stix2viz.vizInit(chart, {{"width": {width}, "height": {height},
-                "iconDir": "/nbextensions/stix2viz/icons"}});
-            stix2viz.vizStix({data});
+            visualizer{id} = new stix2viz.Viz(chart, {{"width": {width}, "height": {height},
+                "icondir": "/nbextensions/stix2viz/icons"}});
+            visualizer{id}.vizstix({data});
         }});
     </script>
     """.format(id=_COUNTER, data=str(data).strip(), width=width, height=height)

@@ -31,7 +31,14 @@ Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.git
 You can also optionally customize the text and icons associated with each object type, shown on the graph. There is a separate field that accepts JSON (format is specified on the visualizer page), and allows you to specify a custom icon and/or a custom property to be shown. You can specify one custom icon and/or display property per type of object; you can overwrite the icon and/or text displayed for existing STIX object types, or for your own custom object types. Note that the custom icon must be located in the visualizer's `icons` directory. Alternatively, you can specify the custom icon via a web URL, in which case you must specify the protocol (e.g. https).
 
 #### Integrating the visualizer
-You can integrate the visualizer into your own web application.  The visualizer is implemented as an [AMD](https://en.wikipedia.org/wiki/Asynchronous_module_definition) module.  The module exports three functions: `vizInit`, `vizStix` and `vizReset`.  Use `vizInit(mySvgElement)` followed by `vizStix(content)` to visualize your STIX content. Finally, use `vizReset()` if you need to clear the graph.
+You can integrate the visualizer into your own web application. The visualizer is implemented as an [AMD](https://en.wikipedia.org/wiki/Asynchronous_module_definition) module that exports the `Viz` class. You can create a new `Viz` instance and visualize your STIX content using code like the following:
+
+```javascript
+visualizer = new stix2viz.Viz(mySvgElement);
+visualizer.vizStix(content);
+```
+
+Finally, you can use `visualizer.vizReset()` if you need to clear the graph.
 
 #### Technical Details
 
