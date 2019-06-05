@@ -146,10 +146,15 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         else {
           throw "Input contains one or more invalid STIX objects";
         }
-
       }
       else if (this.isStixObj(content)) {
-        return content;
+        if (content.type == "bundle") {
+          return content;
+        } else {
+          return {
+            "objects": [content]
+          };
+        }
       }
       else {
         throw "Input is neither parseable JSON nor a STIX object";
