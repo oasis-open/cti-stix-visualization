@@ -79,6 +79,9 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         else { this.d3Config.height = 450; }
         if ('iconDir' in config) { this.d3Config.iconDir = config.iconDir; }
         else { this.d3Config.iconDir = "icons"; }
+        // To differentiate multiple graphs on same page
+        if ('id' in config) { this.id = config.id; }
+        else { this.id = 0; }
 
         if (typeof legendCb === 'undefined') { this.legendCallback = function(){}; }
         else { this.legendCallback = legendCb; }
@@ -218,7 +221,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           .style("stroke", "#aaa")
           .style('fill', "#aaa")
           .style("stroke-width", "3px")
-          .attr('id', function(d, i) { return "link_" + i; })
+          .attr('id', function(d, i) { return "link" + _this.id + "_" + i; })
           .on('click', function(d, i) { handleSelected(d, this); });
 
       // Create the text labels that will be attatched to the paths
@@ -230,7 +233,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
          .attr("text-anchor", "start")
          .style("fill","#000")
        .append("textPath")
-        .attr("xlink:href",function(d,i) { return "#link_" + i;})
+        .attr("xlink:href",function(d,i) { return "#link" + _this.id + "_" + i;})
         .attr("startOffset", "20%")
         .text(function(d) {
           return d.label;
