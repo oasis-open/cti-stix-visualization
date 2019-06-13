@@ -137,6 +137,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         var val = document.createElement('p');
         var key = document.createElement('div');
         var keyImg = document.createElement('img');
+        keyImg.onerror = function() {
+          // set the node's icon to the default if this image could not load
+          this.src = visualizer.d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg";
+        }
         keyImg.src = visualizer.iconFor(typeName);
         keyImg.width = "37";
         keyImg.height = "37";

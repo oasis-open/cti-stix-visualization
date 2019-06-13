@@ -1,29 +1,6 @@
 define(["nbextensions/stix2viz/d3"], function(d3) {
 
     refRegex = /_refs*$/;
-    var sdoList = [
-        'attack-pattern',
-        'bundle',
-        'campaign',
-        'course-of-action',
-        'domain-name',
-        'identity',
-        'incident',
-        'indicator',
-        'infrastructure',
-        'intrusion-set',
-        'ipv4-addr',
-        'malware',
-        'marking-definition',
-        'observed-data',
-        'relationship',
-        'report',
-        'sighting',
-        'threat-actor',
-        'tool',
-        'victim',
-        'vulnerability'
-    ];
 
     /* ******************************************************
      * Viz class constructor.
@@ -168,8 +145,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * properties required by all STIX objects.
      * ******************************************************/
     Viz.prototype.isStixObj = function(obj) {
-      if ('type' in obj && 'id' in obj && (('created' in obj &&
-                          'modified' in obj) || (obj.type === 'bundle'))) {
+      if ('type' in obj && 'id' in obj) {
         return true;
       } else {
         return false;
@@ -255,14 +231,12 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         node.append("circle")
           .attr("r", this.d3Config.nodeSize)
           .style("fill", function(d) { return _this.d3Config.color(d.typeGroup); });
-        node.append("image")
-          .attr("xlink:href", function(d) {
-              return _this.iconFor(d.type, this.customConfig);
-          })
+      var nodeIcon = node.append("image")
           .attr("x", "-" + (this.d3Config.nodeSize + 0.5) + "px")
           .attr("y", "-" + (this.d3Config.nodeSize + 1.5)  + "px")
           .attr("width", this.d3Config.iconSize + "px")
           .attr("height", this.d3Config.iconSize + "px");
+      this.setNodeIcon(nodeIcon, node.datum().type);
       node.on('click', function(d, i) { _this.handleSelected(d, this); }); // If they're holding shift, release
 
       // Fix on click/drag, unfix on double click
@@ -663,7 +637,6 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Determines which icon to use in the following order:
      * 1) A display_icon set in the config (must be in the icon directory)
      * 2) A default icon for the SDO type, bundled with this library
-     * 3) A default "custom object" icon
      * ******************************************************/
     Viz.prototype.iconFor = function(typeName) {
       if (this.customConfig !== undefined && typeName in this.customConfig) {
@@ -672,14 +645,35 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           if (this.validUrl(customIcon)) {
             return customIcon;
           } else {
-            return this.d3Config.iconDir + '/' + customIcon;
+            typeIcon = this.d3Config.iconDir + '/' + customIcon;
+            return typeIcon;
           }
         }
       }
-      if (typeName !== undefined && sdoList.indexOf(typeName) != -1) {
-        return this.d3Config.iconDir + "/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png";
+      if (typeName !== undefined) {
+        typeIcon = this.d3Config.iconDir + "/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png";
+        return typeIcon;
       }
-      return this.d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg";
+    };
+
+    /* ******************************************************
+     * Sets the icon on a STIX object node
+     *
+     * If the image doesn't load properly, a default 'custom object'
+     * icon will be used instead
+     * ******************************************************/
+    Viz.prototype.setNodeIcon = function(node, stixType) {
+      var _this = this;
+      var tmpImg = new Image();
+      tmpImg.onload = function() {
+        // set the node's icon to this image if it loaded properly
+        node.attr("xlink:href", tmpImg.src);
+      }
+      tmpImg.onerror = function() {
+        // set the node's icon to the default if this image could not load
+        node.attr("xlink:href", _this.d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg")
+      }
+      tmpImg.src = _this.iconFor(stixType, _this.customConfig);
     };
 
     /* ******************************************************
