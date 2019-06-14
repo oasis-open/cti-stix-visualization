@@ -67,6 +67,42 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         if (typeof selectedCb === 'undefined') { this.selectedCallback = function(){}; }
         else { this.selectedCallback = selectedCb; }
 
+        // keys are the name of the _ref/s property, values are the name of the
+        // relationship and whether the object with that property should be the
+        // source_ref in the relationship
+        this.refsMapping = {
+            created_by_ref: ["created-by", true],
+            object_marking_refs: ["applies-to", false],
+            object_refs: ["refers-to", true],
+            sighting_of_ref: ["sighting-of", true],
+            observed_data_refs: ["observed", true],
+            where_sighted_refs: ["saw", false],
+            object_ref: ["applies-to", true],
+            sample_refs: ["sample-of", false],
+            analysis_sco_refs: ["captured-by", false],
+            contains_refs: ["contains", true],
+            resolves_to_refs: ["resolves-to", true],
+            belongs_to_ref: ["belongs-to", true],
+            from_ref: ["from", true],
+            sender_ref: ["sent-by", true],
+            to_refs: ["to", true],
+            cc_refs: ["cc", true],
+            bcc_refs: ["bcc", true],
+            raw_email_ref: ["raw-binary-of", false],
+            parent_directory_ref: ["parent-of", false],
+            content_ref: ["contents-of", false],
+            src_ref: ["source-of", false],
+            dst_ref: ["destination-of", false],
+            src_payload_ref: ["source-payload-of", false],
+            dst_payload_ref: ["destination-payload-of", false],
+            encapsulates_refs: ["encapsulated-by", false],
+            encapsulated_by_ref: ["encapsulated-by", true],
+            opened_connection_refs: ["opened-by", false],
+            creator_user_ref: ["created-by", true],
+            image_ref: ["image-of", false],
+            parent_ref: ["parent-of", false]
+        }
+
         canvas.style.width = this.d3Config.width;
         canvas.style.height = this.d3Config.height;
         this.force = d3.layout.force().charge(-400).linkDistance(this.d3Config.linkMultiplier * this.d3Config.nodeSize).size([this.d3Config.width, this.d3Config.height]);
@@ -533,6 +569,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Takes a JSON object as input.
      * ******************************************************/
     Viz.prototype.buildNodes = function(package) {
+      var _this = this;
       var relationships = [];
       if(package.hasOwnProperty('objects')) {
         this.parseSDOs(package['objects']);
@@ -543,44 +580,26 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
             relationships.push(item);
             return;
           }
-          if ('created_by_ref' in item) {
-            relationships.push({'source_ref': item['id'],
-                                'target_ref': item['created_by_ref'],
-                                'relationship_type': 'created-by'});
-          }
-          if ('object_marking_refs' in item) {
-            item['object_marking_refs'].forEach(function(markingID) {
-              relationships.push({'source_ref': markingID,
-                                  'target_ref': item['id'],
-                                  'relationship_type': 'applies-to'});
-            });
-          }
-          if ('object_refs' in item) {
-            item['object_refs'].forEach(function(objID) {
-              relationships.push({'source_ref': item['id'],
-                                  'target_ref': objID,
-                                  'relationship_type': 'refers-to'});
-            });
-          }
-          if ('sighting_of_ref' in item) {
-            relationships.push({'source_ref': item['id'],
-                                'target_ref': item['sighting_of_ref'],
-                                'relationship_type': 'sighting-of'});
-          }
-          if ('observed_data_refs' in item) {
-            item['observed_data_refs'].forEach(function(objID) {
-              relationships.push({'source_ref': item['id'],
-                                  'target_ref': objID,
-                                  'relationship_type': 'observed'});
-            });
-          }
-          if ('where_sighted_refs' in item) {
-            item['where_sighted_refs'].forEach(function(objID) {
-              relationships.push({'source_ref': objID,
-                                  'target_ref': item['id'],
-                                  'relationship_type': 'saw'});
-            });
-          }
+          Object.keys(item).forEach(function(key, index) {
+            if (key.endsWith("_ref") && _this.refsMapping.hasOwnProperty(key)) {
+              var source = (_this.refsMapping[key][1] === true) ? item["id"] : item[key];
+              var target = (_this.refsMapping[key][1] === true) ? item[key] : item["id"];
+              var relType = _this.refsMapping[key][0];
+              relationships.push({'source_ref': source,
+                                  'target_ref': target,
+                                  'relationship_type': relType});
+            }
+            else if (key.endsWith("_refs") && _this.refsMapping.hasOwnProperty(key)) {
+              item[key].forEach(function(refID) {
+                var source = (_this.refsMapping[key][1] === true) ? item["id"] : refID;
+                var target = (_this.refsMapping[key][1] === true) ? refID : item["id"];
+                var relType = _this.refsMapping[key][0];
+                relationships.push({'source_ref': source,
+                                    'target_ref': target,
+                                    'relationship_type': relType});
+              });
+            }
+          });
         });
       };
 
