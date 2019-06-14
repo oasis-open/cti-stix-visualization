@@ -236,7 +236,9 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           .attr("y", "-" + (this.d3Config.nodeSize + 1.5)  + "px")
           .attr("width", this.d3Config.iconSize + "px")
           .attr("height", this.d3Config.iconSize + "px");
-      this.setNodeIcon(nodeIcon, node.datum().type);
+      nodeIcon.each(function(d) {
+          _this.setNodeIcon(d3.select(this), d.type);
+      });
       node.on('click', function(d, i) { _this.handleSelected(d, this); }); // If they're holding shift, release
 
       // Fix on click/drag, unfix on double click
@@ -444,7 +446,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Also makes values more readable.
      * Called as the 2nd parameter to JSON.stringify().
      * ******************************************************/
-    Viz.prototype.replacer = function(key, value) {
+    function replacer(key, value) {
       var blacklist = ["typeGroup", "index", "weight", "x", "y", "px", "py", "fixed", "dimmed"];
       if (blacklist.indexOf(key) >= 0) {
         return undefined;
@@ -488,7 +490,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Takes datum and element as input.
      * ******************************************************/
     Viz.prototype.handleSelected = function(d, el) {
-      jsonString = JSON.stringify(d, this.replacer, 2); // get only the STIX values
+      var selectedReplacer = replacer.bind(this);
+      jsonString = JSON.stringify(d, selectedReplacer, 2); // get only the STIX values
       purified = JSON.parse(jsonString); // make a new JSON object from the STIX values
 
       // Pretty up the keys
