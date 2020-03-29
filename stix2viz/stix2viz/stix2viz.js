@@ -133,16 +133,18 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         return;
       }
 
-      try {
-        if (typeof config === 'string' || config instanceof String) {
-          this.customConfig = JSON.parse(config);
-        } else if (config !== undefined) {
-          this.customConfig = config;
+      if (config) {
+        try {
+          if (typeof config === 'string' || config instanceof String) {
+            this.customConfig = JSON.parse(config);
+          } else {
+            this.customConfig = config;
+          }
+        } catch (err) {
+          alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
+          if (typeof onError !== 'undefined') onError();
+          return;
         }
-      } catch (err) {
-        alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
-        if (typeof onError !== 'undefined') onError();
-        return;
       }
 
       this.buildNodes(parsed);
