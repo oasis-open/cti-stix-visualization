@@ -133,14 +133,18 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         return;
       }
 
-      try {
-        if (config !== undefined && config !== "") {
-          this.customConfig = JSON.parse(config);
+      if (config) {
+        try {
+          if (typeof config === 'string' || config instanceof String) {
+            this.customConfig = JSON.parse(config);
+          } else {
+            this.customConfig = config;
+          }
+        } catch (err) {
+          alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
+          if (typeof onError !== 'undefined') onError();
+          return;
         }
-      } catch (err) {
-        alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
-        if (typeof onError !== 'undefined') onError();
-        return;
       }
 
       this.buildNodes(parsed);
@@ -633,24 +637,39 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * Returns the name to use for an SDO Node
      *
      * Determines what name to use in the following order:
-     * 1) A display_property set in the config
-     * 2) The SDO's "name" property
-     * 3) the SDO's "value" property
-     * 4) the SDO's "type" property
+     * 1) A user-chosen ID-specific label via customConfig.userLabels.<id>
+     * 2) The value of a user-chosen type-specific SDO property given via
+     *    customConfig.<type>.display_property
+     * 3) The SDO's "name" property
+     * 4) The SDO's "value" property
+     * 5) The SDO's "type" property
      * ******************************************************/
     Viz.prototype.nameFor = function(sdo) {
-      if (this.customConfig !== undefined && sdo.type in this.customConfig) {
-        let customStr = sdo[this.customConfig[sdo.type].display_property];
 
-        if (customStr.length <= 100) { return customStr; }
-        else { return customStr.substr(0,100) + '...'; } // For space-saving
-      } else if (sdo.name !== undefined) {
-        return sdo.name;
-      } else if (sdo.value !== undefined) {
-        return sdo.value;
-      } else {
-        return sdo.type;
+      let name = null;
+
+      if (this.customConfig !== undefined) {
+        if ("userLabels" in this.customConfig &&
+            sdo.id in this.customConfig.userLabels)
+          name = this.customConfig.userLabels[sdo.id];
+        else if (sdo.type in this.customConfig)
+          name = sdo[this.customConfig[sdo.type].display_property];
+
+        if (name && name.length > 100)
+          name = name.substr(0,100) + '...';  // For space-saving
       }
+
+      if (!name) {
+        if (sdo.name !== undefined) {
+          name = sdo.name;
+        } else if (sdo.value !== undefined) {
+          name = sdo.value;
+        } else {
+          name = sdo.type;
+        }
+      }
+
+      return name;
     };
 
     /* ******************************************************

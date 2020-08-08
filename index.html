@@ -32,7 +32,7 @@
       <button id="paste-parser">Parse</button>
       <br />
       <p>-- Configuration --</p>
-      <textarea id="paste-area-custom-config" name="pasted" placeholder="Copy/Paste, in JSON format, (if you want to specify this) your custom config for the graph as such: &#10;{&#10;&#34;object_type&#34;: &#10;&#9;{&#10;&#9;&#9;&#34;display_property&#34;: &#60;nameOfProperty&#62;, &#10;&#9;&#9;&#34;display_icon&#34;: &#60;nameOfIconFile&#62;&#10;&#9;}&#10;}&#10;&#10;Please note that the above properties are the only currently-supported customizations, and at least 1 of them has to be specified."></textarea>
+      <textarea id="paste-area-custom-config" name="pasted" placeholder="Copy/Paste, in JSON format, (if you want to specify this) your custom config for the graph as such: &#10;{&#10;&#34;&lt;object_type&gt;&#34;: &#10;&#9;{&#10;&#9;&#9;&#34;display_property&#34;: &#60;nameOfProperty&#62;, &#10;&#9;&#9;&#34;display_icon&#34;: &#60;nameOfIconFile&#62;&#10;&#9;},&#10;&quot;userLabels&quot;:&#10;&#9;{&#10;&#9;&#9;&quot;&lt;STIX ID&gt;&quot;: &quot;a label&quot;,&#10;&#9;&#9;...&#10;&#9;}&#10;}&#10;&#10;&quot;&lt;object_type&gt;&quot; lets you customize labels per-type; &quot;userLabels&quot; lets you customize labels per-ID.  For type-specific customization, please note that the above properties are the only currently-supported properties, and at least 1 of them has to be specified.  ID-specific label customization will take priority over type-specific labels."></textarea>
     </div>
     <div id="canvas-container" class="hidden">
       <div id="canvas-wrapper">
