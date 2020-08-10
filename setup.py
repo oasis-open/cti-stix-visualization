@@ -14,7 +14,7 @@ setup(
     url='https://oasis-open.github.io/cti-documentation/',
     author='OASIS Cyber Threat Intelligence Technical Committee',
     author_email='cti-users@lists.oasis-open.org',
-    version="0.2.0",
+    version="0.3.0",
     packages=find_packages(),
     install_requires=["jupyter>=1.0.0"],
     package_data={
