@@ -21,7 +21,7 @@ In a notebook cell, run the following code:
     import requests
     import stix2viz
 
-    data = requests.get("https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json").content
+    data = requests.get("https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json").text
     stix2viz.display(data)
 
 
