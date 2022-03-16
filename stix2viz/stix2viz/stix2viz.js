@@ -664,6 +664,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
           name = sdo.name;
         } else if (sdo.value !== undefined) {
           name = sdo.value;
+        } else if (sdo.path !== undefined) {
+          name = sdo.path;
         } else {
           name = sdo.type;
         }
