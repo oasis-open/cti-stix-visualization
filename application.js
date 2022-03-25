@@ -16,12 +16,13 @@ require.config({
     }
 });
 
-require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2viz) {
+require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2viz) {
 
 
     // Init some stuff
     // For optimization purposes, look into moving these to local variables
-    var visualizer;
+    //var visualizer;
+    var chart = null;
     selectedContainer = document.getElementById('selection');
     uploader = document.getElementById('uploader');
     canvasContainer = document.getElementById('canvas-container');
@@ -62,8 +63,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       cfg = {
         iconDir: "stix2viz/stix2viz/icons"
       }
-      visualizer = new stix2viz.Viz(canvas, cfg, populateLegend, populateSelected);
-      visualizer.vizStix(content, customConfig, vizCallback, errorCallback);
+      //visualizer = new stix2viz.Viz(canvas, cfg, populateLegend, populateSelected);
+      //visualizer.vizStix(content, customConfig, vizCallback, errorCallback);
+      vizCallback();
+      chart = stix2viz.makeGraph(canvas, content);
     }
 
     /* ----------------------------------------------------- *
@@ -216,7 +219,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       var header = document.getElementById('header');
       if (header.classList.contains('linkish')) {
         hideMessages();
-        visualizer.vizReset();
+        //visualizer.vizReset();
+        if (chart) chart.dispose();
         document.getElementById('files').value = ""; // reset the files input
         document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
         document.getElementById('legend-content').innerHTML = ""; // reset the legend in the sidebar
