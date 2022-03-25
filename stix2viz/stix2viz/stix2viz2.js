@@ -574,4 +574,4 @@ function makeModule(echarts)
 }
 
 
-define(["echarts"], makeModule);
+define(["stix2viz/echarts/echarts"], makeModule);
