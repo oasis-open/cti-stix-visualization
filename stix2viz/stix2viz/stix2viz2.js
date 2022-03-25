@@ -153,7 +153,7 @@ function nameForStixId(stixId, stixIdToObject, stixIdToName, nameCounts)
 
 /**
  * Create an echarts image URL to an icon file for the given STIX type.
- * An image URL looks like "image://<some url>", e.g. image://http://foo/bar.
+ * An image URL looks like "image://<some url>".
  */
 function stixTypeToImageURL(stixType)
 {
@@ -297,12 +297,16 @@ function linksForEmbeddedRelationships(
 
                 if (targetName)
                 {
-                    if (!forward)
-                        [sourceName, targetName] = [targetName, sourceName];
+                    let linkSrc, linkDst;
+                    if (forward)
+                        [linkSrc, linkDst] = [sourceName, targetName];
+                    else
+                        [linkSrc, linkDst] = [targetName, sourceName];
 
                     let link = makeLinkObject(
-                        sourceName, targetName, linkLabel
+                        linkSrc, linkDst, linkLabel
                     );
+
                     links.push(link);
                 }
                 else
@@ -418,7 +422,7 @@ function makeCategories(stixBundle)
     for (let object of stixBundle.get("objects"))
         stixTypes.add(object.get("type"));
 
-    // relationships don't correspond to node types... remove that
+    // relationships don't correspond to node types...
     stixTypes.delete("relationship");
 
     let categories = [];
@@ -476,6 +480,13 @@ function makeLegend(categories)
  * The entrypoint for users of this module: create a graph which visualizes
  * the content in the given STIX bundle.  The content will be added to the
  * webpage DOM under the given element.
+ *
+ * @param echarts The echarts module object
+ * @param domElement the parent element where the chart is to be located in a
+ *      web page
+ * @param stixBundleJson STIX content in JSON as a bundle
+ * @return The chart object.  May be used perform certain options on the
+ *      chart, e.g. dispose of it.
  */
 function makeGraph(echarts, domElement, stixBundleJson)
 {
@@ -485,9 +496,6 @@ function makeGraph(echarts, domElement, stixBundleJson)
     let legend = makeLegend(categories);
 
     let [nodes, links] = makeNodesAndLinks(stixBundle, categories);
-
-    //console.log(nodes);
-    //console.log(links);
 
     let initOpts = {
         renderer: "svg"  // or "canvas"
@@ -531,6 +539,8 @@ function makeGraph(echarts, domElement, stixBundleJson)
     // graph.
     let chart = echarts.init(domElement, null, initOpts);
     chart.setOption(chartOpts);
+
+    return chart;
 }
 
 
