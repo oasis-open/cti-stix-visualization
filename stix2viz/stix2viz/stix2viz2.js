@@ -1,12 +1,13 @@
 "use strict";
 
+/*
+Copied from old stix2viz code: define additional graph edge types from
+STIX embedded relationships.  (And convert to a proper Map object.)
 
-// Copied from old stix2viz code: define additional graph edge types from
-// STIX embedded relationships.  (And convert to a proper Map object.)
-//
-// keys are the name of the _ref/s property, values are the name of the
-// relationship and whether the object with that property should be the
-// source_ref in the relationship
+keys are the name of the _ref/s property, values are the name of the
+relationship and whether the object with that property should be the
+source_ref in the relationship
+*/
 let refsMapping = new Map(Object.entries({
     created_by_ref: ["created-by", true],
     object_marking_refs: ["applies-to", false],
@@ -151,6 +152,22 @@ function nameForStixId(stixId, stixIdToObject, stixIdToName, nameCounts)
 
 
 /**
+ * Create an echarts image URL to an icon file for the given STIX type.
+ * An image URL looks like "image://<some url>", e.g. image://http://foo/bar.
+ */
+function stixTypeToImageURL(stixType)
+{
+    let iconFileName = "stix2_"
+        + stixType.replaceAll("-", "_")
+        + "_icon_tiny_round_v1.png";
+
+    let iconUrl = "image://stix2viz/stix2viz/icons/" + iconFileName;
+
+    return iconUrl;
+}
+
+
+/**
  * Create an object representing an echarts link.  Any changes to link config
  * settings can be made here.
  *
@@ -175,8 +192,32 @@ function makeLinkObject(sourceName, targetName, label)
 
 
 /**
+ * Create an object representing an echarts node.  Any changes to node config
+ * settings can be made here.
+ *
+ * @param name A node name; will be used to label the node in the graph
+ * @param stixObject The STIX object.  Provided in case any info from it is
+ *      needed for configuring the node
+ * @param categoryIndices A map to look up a STIX type name (used as the
+ *      category name) to a category index, which is how we must tag the node.
+ * @return A node object
+ */
+function makeNodeObject(name, stixObject, categoryIndices)
+{
+    let stixType = stixObject.get("type");
+
+    let node = {
+        name: name,
+        category: categoryIndices.get(stixType)
+    };
+
+    return node;
+}
+
+
+/**
  * Create a echarts link object from the given STIX relationship object, if
- * possible.  If source or target_ref returns to an unknown object, the link
+ * possible.  If source or target_ref refers to an unknown object, the link
  * can't be created and null is returned.
  *
  * @param stixRel a STIX relationship object
@@ -205,7 +246,7 @@ function linkForRelationship(stixRel, stixIdToObject, stixIdToName, nameCounts)
         link = makeLinkObject(sourceName, targetName, relType);
     else
         console.warn(
-            "Skipped relationship %s %s %s: missing endpoint objects",
+            "Skipped relationship %s %s %s: missing endpoint object(s)",
             sourceRef, relType, targetRef
         );
 
@@ -213,6 +254,18 @@ function linkForRelationship(stixRel, stixIdToObject, stixIdToName, nameCounts)
 }
 
 
+/**
+ * Search through the top-level properties of the given STIX object, and
+ * create echarts links for embedded relationships.
+ *
+ * @param stixObject a STIX object
+ * @param stixIdToObject A mapping from STIX ID to object, representing all of
+ *      the objects we know about.
+ * @param stixIdToName A mapping from IDs of STIX objects to previously
+ *      computed names.
+ * @param nameCounts A mapping from names to counts, used to uniquefy new names.
+ * @return An array of echarts link objects
+ */
 function linksForEmbeddedRelationships(
     stixObject, stixIdToObject, stixIdToName, nameCounts
 )
@@ -272,9 +325,13 @@ function linksForEmbeddedRelationships(
  *
  * @param stixBundle a STIX bundle, as parsed JSON (using Maps instead of
  *      plain javascript objects).
+ * @param categories Echarts data for categories.  This is an array of objects;
+ *      the important part of each object is the "name" property giving the
+ *      category name, which is a STIX type.  It is used to tag each echarts
+ *      node with a category according to its type.
  * @return nodes and links structures in a 2-element array.
  */
-function makeNodesAndLinks(stixBundle)
+function makeNodesAndLinks(stixBundle, categories)
 {
     // Create a different data structure for the objects: a mapping from ID
     // to object.  This makes object lookups by STIX ID fast.
@@ -282,6 +339,17 @@ function makeNodesAndLinks(stixBundle)
 
     for (let object of stixBundle.get("objects"))
         stixIdToObject.set(object.get("id"), object);
+
+    // Tagging a node with its category involves assigning an index into this
+    // categories array.  Would have been easier to just use category names...
+    // anyway, this map enables efficient lookup of a category index by name.
+    let categoryIndices = new Map();
+    let index = 0;
+    for (let category of categories)
+    {
+        categoryIndices.set(category.name, index);
+        ++index;
+    }
 
     // List of graph nodes, where each list element is whatever echarts needs
     // to represent the node.  This is a plain javascript object with a "name"
@@ -317,9 +385,8 @@ function makeNodesAndLinks(stixBundle)
         else
         {
             let name = nameForStixObject(object, stixIdToName, nameCounts);
-            nodes.push({
-                name: name
-            });
+            let node = makeNodeObject(name, object, categoryIndices);
+            nodes.push(node);
 
             let embeddedRelLinks = linksForEmbeddedRelationships(
                 object, stixIdToObject, stixIdToName, nameCounts
@@ -336,20 +403,88 @@ function makeNodesAndLinks(stixBundle)
 
 
 /**
+ * Create an echarts categories structure, based on STIX types.  We will have
+ * one category per type.
+ *
+ * @param stixBundle A STIX bundle; types are collected from the contained
+ *      objects
+ * @return An array of categories for echarts
+ */
+function makeCategories(stixBundle)
+{
+    let stixTypes = new Set();
+
+    // collect our types
+    for (let object of stixBundle.get("objects"))
+        stixTypes.add(object.get("type"));
+
+    // relationships don't correspond to node types... remove that
+    stixTypes.delete("relationship");
+
+    let categories = [];
+    for (let type of stixTypes)
+    {
+        let imageURL = stixTypeToImageURL(type);
+
+        let category = {
+            name: type,
+            symbol: imageURL
+        };
+
+        categories.push(category);
+    }
+
+    return categories;
+}
+
+
+/**
+ * Create an echarts legend structure based on the given categories.
+ *
+ * @param categories An echarts categories array.  This is an array of objects
+ *      where each object has a "name" property (at least) giving the category
+ *      name (which is a STIX type).
+ * @return An echarts legend object
+ */
+function makeLegend(categories)
+{
+    let legendData = [];
+    for (let category of categories)
+    {
+        let imageURL = stixTypeToImageURL(category.name);
+
+        let entry = {
+            name: category.name,
+            icon: imageURL
+        };
+
+        legendData.push(entry);
+    }
+
+    let legend = {
+        data: legendData,
+        orient: "vertical",
+        left: "right",
+        top: "bottom"
+    };
+
+    return legend;
+}
+
+
+/**
  * The entrypoint for users of this module: create a graph which visualizes
  * the content in the given STIX bundle.  The content will be added to the
  * webpage DOM under the given element.
  */
 function makeGraph(echarts, domElement, stixBundleJson)
 {
-    // set of non-SRO STIX types present in the graph.  Used to create a
-    // legend.
-    let stixTypes = new Set();
-
-
     let stixBundle = jsonParseToMap(stixBundleJson);
 
-    let [nodes, links] = makeNodesAndLinks(stixBundle);
+    let categories = makeCategories(stixBundle);
+    let legend = makeLegend(categories);
+
+    let [nodes, links] = makeNodesAndLinks(stixBundle, categories);
 
     //console.log(nodes);
     //console.log(links);
@@ -359,9 +494,10 @@ function makeGraph(echarts, domElement, stixBundleJson)
     };
 
     let chartOpts = {
+        legend: legend,
         series: {
             type: "graph",
-            // using true or "move" here seems to cause the whole graph
+            // using true or "move" here seems to often cause the whole graph
             // to move when dragging one node.  Seems like a bug...
             roam: "scale",
             draggable: true,
@@ -370,17 +506,22 @@ function makeGraph(echarts, domElement, stixBundleJson)
                 // causes nodes to repel each other
                 repulsion: 100,
                 // causes layout to distance linked nodes by this amount.
-                // (so if farther, this is an attractive force; if smaller, it
+                // (so if farther, this is an attractive force; if nearer, it
                 // is repulsive.)
                 edgeLength: 100,
                 // causes nodes to be attracted to the center
                 gravity: 0.1
             },
             label: {
-                show: true
+                show: true,
+                align: "left",
+                verticalAlign: "bottom"
             },
             // draw arrowheads on the target end of the links
             edgeSymbol: ["none", "arrow"],
+            // Add curvature to parallel edges
+            autoCurveness: true,
+            categories: categories,
             nodes: nodes,
             links: links
         }
