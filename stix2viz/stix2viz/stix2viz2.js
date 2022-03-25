@@ -516,7 +516,7 @@ function makeGraph(echarts, domElement, stixBundleJson)
                 // causes layout to distance linked nodes by this amount.
                 // (so if farther, this is an attractive force; if nearer, it
                 // is repulsive.)
-                edgeLength: 100,
+                edgeLength: 200,
                 // causes nodes to be attracted to the center
                 gravity: 0.1
             },
@@ -531,7 +531,23 @@ function makeGraph(echarts, domElement, stixBundleJson)
             autoCurveness: true,
             categories: categories,
             nodes: nodes,
-            links: links
+            links: links,
+
+            // Misc aesthetic adjustments
+
+            // Make icons larger
+            symbolSize: 40,
+            // Make arrowheads a little larger
+            edgeSymbolSize: 15,
+            // thicken edges to make them easier to see
+            lineStyle: {
+                width: 2,
+                opacity: 1
+            },
+            // Thicken edge label font to make it easier to read
+            edgeLabel: {
+                fontWeight: "bold"
+            },
         }
     };
 
