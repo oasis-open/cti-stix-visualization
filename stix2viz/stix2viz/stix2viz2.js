@@ -512,7 +512,7 @@ function makeGraph(echarts, domElement, stixBundleJson)
             layout: "force",
             force: {
                 // causes nodes to repel each other
-                repulsion: 100,
+                repulsion: 1000,
                 // causes layout to distance linked nodes by this amount.
                 // (so if farther, this is an attractive force; if nearer, it
                 // is repulsive.)
