@@ -182,7 +182,6 @@ function makeLinkObject(sourceName, targetName, label)
         source: sourceName,
         target: targetName,
         label: {
-            show: true,
             formatter: label
         }
     };
@@ -505,9 +504,12 @@ function makeGraph(echarts, domElement, stixBundleJson)
         legend: legend,
         series: {
             type: "graph",
-            // using true or "move" here seems to often cause the whole graph
-            // to move when dragging one node.  Seems like a bug...
+            // Make graph zoomable.
+            // using true or "move" here to enable panning seems to often cause
+            // the whole graph to move when dragging one node.  Seems like a
+            // bug...
             roam: "scale",
+            // make nodes draggable
             draggable: true,
             layout: "force",
             force: {
@@ -520,6 +522,8 @@ function makeGraph(echarts, domElement, stixBundleJson)
                 // causes nodes to be attracted to the center
                 gravity: 0.1
             },
+            // Applies to node labels.  Move them a bit so they don't
+            // completely cover the icon.
             label: {
                 show: true,
                 align: "left",
@@ -546,6 +550,7 @@ function makeGraph(echarts, domElement, stixBundleJson)
             },
             // Thicken edge label font to make it easier to read
             edgeLabel: {
+                show: true,
                 fontWeight: "bold"
             },
         }
