@@ -1,3 +1,13 @@
+Issues: 
+
+
+- No prototype builtins? 
+https://eslint.org/docs/rules/no-prototype-builtins
+
+- That one missing handler
+
+- Should pngs be included? 
+
 # cti-stix-visualization
 
 *This is an [OASIS TC Open Repository](https://www.oasis-open.org/resources/open-repositories/). See the [Governance](#governance) section for more information.*
