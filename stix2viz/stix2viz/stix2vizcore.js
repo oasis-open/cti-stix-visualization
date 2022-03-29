@@ -578,14 +578,14 @@ export default (d3) => {
    *
    * Takes a JSON object as input.
    * ******************************************************/
-  Viz.prototype.buildNodes = function (package) {
+  Viz.prototype.buildNodes = function (pkg) {
     var _this = this;
     var relationships = [];
-    if (package.hasOwnProperty('objects')) {
-      this.parseSDOs(package['objects']);
+    if (pkg.hasOwnProperty('objects')) {
+      this.parseSDOs(pkg['objects']);
 
       // Get embedded relationships
-      package['objects'].forEach(function (item) {
+      pkg['objects'].forEach(function (item) {
         if (item['type'] === 'relationship') {
           relationships.push(item);
           return;
