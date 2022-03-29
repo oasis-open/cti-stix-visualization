@@ -100,7 +100,10 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
             opened_connection_refs: ["opened-by", false],
             creator_user_ref: ["created-by", true],
             image_ref: ["image-of", false],
-            parent_ref: ["parent-of", false]
+            parent_ref: ["parent-of", false],
+
+            //Email attachments
+            body_raw_ref: ["attachment", true], 
         }
 
         canvas.style.width = this.d3Config.width;
@@ -585,6 +588,42 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
             return;
           }
           Object.keys(item).forEach(function(key, index) {
+
+            // Iterate through the body_multipart array and do relationship linking there
+            if (key === 'body_multipart') {
+              const parts = item[key];
+              if (Array.isArray(parts)) {
+                parts.forEach((innerItem) => {
+                  Object.keys(innerItem).forEach((innerKey) => {
+                    if (
+                      innerKey.endsWith('_ref') &&
+                      _this.bodyRefMapping.hasOwnProperty(innerKey)
+                    ) {
+                      var source =
+                        _this.bodyRefMapping[innerKey][1] === true
+                          ? item['id']
+                          : innerItem[innerKey];
+                      var target =
+                        _this.bodyRefMapping[innerKey][1] === true
+                          ? innerItem[innerKey]
+                          : item['id'];
+                      var relType = _this.bodyRefMapping[innerKey][0];
+                      relationships.push({
+                        source_ref: source,
+                        target_ref: target,
+                        relationship_type: relType
+                      });
+                    }
+                  });
+                });
+              } else {
+                console.warn(
+                  'Something is going wrong here, got an body_multipart that is not an array, it is:',
+                  parts
+                );
+              }
+            }
+
             if (key.endsWith("_ref") && _this.refsMapping.hasOwnProperty(key)) {
               var source = (_this.refsMapping[key][1] === true) ? item["id"] : item[key];
               var target = (_this.refsMapping[key][1] === true) ? item[key] : item["id"];
