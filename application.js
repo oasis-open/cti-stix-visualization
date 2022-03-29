@@ -16,7 +16,7 @@ require.config({
     }
 });
 
-require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2viz) {
+require(["domReady!", "stix2viz/stix2viz/stix2viz", "lib/stix2vizcore"], function (document, Viz) {
 
 
     // Init some stuff
@@ -62,7 +62,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       cfg = {
         iconDir: "stix2viz/stix2viz/icons"
       }
-      visualizer = new stix2viz.Viz(canvas, cfg, populateLegend, populateSelected);
+      visualizer = new Viz(canvas, cfg, populateLegend, populateSelected);
       visualizer.vizStix(content, customConfig, vizCallback, errorCallback);
     }
 

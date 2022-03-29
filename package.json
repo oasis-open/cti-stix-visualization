@@ -1,7 +1,7 @@
 {
   "name": "cti-stix-visualization-dwj",
   "version": "0.0.1",
-  "main": "lib/stix2viz.js",
+  "main": "lib/stix2vizcore.js",
   "repository": "git@github.com:dwjohnston/cti-stix-visualization.git",
   "author": "David Johnston <david@blacksheepcode.com>",
   "license": "SEE LICNESE",
