@@ -43,14 +43,6 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
     }
 
     /* ******************************************************
-     * Will be called right before the graph is built.
-     * ******************************************************/
-    function vizCallback() {
-      hideMessages();
-      resizeCanvas();
-    }
-
-    /* ******************************************************
      * Will be called if there's a problem parsing input.
      * ******************************************************/
     function errorCallback() {
@@ -65,9 +57,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
       cfg = {
         iconDir: "stix2viz/stix2viz/icons"
       }
-      //visualizer = new stix2viz.Viz(canvas, cfg, populateLegend, populateSelected);
-      //visualizer.vizStix(content, customConfig, vizCallback, errorCallback);
-      vizCallback();
+      toggleView();
+      resizeCanvas();
       chart = stix2viz.makeGraph(canvas, content);
     }
 
@@ -198,10 +189,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
     }
 
     /* ******************************************************
-     * Hides the data entry container and displays the graph
-     * container
+     * Toggle the view between the data entry container and
+     * the graph container
      * ******************************************************/
-    function hideMessages() {
+    function toggleView() {
       uploader.classList.toggle("hidden");
       canvasContainer.classList.toggle("hidden");
     }
@@ -220,8 +211,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
     function resetPage() {
       var header = document.getElementById('header');
       if (header.classList.contains('linkish')) {
-        hideMessages();
-        //visualizer.vizReset();
+        toggleView();
         if (chart) chart.dispose();
         document.getElementById('files').value = ""; // reset the files input
         document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
