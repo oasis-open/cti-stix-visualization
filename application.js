@@ -38,6 +38,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
       document.getElementById('canvas-wrapper').style.width = cWidth;
       canvas.style.width = cWidth;
       canvas.style.height = cHeight;
+      if (chart)
+        chart.resize();
     }
 
     /* ******************************************************
