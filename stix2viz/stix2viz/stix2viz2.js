@@ -72,7 +72,7 @@ function jsonParseToMap(jsonContent)
  * name was previously seen.  nameCounts is updated as necessary.
  *
  * @param baseName A computed name, which may not be unique
- * @param nameCounts Bookkeeping to support uniqueification, mapping previously
+ * @param nameCounts Bookkeeping to support uniquefication, mapping previously
  *      seen base names to counts
  * @return A uniquefied name
  */
@@ -103,17 +103,52 @@ function uniquefyName(baseName, nameCounts)
  * @param stixIdToName A mapping from IDs of STIX objects to previously
  *      computed names.
  * @param nameCounts A mapping from names to counts, used to uniquefy new names.
+ * @param config A config object containing preferences for naming objects;
+ *      null to use defaults
  * @return A name
  */
-function nameForStixObject(stixObject, stixIdToName, nameCounts)
+function nameForStixObject(stixObject, stixIdToName, nameCounts, config=null)
 {
     let stixId = stixObject.get("id");
+    let stixType = stixObject.get("type");
 
     let name = stixIdToName.get(stixId);
     if (!name)
     {
-        // TODO: replace this with a smarter way of obtaining names
-        let baseName = stixObject.get("type");
+        let baseName;
+        let userLabels;
+
+        if (config)
+            userLabels = config.userLabels;
+
+        if (userLabels)
+            baseName = userLabels[stixId];
+
+        if (!baseName)
+        {
+            let typeConfig;
+            if (config)
+                 typeConfig = config[stixType];
+            if (typeConfig)
+            {
+                let labelPropName = typeConfig.display_property;
+                if (labelPropName)
+                    baseName = stixObject.get(labelPropName);
+            }
+        }
+
+        // Copied from old visualizer, fall back to some hard-coded properties
+        if (!baseName)
+            baseName = stixObject.get("name");
+        if (!baseName)
+            baseName = stixObject.get("value");
+        if (!baseName)
+            baseName = stixType;
+
+        // Copied from old visualizer: ensure the name isn't too long.
+        if (baseName.length > 100)
+          baseName = baseName.substr(0,100) + '...';
+
         name = uniquefyName(baseName, nameCounts);
         stixIdToName.set(stixId, name);
     }
@@ -135,16 +170,20 @@ function nameForStixObject(stixObject, stixIdToName, nameCounts)
  * @param stixIdToName A mapping from IDs of STIX objects to previously
  *      computed names.
  * @param nameCounts A mapping from names to counts, used to uniquefy new names.
+ * @param config A config object containing preferences for naming objects;
+ *      null to use defaults
  * @return A name, or null
  */
-function nameForStixId(stixId, stixIdToObject, stixIdToName, nameCounts)
+function nameForStixId(
+    stixId, stixIdToObject, stixIdToName, nameCounts, config=null
+)
 {
     let name = stixIdToName.get(stixId) || null;
     if (!name)
     {
         let object = stixIdToObject.get(stixId);
         if (object)
-            name = nameForStixObject(object, stixIdToName, nameCounts);
+            name = nameForStixObject(object, stixIdToName, nameCounts, config);
     }
 
     return name;
@@ -154,16 +193,32 @@ function nameForStixId(stixId, stixIdToObject, stixIdToName, nameCounts)
 /**
  * Create an echarts image URL to an icon file for the given STIX type.
  * An image URL looks like "image://<some url>".
+ *
+ * @param stixType the STIX type to get a URL for
+ * @param iconPath A path to prepend to an icon filename.  The path is
+ *      prepended as <path>/<filename>, i.e. it is separated from the filename
+ *      with a forward slash.  If null/undefined, don't prepend a path.
+ * @param iconFileName An icon file name.  If falsey, a default is constructed
+ *      from the given STIX type.
+ * @return An image URL for an icon for the given STIX type
  */
-function stixTypeToImageURL(stixType)
+function stixTypeToImageURL(stixType, iconPath, iconFileName)
 {
-    let iconFileName = "stix2_"
-        + stixType.replaceAll("-", "_")
-        + "_icon_tiny_round_v1.png";
+    let iconUrl;
 
-    let iconUrl = "image://stix2viz/stix2viz/icons/" + iconFileName;
+    if (!iconFileName)
+        iconFileName = "stix2_"
+            + stixType.replaceAll("-", "_")
+            + "_icon_tiny_round_v1.png";
 
-    return iconUrl;
+    if (iconPath === null || iconPath === undefined)
+        iconUrl = iconFileName;
+    else
+        iconUrl = iconPath + "/" + iconFileName;
+
+    let imageUrl = "image://" + iconUrl;
+
+    return imageUrl;
 }
 
 
@@ -208,6 +263,8 @@ function makeNodeObject(name, stixObject, categoryIndices)
     let node = {
         name: name,
         category: categoryIndices.get(stixType)
+        // we don't need to set any icon config here; it is inherited from the
+        // category.
     };
 
     return node;
@@ -225,19 +282,23 @@ function makeNodeObject(name, stixObject, categoryIndices)
  * @param stixIdToName A mapping from IDs of STIX objects to previously
  *      computed names.
  * @param nameCounts A mapping from names to counts, used to uniquefy new names.
+ * @param config A config object containing preferences for naming objects;
+ *      null to use defaults
  * @return An echarts link object, or null if one could not be created
  */
-function linkForRelationship(stixRel, stixIdToObject, stixIdToName, nameCounts)
+function linkForRelationship(
+    stixRel, stixIdToObject, stixIdToName, nameCounts, config=null
+)
 {
     let sourceRef = stixRel.get("source_ref");
     let targetRef = stixRel.get("target_ref");
     let relType = stixRel.get("relationship_type");
 
     let sourceName = nameForStixId(
-        sourceRef, stixIdToObject, stixIdToName, nameCounts
+        sourceRef, stixIdToObject, stixIdToName, nameCounts, config
     );
     let targetName = nameForStixId(
-        targetRef, stixIdToObject, stixIdToName, nameCounts
+        targetRef, stixIdToObject, stixIdToName, nameCounts, config
     );
 
     let link = null;
@@ -263,13 +324,17 @@ function linkForRelationship(stixRel, stixIdToObject, stixIdToName, nameCounts)
  * @param stixIdToName A mapping from IDs of STIX objects to previously
  *      computed names.
  * @param nameCounts A mapping from names to counts, used to uniquefy new names.
+ * @param config A config object containing preferences for naming objects;
+ *      null to use defaults
  * @return An array of echarts link objects
  */
 function linksForEmbeddedRelationships(
-    stixObject, stixIdToObject, stixIdToName, nameCounts
+    stixObject, stixIdToObject, stixIdToName, nameCounts, config=null
 )
 {
-    let sourceName = nameForStixObject(stixObject, stixIdToName, nameCounts);
+    let sourceName = nameForStixObject(
+        stixObject, stixIdToName, nameCounts, config
+    );
     let links = [];
 
     for (let [propName, value] of stixObject)
@@ -291,7 +356,7 @@ function linksForEmbeddedRelationships(
             for (let ref of refs)
             {
                 let targetName = nameForStixId(
-                    ref, stixIdToObject, stixIdToName, nameCounts
+                    ref, stixIdToObject, stixIdToName, nameCounts, config
                 );
 
                 if (targetName)
@@ -332,9 +397,11 @@ function linksForEmbeddedRelationships(
  *      the important part of each object is the "name" property giving the
  *      category name, which is a STIX type.  It is used to tag each echarts
  *      node with a category according to its type.
+ * @param config A config object containing preferences for naming objects;
+ *      null to use defaults
  * @return nodes and links structures in a 2-element array.
  */
-function makeNodesAndLinks(stixBundle, categories)
+function makeNodesAndLinks(stixBundle, categories, config=null)
 {
     // Create a different data structure for the objects: a mapping from ID
     // to object.  This makes object lookups by STIX ID fast.
@@ -347,12 +414,8 @@ function makeNodesAndLinks(stixBundle, categories)
     // categories array.  Would have been easier to just use category names...
     // anyway, this map enables efficient lookup of a category index by name.
     let categoryIndices = new Map();
-    let index = 0;
-    for (let category of categories)
-    {
+    for (let [index, category] of categories.entries())
         categoryIndices.set(category.name, index);
-        ++index;
-    }
 
     // List of graph nodes, where each list element is whatever echarts needs
     // to represent the node.  This is a plain javascript object with a "name"
@@ -379,7 +442,7 @@ function makeNodesAndLinks(stixBundle, categories)
         if (object.get("type") === "relationship")
         {
             let link = linkForRelationship(
-                object, stixIdToObject, stixIdToName, nameCounts
+                object, stixIdToObject, stixIdToName, nameCounts, config
             );
 
             if (link)
@@ -387,12 +450,14 @@ function makeNodesAndLinks(stixBundle, categories)
         }
         else
         {
-            let name = nameForStixObject(object, stixIdToName, nameCounts);
+            let name = nameForStixObject(
+                object, stixIdToName, nameCounts, config
+            );
             let node = makeNodeObject(name, object, categoryIndices);
             nodes.push(node);
 
             let embeddedRelLinks = linksForEmbeddedRelationships(
-                object, stixIdToObject, stixIdToName, nameCounts
+                object, stixIdToObject, stixIdToName, nameCounts, config
             );
 
             // Seems like there ought to be a better way to extend one array
@@ -413,7 +478,7 @@ function makeNodesAndLinks(stixBundle, categories)
  *      objects
  * @return An array of categories for echarts
  */
-function makeCategories(stixBundle)
+function makeCategories(stixBundle, config=null)
 {
     let stixTypes = new Set();
 
@@ -427,7 +492,19 @@ function makeCategories(stixBundle)
     let categories = [];
     for (let type of stixTypes)
     {
-        let imageURL = stixTypeToImageURL(type);
+        // Choose an icon file according to config settings
+        let iconPath, iconFileName;
+
+        if (config)
+        {
+            let typeConfig = config[type];
+            if (typeConfig)
+                iconFileName = typeConfig.display_icon;
+
+            iconPath = config.iconDir;
+        }
+
+        let imageURL = stixTypeToImageURL(type, iconPath, iconFileName);
 
         let category = {
             name: type,
@@ -454,11 +531,9 @@ function makeLegend(categories)
     let legendData = [];
     for (let category of categories)
     {
-        let imageURL = stixTypeToImageURL(category.name);
-
         let entry = {
             name: category.name,
-            icon: imageURL
+            icon: category.symbol
         };
 
         legendData.push(entry);
@@ -483,18 +558,20 @@ function makeLegend(categories)
  * @param echarts The echarts module object
  * @param domElement the parent element where the chart is to be located in a
  *      web page
- * @param stixBundleJson STIX content in JSON as a bundle
+ * @param stixBundleJson STIX content in JSON (a string) as a bundle
+ * @param config A config object containing preferences for naming objects;
+ *      null to use defaults
  * @return The chart object.  May be used perform certain options on the
  *      chart, e.g. dispose of it.
  */
-function makeGraph(echarts, domElement, stixBundleJson)
+function makeGraph(echarts, domElement, stixBundleJson, config=null)
 {
     let stixBundle = jsonParseToMap(stixBundleJson);
 
-    let categories = makeCategories(stixBundle);
+    let categories = makeCategories(stixBundle, config);
     let legend = makeLegend(categories);
 
-    let [nodes, links] = makeNodesAndLinks(stixBundle, categories);
+    let [nodes, links] = makeNodesAndLinks(stixBundle, categories, config);
 
     let initOpts = {
         renderer: "svg"  // or "canvas"
@@ -552,7 +629,7 @@ function makeGraph(echarts, domElement, stixBundleJson)
             edgeLabel: {
                 show: true,
                 fontWeight: "bold"
-            },
+            }
         }
     };
 
@@ -571,8 +648,8 @@ function makeGraph(echarts, domElement, stixBundleJson)
 function makeModule(echarts)
 {
     let module = {
-        makeGraph: (domElement, stixBundleJson) =>
-            makeGraph(echarts, domElement, stixBundleJson)
+        makeGraph: (domElement, stixBundleJson, config=null) =>
+            makeGraph(echarts, domElement, stixBundleJson, config)
     };
 
     return module;

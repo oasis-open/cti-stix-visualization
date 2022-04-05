@@ -54,12 +54,17 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
      * Initializes the graph, then renders it.
      * ******************************************************/
     function vizStixWrapper(content, customConfig) {
-      cfg = {
-        iconDir: "stix2viz/stix2viz/icons"
-      }
+
+      if (customConfig)
+        customConfig = JSON.parse(customConfig);
+      else
+        customConfig = {};
+
+      // Hard-coded working icon directory setting for this application.
+      customConfig.iconDir = "stix2viz/stix2viz/icons";
       toggleView();
       resizeCanvas();
-      chart = stix2viz.makeGraph(canvas, content);
+      chart = stix2viz.makeGraph(canvas, content, customConfig);
     }
 
     /* ----------------------------------------------------- *
@@ -212,7 +217,11 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
       var header = document.getElementById('header');
       if (header.classList.contains('linkish')) {
         toggleView();
-        if (chart) chart.dispose();
+        if (chart)
+        {
+            chart.dispose();
+            chart = null;
+        }
         document.getElementById('files').value = ""; // reset the files input
         document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
         document.getElementById('legend-content').innerHTML = ""; // reset the legend in the sidebar
