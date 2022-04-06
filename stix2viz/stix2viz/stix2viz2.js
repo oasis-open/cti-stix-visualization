@@ -118,6 +118,9 @@ function nameForStixObject(stixObject, stixIdToName, nameCounts, config=null)
         let baseName;
         let userLabels;
 
+        // Look for an ID-specific label; if that fails, look for a
+        // type-specific label; if that fails, use some hard-coded fallbacks,
+        // which eventually just default to using the STIX type.
         if (config)
             userLabels = config.userLabels;
 
@@ -629,6 +632,17 @@ function makeGraph(echarts, domElement, stixBundleJson, config=null)
             edgeLabel: {
                 show: true,
                 fontWeight: "bold"
+            },
+            // Enable single node selection, define a style for a selected
+            // node.
+            selectedMode: "single",
+            select: {
+                itemStyle: {
+                    shadowBlur: 10,
+                    shadowColor: "#000",
+                    shadowOffsetX: 5,
+                    shadowOffsetY: 5
+                }
             }
         }
     };
