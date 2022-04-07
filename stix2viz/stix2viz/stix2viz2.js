@@ -43,15 +43,59 @@ let refsMapping = new Map(Object.entries({
 
 
 /**
+ * Determine whether the given value is a plain javascript object.  E.g. one
+ * which was given as an object literal.
+ */
+function isPlainObject(value)
+{
+    let result = false;
+
+    // null/undefined would cause errors in Object.getPrototypeOf(), and
+    // {} and [] are actually truthy in javascript!  I don't think anything
+    // falsey could be a plain object.
+    if (value)
+        // https://stackoverflow.com/questions/52001739/what-is-considered-a-plain-object
+        result = Object.getPrototypeOf(value) === Object.prototype;
+
+    return result;
+}
+
+
+/**
  * A JSON.parse() "reviver" function which may be used to cause JSON.parse()
  * to produce a Map instead of a plain javascript object (from a JSON object).
  */
 function mapReviver(key, value)
 {
-    if (typeof value === "object" && !Array.isArray(value))
+    if (isPlainObject(value))
         return new Map(Object.entries(value));
     else
         return value;
+}
+
+
+/**
+ * Recursively search through the given value and convert all plain objects
+ * found into Map's.
+ */
+function recursiveObjectToMap(obj)
+{
+    let newValue;
+
+    if (isPlainObject(obj))
+    {
+        let map = new Map();
+        for (let [key, value] of Object.entries(obj))
+            map.set(key, recursiveObjectToMap(value));
+
+        newValue = map;
+    }
+    else if (Array.isArray(obj))
+        newValue = obj.map(recursiveObjectToMap);
+    else
+        newValue = obj;
+
+    return newValue;
 }
 
 
@@ -62,7 +106,14 @@ function mapReviver(key, value)
  */
 function jsonParseToMap(jsonContent)
 {
-    return JSON.parse(jsonContent, mapReviver);
+    let newValue;
+
+    if (typeof jsonContent === "string" || jsonContent instanceof String)
+        newValue = JSON.parse(jsonContent, mapReviver);
+    else
+        newValue = recursiveObjectToMap(jsonContent);
+
+    return newValue;
 }
 
 
@@ -265,9 +316,14 @@ function makeNodeObject(name, stixObject, categoryIndices)
 
     let node = {
         name: name,
-        category: categoryIndices.get(stixType)
+        category: categoryIndices.get(stixType),
         // we don't need to set any icon config here; it is inherited from the
         // category.
+
+        // I don't know if this is frowned upon, but mouse click events
+        // include this node object.  We can sneak in some useful extra
+        // STIX-related identifying information for our click handlers.
+        _stix_id: stixObject.get("id")
     };
 
     return node;
