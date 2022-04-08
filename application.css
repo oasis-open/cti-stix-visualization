@@ -163,8 +163,3 @@ pre {
 .hidden {
   display: none;
 }
-
-/*.selected {
-  >>> This style is in the header of the index.html file for comptibility reasons! <<<
-  filter: url("#drop-shadow");
-}*/
