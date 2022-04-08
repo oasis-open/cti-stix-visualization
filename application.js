@@ -30,11 +30,6 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
      * Resizes the canvas based on the size of the window
      * ******************************************************/
     function resizeCanvas() {
-      var cWidth = selectedContainer.offsetLeft - 52;
-      var cHeight = window.innerHeight - document.getElementsByTagName('h1')[0].offsetHeight - 27;
-      document.getElementById('canvas-wrapper').style.width = cWidth;
-      canvas.style.width = cWidth;
-      canvas.style.height = cHeight;
       if (chart)
         chart.resize();
     }
@@ -68,7 +63,6 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
             stixIdToObject.set(obj.id, obj);
 
         toggleView();
-        resizeCanvas();
         chart = stix2viz.makeGraph(canvas, stixBundle, customConfig);
         chart.on(
             "click",
