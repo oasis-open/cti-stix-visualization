@@ -602,10 +602,46 @@ function makeLegend(categories)
         data: legendData,
         orient: "vertical",
         left: "right",
-        top: "bottom"
+        top: "bottom",
+        itemWidth: 14 // Prevent squashed icons
     };
 
     return legend;
+}
+
+
+/**
+ * Set default icon for graph nodes, e.g. for custom types.
+ *
+ * @param categories An echarts categories array.  This is an array of objects
+ *      where each object has a "synbol" property giving the path to the icon
+ *      to use for that STIX type.
+ * @param config A config object containing preferences; null to use defaults
+ */
+function setDefaultIcon(categories=[], config=null)
+{
+    // Get path to default icon
+    let iconPath;
+    if (config){
+        iconPath = config.iconDir;
+    }
+    let defaultURL = stixTypeToImageURL('custom_object', iconPath, null);
+    defaultURL = defaultURL.replace('image://', '');
+    defaultURL = defaultURL.replace('.png', '.svg');
+
+    // Try to load the icon for each category (STIX type)
+    categories.forEach(function(category) {
+        let icon = category.symbol.replace('image://', '');
+        let tmpImg = new Image();
+        tmpImg.onerror = function() {
+            // if this image could not load, switch all instances of it to default
+            let instances = document.querySelectorAll("div[_echarts_instance_] image[href='"+icon+"']");
+            instances.forEach(function(i) {
+                i.setAttribute('href', defaultURL);
+            });
+        }
+        tmpImg.src = icon;
+    });
 }
 
 
@@ -706,6 +742,9 @@ function makeGraph(echarts, domElement, stixBundleJson, config=null)
     // 2nd arg here is for theming.  E.g. could use "dark" for a dark themed
     // graph.
     let chart = echarts.init(domElement, null, initOpts);
+    chart.one('finished', function() {
+        setDefaultIcon(categories, config);
+    });
     chart.setOption(chartOpts);
 
     return chart;
