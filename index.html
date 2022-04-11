@@ -18,16 +18,16 @@
     <a href="https://github.com/oasis-open/cti-stix-visualization/"><img src="GitHub-Mark-64px.png" alt="View source on GitHub"></a></h1>
 
     <div id="uploader">
-      <p>Drop some STIX 2.0 here!</p>
+      <p>Drop some STIX 2.x here!</p>
       <input type="file" id="files" name="files" /><br>
       <p>-- OR --</p>
-      <p>Fetch some STIX 2.0 from this URL!</p>
+      <p>Fetch some STIX 2.x from this URL!</p>
       <input type="text" id="url" name="url" placeholder="Paste URL here" /><br>
       <button id="fetch-url">Fetch</button>
       <p>-- OR --</p>
       <p>Pass it as a url parameter, like so:</p><a href="https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json">https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json</a>
       <p>-- OR --</p>
-      <p>Paste some STIX 2.0 here!</p>
+      <p>Paste some STIX 2.x here!</p>
       <textarea id="paste-area-stix-json" name="pasted" placeholder="Copy/Paste JSON data here..."></textarea><br>
       <button id="paste-parser">Parse</button>
       <br />
@@ -35,21 +35,34 @@
       <textarea id="paste-area-custom-config" name="pasted" placeholder="Copy/Paste, in JSON format, (if you want to specify this) your custom config for the graph as such: &#10;{&#10;&#34;&lt;object_type&gt;&#34;: &#10;&#9;{&#10;&#9;&#9;&#34;display_property&#34;: &#60;nameOfProperty&#62;, &#10;&#9;&#9;&#34;display_icon&#34;: &#60;nameOfIconFile&#62;&#10;&#9;},&#10;&quot;userLabels&quot;:&#10;&#9;{&#10;&#9;&#9;&quot;&lt;STIX ID&gt;&quot;: &quot;a label&quot;,&#10;&#9;&#9;...&#10;&#9;}&#10;}&#10;&#10;&quot;&lt;object_type&gt;&quot; lets you customize labels per-type; &quot;userLabels&quot; lets you customize labels per-ID.  For type-specific customization, please note that the above properties are the only currently-supported properties, and at least 1 of them has to be specified.  ID-specific label customization will take priority over type-specific labels."></textarea>
     </div>
     <div id="canvas-container" class="hidden">
-      <div id="canvas-wrapper">
-        <svg id="canvas"></svg>
-        <p>Nodes are draggable! (Node will 'pin' on mouseup)</p>
-        <p>Double-click a pinned node to unpin it!</p>
-        <p>Click the 'Selected Node' area to expand/shrink it.</p>
-      </div>
-      <div id="legend" class="sidebar">
-        <h2>Legend</h2>
-        <ul id="legend-content"></ul>
-      </div>
-      <div id="selected" class="sidebar">
-        <h2>Selected Node</h2>
-        <div id="selection">
+      <div id="canvas-group" class="top-wrapper">
+        <div id="canvas-wrapper">
+          <svg id="canvas"></svg>
+          <p>Nodes are draggable! (Node will 'pin' on mouseup)</p>
+          <p>Double-click a pinned node to unpin it!</p>
+        </div>
+        <div id="legend" class="sidebar">
+          <h2>Legend</h2>
+          <ul id="legend-content"></ul>
         </div>
       </div>
+      <form name="mainList">
+        <div id="simple-list-container" class="hidden top-wrapper">
+          <ol id="simple-list"></ol>
+        </div>
+        <div class="top-wrapper">
+          <div id="selected">
+            <h2>Selected Node</h2>
+            <div id="selection">
+            </div>
+          </div>
+          <div id="linkedNodesGroup">
+            <h2>Linked Nodes</h2>
+            <div id="linkedNodes">
+            </div>
+          </div>
+        </div>
+    </form>
     </div>
   </body>
 </html>
