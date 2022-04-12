@@ -118,6 +118,25 @@ function jsonParseToMap(jsonContent)
 
 
 /**
+ * Check whether the given URL resolves to a usable icon file.
+ *
+ * @param iconURL The URL to check
+ * @return true if the URL resolves to a usable file; false if not
+ */
+async function iconFileExists(iconURL)
+{
+    let existsPromise = new Promise((resolve, reject) => {
+        let tmpImg = new Image();
+        tmpImg.onload = (event) => resolve(true);
+        tmpImg.onerror = (event) => resolve(false);
+        tmpImg.src = iconURL;
+    });
+
+    return await existsPromise;
+}
+
+
+/**
  * Given a name, modify it to make it unique: add a "(n)" suffix depending
  * on the content of nameCounts.  nameCounts contains the number of times the
  * name was previously seen.  nameCounts is updated as necessary.
@@ -245,8 +264,8 @@ function nameForStixId(
 
 
 /**
- * Create an echarts image URL to an icon file for the given STIX type.
- * An image URL looks like "image://<some url>".
+ * Create a URL to an icon file for the given STIX type.  This does not check
+ * whether the icon file actually exists.
  *
  * @param stixType the STIX type to get a URL for
  * @param iconPath A path to prepend to an icon filename.  The path is
@@ -254,9 +273,9 @@ function nameForStixId(
  *      with a forward slash.  If null/undefined, don't prepend a path.
  * @param iconFileName An icon file name.  If falsey, a default is constructed
  *      from the given STIX type.
- * @return An image URL for an icon for the given STIX type
+ * @return A URL of an icon for the given STIX type
  */
-function stixTypeToImageURL(stixType, iconPath, iconFileName)
+function stixTypeToIconURL(stixType, iconPath, iconFileName)
 {
     let iconUrl;
 
@@ -270,9 +289,7 @@ function stixTypeToImageURL(stixType, iconPath, iconFileName)
     else
         iconUrl = iconPath + "/" + iconFileName;
 
-    let imageUrl = "image://" + iconUrl;
-
-    return imageUrl;
+    return iconUrl;
 }
 
 
@@ -530,15 +547,40 @@ function makeNodesAndLinks(stixBundle, categories, config=null)
 
 
 /**
+ * Create a fallback icon URL to use any time the usual STIX type based
+ * icon file is not found.  (Implied: this default is the same, regardless of
+ * STIX type.)  Of course, this fallback *should* be known to always exist!
+ *
+ * @param iconPath The user-configured setting for the icon directory, in case
+ *      it is relevant for the fallback; null if one was not configured.
+ * @return A URL to an icon
+ */
+function getDefaultIconURL(iconPath=null)
+{
+    let defaultURL = stixTypeToIconURL('custom_object', iconPath, null);
+    defaultURL = defaultURL.replace('.png', '.svg');
+
+    return defaultURL;
+}
+
+
+/**
  * Create an echarts categories structure, based on STIX types.  We will have
  * one category per type.
  *
  * @param stixBundle A STIX bundle; types are collected from the contained
  *      objects
+ * @param config User config data
  * @return An array of categories for echarts
  */
-function makeCategories(stixBundle, config=null)
+async function makeCategories(stixBundle, config=null)
 {
+    let iconPath = null;
+    if (config)
+        iconPath = config.iconDir;
+
+    let defaultIconURL = getDefaultIconURL(iconPath);
+
     let stixTypes = new Set();
 
     // collect our types
@@ -552,22 +594,24 @@ function makeCategories(stixBundle, config=null)
     for (let type of stixTypes)
     {
         // Choose an icon file according to config settings
-        let iconPath, iconFileName;
+        let iconFileName;
 
         if (config)
         {
             let typeConfig = config[type];
             if (typeConfig)
                 iconFileName = typeConfig.display_icon;
-
-            iconPath = config.iconDir;
         }
 
-        let imageURL = stixTypeToImageURL(type, iconPath, iconFileName);
+        let iconURL = stixTypeToIconURL(type, iconPath, iconFileName);
+
+        let iconExists = await iconFileExists(iconURL);
+        if (!iconExists)
+            iconURL = defaultIconURL;
 
         let category = {
             name: type,
-            symbol: imageURL
+            symbol: "image://" + iconURL
         };
 
         categories.push(category);
@@ -611,43 +655,6 @@ function makeLegend(categories)
 
 
 /**
- * Set default icon for graph nodes, e.g. for custom types.
- *
- * @param domElement the parent element where the chart is to be located in a
- *      web page
- * @param categories An echarts categories array.  This is an array of objects
- *      where each object has a "synbol" property giving the path to the icon
- *      to use for that STIX type.
- * @param config A config object containing preferences; null to use defaults
- */
-function setDefaultIcon(domElement, categories=[], config=null)
-{
-    // Get path to default icon
-    let iconPath;
-    if (config){
-        iconPath = config.iconDir;
-    }
-    let defaultURL = stixTypeToImageURL('custom_object', iconPath, null);
-    defaultURL = defaultURL.replace('image://', '');
-    defaultURL = defaultURL.replace('.png', '.svg');
-
-    // Try to load the icon for each category (STIX type)
-    categories.forEach(function(category) {
-        let icon = category.symbol.replace('image://', '');
-        let tmpImg = new Image();
-        tmpImg.onerror = function() {
-            // if this image could not load, switch all instances of it to default
-            let instances = domElement.querySelectorAll("div[_echarts_instance_] image[href='"+icon+"']");
-            instances.forEach(function(i) {
-                i.setAttribute('href', defaultURL);
-            });
-        }
-        tmpImg.src = icon;
-    });
-}
-
-
-/**
  * The entrypoint for users of this module: create a graph which visualizes
  * the content in the given STIX bundle.  The content will be added to the
  * webpage DOM under the given element.
@@ -661,11 +668,11 @@ function setDefaultIcon(domElement, categories=[], config=null)
  * @return The chart object.  May be used perform certain options on the
  *      chart, e.g. dispose of it.
  */
-function makeGraph(echarts, domElement, stixBundleJson, config=null)
+async function makeGraph(echarts, domElement, stixBundleJson, config=null)
 {
     let stixBundle = jsonParseToMap(stixBundleJson);
 
-    let categories = makeCategories(stixBundle, config);
+    let categories = await makeCategories(stixBundle, config);
     let legend = makeLegend(categories);
 
     let [nodes, links] = makeNodesAndLinks(stixBundle, categories, config);
@@ -744,9 +751,6 @@ function makeGraph(echarts, domElement, stixBundleJson, config=null)
     // 2nd arg here is for theming.  E.g. could use "dark" for a dark themed
     // graph.
     let chart = echarts.init(domElement, null, initOpts);
-    chart.one('finished', function() {
-        setDefaultIcon(domElement, categories, config);
-    });
     chart.setOption(chartOpts);
 
     return chart;

@@ -45,7 +45,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
     /* ******************************************************
      * Initializes the graph, then renders it.
      * ******************************************************/
-    function vizStixWrapper(content, customConfig) {
+    async function vizStixWrapper(content, customConfig) {
 
         if (customConfig)
             customConfig = JSON.parse(customConfig);
@@ -63,7 +63,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2v
             stixIdToObject.set(obj.id, obj);
 
         toggleView();
-        chart = stix2viz.makeGraph(canvas, stixBundle, customConfig);
+        chart = await stix2viz.makeGraph(canvas, stixBundle, customConfig);
         chart.on(
             "click",
             {dataType: "node"},
