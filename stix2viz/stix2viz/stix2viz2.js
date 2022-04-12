@@ -613,12 +613,14 @@ function makeLegend(categories)
 /**
  * Set default icon for graph nodes, e.g. for custom types.
  *
+ * @param domElement the parent element where the chart is to be located in a
+ *      web page
  * @param categories An echarts categories array.  This is an array of objects
  *      where each object has a "synbol" property giving the path to the icon
  *      to use for that STIX type.
  * @param config A config object containing preferences; null to use defaults
  */
-function setDefaultIcon(categories=[], config=null)
+function setDefaultIcon(domElement, categories=[], config=null)
 {
     // Get path to default icon
     let iconPath;
@@ -635,7 +637,7 @@ function setDefaultIcon(categories=[], config=null)
         let tmpImg = new Image();
         tmpImg.onerror = function() {
             // if this image could not load, switch all instances of it to default
-            let instances = document.querySelectorAll("div[_echarts_instance_] image[href='"+icon+"']");
+            let instances = domElement.querySelectorAll("div[_echarts_instance_] image[href='"+icon+"']");
             instances.forEach(function(i) {
                 i.setAttribute('href', defaultURL);
             });
@@ -743,7 +745,7 @@ function makeGraph(echarts, domElement, stixBundleJson, config=null)
     // graph.
     let chart = echarts.init(domElement, null, initOpts);
     chart.one('finished', function() {
-        setDefaultIcon(categories, config);
+        setDefaultIcon(domElement, categories, config);
     });
     chart.setOption(chartOpts);
 
