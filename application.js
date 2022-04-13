@@ -16,7 +16,7 @@ require.config({
     }
 });
 
-require(["domReady!", "stix2viz/stix2viz/stix2viz2"], function (document, stix2viz) {
+require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2viz) {
 
 
     // Init some stuff
