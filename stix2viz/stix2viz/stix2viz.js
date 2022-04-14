@@ -216,6 +216,8 @@ function nameForStixObject(stixObject, stixIdToName, nameCounts, config=null)
         if (!baseName)
             baseName = stixObject.get("value");
         if (!baseName)
+            baseName = stixObject.get("path");
+        if (!baseName)
             baseName = stixType;
 
         // Copied from old visualizer: ensure the name isn't too long.
@@ -701,7 +703,7 @@ async function makeGraph(echarts, domElement, stixContent, config=null)
             // using true or "move" here to enable panning seems to often cause
             // the whole graph to move when dragging one node.  Seems like a
             // bug...
-            roam: "scale",
+            roam: true,
             // make nodes draggable
             draggable: true,
             layout: "force",
@@ -720,7 +722,13 @@ async function makeGraph(echarts, domElement, stixContent, config=null)
             label: {
                 show: true,
                 align: "left",
-                verticalAlign: "bottom"
+                verticalAlign: "bottom",
+                offset: [22,0],
+                color: "#000",
+                textBorderColor: "#fff",
+                textBorderWidth: 2,
+                fontWeight: "bold",
+                fontSize: 13
             },
             // draw arrowheads on the target end of the links
             edgeSymbol: ["none", "arrow"],
