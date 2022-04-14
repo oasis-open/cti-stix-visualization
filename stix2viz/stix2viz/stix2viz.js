@@ -704,8 +704,8 @@ async function makeGraph(echarts, domElement, stixContent, config=null)
             // the whole graph to move when dragging one node.  Seems like a
             // bug...
             roam: true,
-            // make nodes draggable
-            draggable: true,
+            // disable draggable nodes for now, due to echarts bugs
+            draggable: false,
             layout: "force",
             force: {
                 // causes nodes to repel each other
