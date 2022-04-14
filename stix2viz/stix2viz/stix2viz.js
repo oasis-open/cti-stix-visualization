@@ -467,8 +467,7 @@ function linksForEmbeddedRelationships(
  * Make the nodes and links structures echarts requires, from the given STIX
  * bundle.
  *
- * @param stixBundle a STIX bundle, as parsed JSON (using Maps instead of
- *      plain javascript objects).
+ * @param stixObjects an array of STIX objects
  * @param categories Echarts data for categories.  This is an array of objects;
  *      the important part of each object is the "name" property giving the
  *      category name, which is a STIX type.  It is used to tag each echarts
@@ -477,13 +476,13 @@ function linksForEmbeddedRelationships(
  *      null to use defaults
  * @return nodes and links structures in a 2-element array.
  */
-function makeNodesAndLinks(stixBundle, categories, config=null)
+function makeNodesAndLinks(stixObjects, categories, config=null)
 {
     // Create a different data structure for the objects: a mapping from ID
     // to object.  This makes object lookups by STIX ID fast.
     let stixIdToObject = new Map();
 
-    for (let object of stixBundle.get("objects"))
+    for (let object of stixObjects)
         stixIdToObject.set(object.get("id"), object);
 
     // Tagging a node with its category involves assigning an index into this
@@ -568,12 +567,11 @@ function getDefaultIconURL(iconPath=null)
  * Create an echarts categories structure, based on STIX types.  We will have
  * one category per type.
  *
- * @param stixBundle A STIX bundle; types are collected from the contained
- *      objects
+ * @param stixObjects An array of STIX objects
  * @param config User config data
  * @return An array of categories for echarts
  */
-async function makeCategories(stixBundle, config=null)
+async function makeCategories(stixObjects, config=null)
 {
     let iconPath = null;
     if (config)
@@ -584,7 +582,7 @@ async function makeCategories(stixBundle, config=null)
     let stixTypes = new Set();
 
     // collect our types
-    for (let object of stixBundle.get("objects"))
+    for (let object of stixObjects)
         stixTypes.add(object.get("type"));
 
     // relationships don't correspond to node types...
@@ -662,20 +660,34 @@ function makeLegend(categories)
  * @param echarts The echarts module object
  * @param domElement the parent element where the chart is to be located in a
  *      web page
- * @param stixBundleJson STIX content in JSON (a string) as a bundle
+ * @param stixContent STIX content as a JSON string, object, or array of
+ *      objects.
  * @param config A config object containing preferences for naming objects;
  *      null to use defaults
  * @return The chart object.  May be used perform certain options on the
  *      chart, e.g. dispose of it.
  */
-async function makeGraph(echarts, domElement, stixBundleJson, config=null)
+async function makeGraph(echarts, domElement, stixContent, config=null)
 {
-    let stixBundle = jsonParseToMap(stixBundleJson);
+    let stixObjects;
 
-    let categories = await makeCategories(stixBundle, config);
+    stixContent = jsonParseToMap(stixContent);
+    if (stixContent instanceof Map)
+    {
+        if (stixContent.get("type") === "bundle")
+            stixObjects = stixContent.get("objects");
+        else
+            // Assume we were given a single object
+            stixObjects = [stixContent];
+    }
+    else
+        // assume an array of objects
+        stixObjects = stixContent;
+
+    let categories = await makeCategories(stixObjects, config);
     let legend = makeLegend(categories);
 
-    let [nodes, links] = makeNodesAndLinks(stixBundle, categories, config);
+    let [nodes, links] = makeNodesAndLinks(stixObjects, categories, config);
 
     let initOpts = {
         renderer: "svg"  // or "canvas"
@@ -763,8 +775,8 @@ async function makeGraph(echarts, domElement, stixBundleJson, config=null)
 function makeModule(echarts)
 {
     let module = {
-        makeGraph: (domElement, stixBundleJson, config=null) =>
-            makeGraph(echarts, domElement, stixBundleJson, config)
+        makeGraph: (domElement, stixContent, config=null) =>
+            makeGraph(echarts, domElement, stixContent, config)
     };
 
     return module;
