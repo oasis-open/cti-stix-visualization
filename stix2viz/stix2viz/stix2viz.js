@@ -216,6 +216,8 @@ function nameForStixObject(stixObject, stixIdToName, nameCounts, config=null)
         if (!baseName)
             baseName = stixObject.get("value");
         if (!baseName)
+            baseName = stixObject.get("path");
+        if (!baseName)
             baseName = stixType;
 
         // Copied from old visualizer: ensure the name isn't too long.
