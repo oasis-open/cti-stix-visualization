@@ -703,7 +703,7 @@ async function makeGraph(echarts, domElement, stixContent, config=null)
             // using true or "move" here to enable panning seems to often cause
             // the whole graph to move when dragging one node.  Seems like a
             // bug...
-            roam: "scale",
+            roam: true,
             // make nodes draggable
             draggable: true,
             layout: "force",
