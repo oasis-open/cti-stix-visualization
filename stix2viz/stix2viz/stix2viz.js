@@ -85,6 +85,22 @@ class InvalidSTIXObjectError extends STIXContentError
 
 
 /**
+ * Instances represent an invalid configuration value.
+ */
+class InvalidConfigError extends Error
+{
+    constructor(message=null, opts=null)
+    {
+        if (!message)
+            message = "Invalid configuration value: must be a JSON or"
+                      + " Javascript object.";
+
+        super(message, opts);
+    }
+}
+
+
+/**
  * Determine whether the given value is a plain javascript object.  E.g. one
  * which was given as an object literal.
  */
@@ -744,6 +760,33 @@ function makeLegend(categories)
 
 
 /**
+ * Config can be given as JSON or an object.  Normalize whatever we are given
+ * to an object.
+ *
+ * @param config configuration as given to the visualizer
+ * @return A configuration object
+ * @throw InvalidConfigError if the given config value is invalid
+ */
+function normalizeConfig(config)
+{
+    if (typeof config === "string" || config instanceof String)
+        try
+        {
+            config = JSON.parse(config);
+        }
+        catch(err)
+        {
+            throw new InvalidConfigError(null, {cause: err});
+        }
+
+    else if (!isPlainObject(config))
+        throw new InvalidConfigError();
+
+    return config;
+}
+
+
+/**
  * STIX content input to the visualizer can take different forms.  This
  * function normalizes it to an array of objects, so subsequent code only
  * deals with a single form.  Each object is itself normalized to a Map
@@ -816,6 +859,9 @@ function normalizeContent(stixContent)
  */
 async function makeGraph(echarts, domElement, stixContent, config=null)
 {
+    if (config !== null)
+        config = normalizeConfig(config);
+
     let stixObjects = normalizeContent(stixContent);
 
     let categories = await makeCategories(stixObjects, config);

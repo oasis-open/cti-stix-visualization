@@ -34,13 +34,48 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         chart.resize();
     }
 
+
+    /**
+     * Build a message and display an alert window, from an exception object.
+     * This will follow the exception's causal chain and display all of the
+     * causes in sequence, to produce a more informative message.
+     */
+    function alertException(exc, initialMessage=null)
+    {
+        let messages = [];
+
+        if (initialMessage)
+            messages.push(initialMessage);
+
+        messages.push(exc.toString());
+
+        while (exc.cause)
+        {
+            exc = exc.cause;
+            messages.push(exc.toString());
+        }
+
+        let message = messages.join("\n\n    caused by:\n\n");
+
+        alert(message);
+    }
+
+
     /* ******************************************************
      * Initializes the graph, then renders it.
      * ******************************************************/
     async function vizStixWrapper(content, customConfig) {
 
         if (customConfig)
-            customConfig = JSON.parse(customConfig);
+            try
+            {
+                customConfig = JSON.parse(customConfig);
+            }
+            catch(err)
+            {
+                alertException(err, "Invalid configuration: must be JSON");
+                return;
+            }
         else
             customConfig = {};
 
@@ -61,7 +96,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         }
         catch (err)
         {
-            alert(err);
+            alertException(err);
         }
     }
 
