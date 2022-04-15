@@ -325,7 +325,7 @@ function nameForStixObject(stixObject, stixIdToName, nameCounts, config=null)
  * structures updated (stixIdToName and nameCounts).  If the ID doesn't resolve
  * to a known object, null is returned.
  *
- * @param stixObject a STIX object
+ * @param stixId a STIX ID
  * @param stixIdToObject A mapping from STIX ID to object, representing all of
  *      the objects we know about.
  * @param stixIdToName A mapping from IDs of STIX objects to previously
@@ -777,7 +777,7 @@ function normalizeContent(stixContent)
     if (stixContent instanceof Map && stixContent.size > 0)
     {
         if (stixContent.get("type") === "bundle")
-            stixObjects = stixContent.get("objects");
+            stixObjects = stixContent.get("objects") || [];
         else
             // Assume we were given a single object
             stixObjects = [stixContent];
