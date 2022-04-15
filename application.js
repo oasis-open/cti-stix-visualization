@@ -35,14 +35,6 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     }
 
     /* ******************************************************
-     * Will be called if there's a problem parsing input.
-     * ******************************************************/
-    function errorCallback() {
-      document.getElementById('chosen-files').innerText = "";
-      document.getElementById("files").value = "";
-    }
-
-    /* ******************************************************
      * Initializes the graph, then renders it.
      * ******************************************************/
     async function vizStixWrapper(content, customConfig) {
@@ -55,20 +47,22 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         // Hard-coded working icon directory setting for this application.
         customConfig.iconDir = "stix2viz/stix2viz/icons";
 
-        // Establish a mapping from STIX ID to object, so our click handler
-        // can get object details from the ID given in a click event.
-        let stixBundle = JSON.parse(content);
-        let stixIdToObject = new Map();
-        for (let obj of stixBundle.objects)
-            stixIdToObject.set(obj.id, obj);
-
         toggleView();
-        chart = await stix2viz.makeGraph(canvas, stixBundle, customConfig);
-        chart.on(
-            "click",
-            {dataType: "node"},
-            e => populateSelected(stixIdToObject.get(e.data._stix_id))
-        );
+
+        try
+        {
+            chart = await stix2viz.makeGraph(canvas, content, customConfig);
+
+            chart.on(
+                "click",
+                {dataType: "node"},
+                e => populateSelected(e.data._stixObject)
+            );
+        }
+        catch (err)
+        {
+            alert(err);
+        }
     }
 
     /* ----------------------------------------------------- *

@@ -43,6 +43,48 @@ let refsMapping = new Map(Object.entries({
 
 
 /**
+ * Instances represent general invalid STIX content passed into the visualizer.
+ */
+class STIXContentError extends Error
+{
+    constructor(message=null, opts=null)
+    {
+        // Use a default generic message.
+        if (!message)
+            message = "Invalid STIX content: expected a non-empty mapping"
+            + " (object or Map) which is a single STIX object or bundle with"
+            + "at least one object, or a non-empty array of objects.";
+
+        super(message, opts);
+    }
+}
+
+
+/**
+ * Instances represent a particular invalid STIX object.
+ */
+class InvalidSTIXObjectError extends STIXContentError
+{
+    constructor(stixObject, opts=null)
+    {
+        let message = "Invalid STIX object: requires at least type and id"
+        + " properties";
+
+        // May as well give some extra info if we know it.  It may seem
+        // silly to say we require an id property... and them give the value
+        // of the id property!  I think users will get the idea.
+        let stixId = stixObject.get("id");
+        if (stixId)
+            message += ": " + stixId;
+
+        super(message, opts);
+
+        this.stixObject = stixObject;
+    }
+}
+
+
+/**
  * Determine whether the given value is a plain javascript object.  E.g. one
  * which was given as an object literal.
  */
@@ -100,11 +142,16 @@ function recursiveObjectToMap(obj)
 
 
 /**
- * Do the same thing as normal JSON.parse(), but translate JSON objects into
- * Javascript Map's instead of plain objects.  That way we can use more sane
+ * Convert the given content to a data structure which uses Maps.  E.g. for
+ * strings, do the same thing as normal JSON.parse(), but translate JSON
+ * objects into Javascript Maps instead of plain objects.  For plain objects,
+ * convert them and their sub-objects to Maps.  That way we can use more sane
  * container types.
+ *
+ * @param stixContent A JSON string, plain object, or array
+ * @return The converted content
  */
-function jsonParseToMap(jsonContent)
+function parseToMap(jsonContent)
 {
     let newValue;
 
@@ -114,6 +161,45 @@ function jsonParseToMap(jsonContent)
         newValue = recursiveObjectToMap(jsonContent);
 
     return newValue;
+}
+
+
+/**
+ * Somewhat the reverse of parseToMap: convert all maps within the given value
+ * to plain objects.
+ *
+ * @param value Any value
+ * @return A value without Maps
+ */
+function mapToObject(value)
+{
+    if (value instanceof Map)
+    {
+        let obj = {};
+        for (let [subKey, subValue] of value)
+            obj[subKey] = mapToObject(subValue);
+        value = obj;
+    }
+    else if (Array.isArray(value))
+        value = value.map(mapToObject);
+
+    return value;
+}
+
+
+/**
+ * Perform a simple sanity check on a STIX object to determine whether it's
+ * valid.
+ *
+ * @param object The STIX object
+ * @return true if the object is valid; false if not
+ */
+function isValidStixObject(stixObject)
+{
+    // assume we've gone through the normalization process such that we
+    // can assume we have a Map object.  This is more about whether an object
+    // has what we need, than whether we have an object in the first place.
+    return stixObject.has("id") && stixObject.has("type");
 }
 
 
@@ -341,8 +427,11 @@ function makeNodeObject(name, stixObject, categoryIndices)
 
         // I don't know if this is frowned upon, but mouse click events
         // include this node object.  We can sneak in some useful extra
-        // STIX-related identifying information for our click handlers.
-        _stix_id: stixObject.get("id")
+        // information for our click handlers.
+        //
+        // Sadly, we must convert back to a plain object, or echarts will
+        // clobber it!
+        _stixObject: mapToObject(stixObject)
     };
 
     return node;
@@ -655,6 +744,62 @@ function makeLegend(categories)
 
 
 /**
+ * STIX content input to the visualizer can take different forms.  This
+ * function normalizes it to an array of objects, so subsequent code only
+ * deals with a single form.  Each object is itself normalized to a Map
+ * instance (as are all sub-objects).
+ *
+ * This function also does some simple sanity checks on the input to try to
+ * ensure it is valid.
+ *
+ * @param stixContent STIX content as given to the visualizer
+ * @return An array of objects if the content was valid; null if it was not
+ *      valid.
+ * @throw STIXContentError if any errors are found in the input
+ */
+function normalizeContent(stixContent)
+{
+    let stixObjects;
+
+    try
+    {
+        stixContent = parseToMap(stixContent);
+    }
+    catch (err)
+    {
+        // wrap misc errors (e.g. JSON.parse() errors, which are SyntaxErrors)
+        // with our generic STIX content error
+        if (err instanceof STIXContentError)
+            throw err;
+        throw new STIXContentError(null, {cause: err});
+    }
+
+    if (stixContent instanceof Map && stixContent.size > 0)
+    {
+        if (stixContent.get("type") === "bundle")
+            stixObjects = stixContent.get("objects");
+        else
+            // Assume we were given a single object
+            stixObjects = [stixContent];
+    }
+    else if (Array.isArray(stixContent))
+        stixObjects = stixContent;
+    else
+        throw new STIXContentError();
+
+    if (stixObjects.length <= 0)
+        throw new STIXContentError();
+
+    // Do a simple validity check on our individual STIX objects.
+    for (let stixObject of stixObjects)
+        if (!isValidStixObject(stixObject))
+            throw new InvalidSTIXObjectError(stixObject);
+
+    return stixObjects;
+}
+
+
+/**
  * The entrypoint for users of this module: create a graph which visualizes
  * the content in the given STIX bundle.  The content will be added to the
  * webpage DOM under the given element.
@@ -671,20 +816,7 @@ function makeLegend(categories)
  */
 async function makeGraph(echarts, domElement, stixContent, config=null)
 {
-    let stixObjects;
-
-    stixContent = jsonParseToMap(stixContent);
-    if (stixContent instanceof Map)
-    {
-        if (stixContent.get("type") === "bundle")
-            stixObjects = stixContent.get("objects");
-        else
-            // Assume we were given a single object
-            stixObjects = [stixContent];
-    }
-    else
-        // assume an array of objects
-        stixObjects = stixContent;
+    let stixObjects = normalizeContent(stixContent);
 
     let categories = await makeCategories(stixObjects, config);
     let legend = makeLegend(categories);
