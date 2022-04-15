@@ -53,7 +53,7 @@ class STIXContentError extends Error
         if (!message)
             message = "Invalid STIX content: expected a non-empty mapping"
             + " (object or Map) which is a single STIX object or bundle with"
-            + "at least one object, or a non-empty array of objects.";
+            + " at least one object, or a non-empty array of objects.";
 
         super(message, opts);
     }
