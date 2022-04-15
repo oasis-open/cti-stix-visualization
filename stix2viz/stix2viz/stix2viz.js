@@ -787,7 +787,7 @@ function normalizeContent(stixContent)
     else
         throw new STIXContentError();
 
-    if (stixObjects.length <= 0)
+    if (!Array.isArray(stixObjects) || stixObjects.length <= 0)
         throw new STIXContentError();
 
     // Do a simple validity check on our individual STIX objects.
