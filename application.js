@@ -49,7 +49,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
 
         messages.push(exc.toString());
 
-        while (exc.cause)
+        while (exc instanceof Error && exc.cause)
         {
             exc = exc.cause;
             messages.push(exc.toString());
