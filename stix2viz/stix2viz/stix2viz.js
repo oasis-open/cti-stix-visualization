@@ -796,8 +796,7 @@ function normalizeConfig(config)
  * ensure it is valid.
  *
  * @param stixContent STIX content as given to the visualizer
- * @return An array of objects if the content was valid; null if it was not
- *      valid.
+ * @return An array of objects
  * @throw STIXContentError if any errors are found in the input
  */
 function normalizeContent(stixContent)
