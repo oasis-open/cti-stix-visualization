@@ -11,6 +11,8 @@ Installation
 2. ``jupyter nbextension install stix2viz --py``
 3. ``jupyter nbextension enable stix2viz --py``
 
+Note: If you receive an error like ``Permission denied: '/usr/local/share/jupyter'``, add the ``--user`` flag in steps 2 and 3 above.
+
 Usage
 -----
 
