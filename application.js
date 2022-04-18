@@ -96,6 +96,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         }
         catch (err)
         {
+            toggleView();
             alertException(err);
         }
     }
