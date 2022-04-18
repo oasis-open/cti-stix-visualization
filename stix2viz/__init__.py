@@ -1,3 +1,6 @@
+import json
+
+
 _COUNTER = 0
 
 
@@ -9,17 +12,22 @@ def display(data, config=None, width=800, height=600):
 
     viz_args = [str(data).strip()]
     if config:
-        viz_args.append(config)
+        # Insert the iconDir config setting, so we can get our icons
+        config_dict = json.loads(config)
+        config_dict["iconDir"] = "/nbextensions/stix2viz/icons"
+    else:
+        config_dict = {"iconDir": "/nbextensions/stix2viz/icons"}
+
+    config = json.dumps(config_dict)
+    viz_args.append(config)
 
     h = """
-    <svg id='chart{id}' style="width:{width}px;height:{height}px;"></svg>
+    <div id='chart{id}' style="width:{width}px;height:{height}px;"></div>
 
     <script type="text/javascript">
         require(["nbextensions/stix2viz/stix2viz"], function(stix2viz) {{
             chart = $('#chart{id}')[0];
-            visualizer{id} = new stix2viz.Viz(chart, {{"width": {width}, "height": {height},
-                "iconDir": "/nbextensions/stix2viz/icons", "id": {id}}});
-            visualizer{id}.vizStix({args});
+            stix2viz.makeGraph(chart, {args});
         }});
     </script>
     """.format(
@@ -54,17 +62,17 @@ def _jupyter_nbextension_paths():
     # I think "section" can be one of ['common', 'notebook', 'tree', 'edit',
     # 'terminal'].  I dunno what they mean.  The examples used "notebook".
     #
-    # So the following dumps both d3 and stix2viz into the "stix2viz"
+    # So the following dumps both echarts and stix2viz into the "stix2viz"
     # extension directory, where they will henceforth be importable (via AMD)
-    # as "nbextensions/stix2viz/d3" and "nbextensions/stix2viz/stix2viz".
+    # as "nbextensions/stix2viz/echarts" and "nbextensions/stix2viz/stix2viz".
     # (You can't put them in the same src directory, because you don't seem to
     # be allowed to have more than one AMD module per extension.)
     return [
         {
             "section": "notebook",
-            "src": "d3",
+            "src": "echarts",
             "dest": "stix2viz",
-            "require": "stix2viz/d3"
+            "require": "stix2viz/echarts"
         },
         {
             "section": "notebook",

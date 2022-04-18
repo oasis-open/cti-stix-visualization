@@ -1,5 +1,5 @@
 /*
-Stix2viz and d3 are packaged in a way that makes them work as Jupyter
+Stix2viz and echarts are packaged in a way that makes them work as Jupyter
 notebook extensions.  Part of the extension installation process involves
 copying them to a different location, where they're available via a special
 "nbextensions" path.  This path is hard-coded into their "require" module
@@ -12,7 +12,7 @@ these modules and apps in a better way.
 */
 require.config({
     paths: {
-      "nbextensions/stix2viz/d3": "stix2viz/d3/d3"
+      "nbextensions/stix2viz/echarts": "stix2viz/echarts/echarts"
     }
 });
 
@@ -20,50 +20,85 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
 
 
     // Init some stuff
-    // For optimization purposes, look into moving these to local variables
-    var visualizer;
-    selectedContainer = document.getElementById('selection');
-    uploader = document.getElementById('uploader');
-    canvasContainer = document.getElementById('canvas-container');
-    canvas = document.getElementById('canvas');
-    styles = window.getComputedStyle(uploader);
+    let chart = null;
+    let selectedContainer = document.getElementById('selection');
+    let uploader = document.getElementById('uploader');
+    let canvasContainer = document.getElementById('canvas-container');
+    let canvas = document.getElementById('canvas');
 
     /* ******************************************************
      * Resizes the canvas based on the size of the window
      * ******************************************************/
     function resizeCanvas() {
-      var cWidth = document.getElementById('legend').offsetLeft - 52;
-      var cHeight = window.innerHeight - document.getElementsByTagName('h1')[0].offsetHeight - 27;
-      document.getElementById('canvas-wrapper').style.width = cWidth;
-      canvas.style.width = cWidth;
-      canvas.style.height = cHeight;
+      if (chart)
+        chart.resize();
     }
 
-    /* ******************************************************
-     * Will be called right before the graph is built.
-     * ******************************************************/
-    function vizCallback() {
-      hideMessages();
-      resizeCanvas();
+
+    /**
+     * Build a message and display an alert window, from an exception object.
+     * This will follow the exception's causal chain and display all of the
+     * causes in sequence, to produce a more informative message.
+     */
+    function alertException(exc, initialMessage=null)
+    {
+        let messages = [];
+
+        if (initialMessage)
+            messages.push(initialMessage);
+
+        messages.push(exc.toString());
+
+        while (exc instanceof Error && exc.cause)
+        {
+            exc = exc.cause;
+            messages.push(exc.toString());
+        }
+
+        let message = messages.join("\n\n    caused by:\n\n");
+
+        alert(message);
     }
 
-    /* ******************************************************
-     * Will be called if there's a problem parsing input.
-     * ******************************************************/
-    function errorCallback() {
-      document.getElementById('chosen-files').innerText = "";
-      document.getElementById("files").value = "";
-    }
 
     /* ******************************************************
      * Initializes the graph, then renders it.
      * ******************************************************/
-    function vizStixWrapper(content, customConfig) {
-      cfg = {
-        iconDir: "stix2viz/stix2viz/icons"
-      }
-      visualizer = new stix2viz.Viz(canvas, cfg, populateLegend, populateSelected);
-      visualizer.vizStix(content, customConfig, vizCallback, errorCallback);
+    async function vizStixWrapper(content, customConfig) {
+
+        if (customConfig)
+            try
+            {
+                customConfig = JSON.parse(customConfig);
+            }
+            catch(err)
+            {
+                alertException(err, "Invalid configuration: must be JSON");
+                return;
+            }
+        else
+            customConfig = {};
+
+        // Hard-coded working icon directory setting for this application.
+        customConfig.iconDir = "stix2viz/stix2viz/icons";
+
+        toggleView();
+
+        try
+        {
+            chart = await stix2viz.makeGraph(canvas, content, customConfig);
+
+            chart.on(
+                "click",
+                {dataType: "node"},
+                e => populateSelected(e.data._stixObject)
+            );
+        }
+        catch (err)
+        {
+            toggleView();
+            alertException(err);
+        }
     }
 
     /* ----------------------------------------------------- *
@@ -124,33 +159,49 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       linkifyHeader();
     }
 
-    /* ******************************************************
-     * Adds icons and information to the legend.
-     *
-     * Takes an array of type names as input
-     * ******************************************************/
-    function populateLegend(typeGroups) {
-      var ul = document.getElementById('legend-content');
-      var color = d3.scale.category20();
-      typeGroups.forEach(function(typeName, index) {
-        var li = document.createElement('li');
-        var val = document.createElement('p');
-        var key = document.createElement('div');
-        var keyImg = document.createElement('img');
-        keyImg.onerror = function() {
-          // set the node's icon to the default if this image could not load
-          this.src = visualizer.d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg";
+    /**
+     * Prettify the given property key and value for display in the object
+     * info box.
+     */
+    function prettyKeyValue(key, value)
+    {
+        let prettyKey=key, prettyValue=value;
+
+        // I am trying to somewhat mimic what the old visualizer did here...
+        if (Array.isArray(value))
+        {
+            if (key === "kill_chain_phases")
+            {
+                // Just use phase names of kill chain phases
+                let phaseNames = value.map(elt => elt.phase_name);
+                prettyValue = phaseNames.join(", ");
+            }
+            else if (value.length > 0 && (
+                    typeof value[0] === "string"
+                    || value[0] instanceof String
+                )
+            )
+                // I.e. if value is an array of strings
+                prettyValue = value.join(", ");
+            else
+            {
+                // Array of anything else
+                let stringValues = value.map(elt => JSON.stringify(elt));
+                prettyValue = stringValues.join(", ");
+            }
         }
-        keyImg.src = visualizer.iconFor(typeName);
-        keyImg.width = "37";
-        keyImg.height = "37";
-        keyImg.style.background = "radial-gradient(" + color(index) + " 16px,transparent 16px)";
-        key.appendChild(keyImg);
-        val.innerText = typeName.charAt(0).toUpperCase() + typeName.substr(1).toLowerCase(); // Capitalize it
-        li.appendChild(key);
-        li.appendChild(val);
-        ul.appendChild(li);
-      });
+        else if (!(typeof value === "string" || value instanceof String))
+            // A non-array, non-string value.  Just run through the
+            // JSON stringifier.
+            prettyValue = JSON.stringify(value);
+
+        // Old code dropped _ref/_refs suffixes, "_", and capitalized
+        prettyKey = key.replace(/_refs?$/, "");
+        prettyKey = prettyKey.replaceAll(/_/g, " ");
+        if (prettyKey.length > 0)
+            prettyKey = prettyKey[0].toUpperCase() + prettyKey.substring(1);
+
+        return [prettyKey, prettyValue];
     }
 
     /* ******************************************************
@@ -178,9 +229,9 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         val.classList.add("value");
 
         // Add the text to the new inner html elements
-        var value = d[key];
-        type.innerText = key;
-        val.innerText = value;
+        let [prettyKey, prettyValue] = prettyKeyValue(key, d[key]);
+        type.innerText = prettyKey;
+        val.innerText = prettyValue;
 
         // Add new divs to "Selected Node"
         div.appendChild(type);
@@ -193,10 +244,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     }
 
     /* ******************************************************
-     * Hides the data entry container and displays the graph
-     * container
+     * Toggle the view between the data entry container and
+     * the graph container
      * ******************************************************/
-    function hideMessages() {
+    function toggleView() {
       uploader.classList.toggle("hidden");
       canvasContainer.classList.toggle("hidden");
     }
@@ -215,11 +266,14 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     function resetPage() {
       var header = document.getElementById('header');
       if (header.classList.contains('linkish')) {
-        hideMessages();
-        visualizer.vizReset();
+        toggleView();
+        if (chart)
+        {
+            chart.dispose();
+            chart = null;
+        }
         document.getElementById('files').value = ""; // reset the files input
         document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
-        document.getElementById('legend-content').innerHTML = ""; // reset the legend in the sidebar
         document.getElementById('selection').innerHTML = ""; // reset the selected node in the sidebar
 
         header.classList.remove('linkish');
@@ -297,7 +351,7 @@ is not serving JSON, or is not running a webserver.\n\nA GitHub Gist can be crea
         selected.style.position = 'absolute';
         selected.style.left = '25px';
         selected.style.width = window.innerWidth - 110;
-        selected.style.top = document.getElementById('legend').offsetHeight + 25;
+        selected.style.top = document.getElementById('canvas').offsetHeight + 25;
         selected.scrollIntoView(true);
       } else {
         selected.className = "sidebar"
