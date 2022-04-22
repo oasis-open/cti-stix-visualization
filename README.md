@@ -2,9 +2,9 @@
 
 *This is an [OASIS TC Open Repository](https://www.oasis-open.org/resources/open-repositories/). See the [Governance](#governance) section for more information.*
 
-The STIX visualization is meant to provide producers and consumers of STIX content with a rapid way to visualize the objects in a STIX JSON file, and the relationships between those objects. The visualization is implemented in HTML, CSS, and JavaScript (using the [Apache ECharts](https://echarts.apache.org/) library), and is suitable for standalone use — either on a hosted server or as a local file — or embedded into other applications. Regardless of how deployed, the JavaScript code in this repository does not transmit STIX data to any server; it is strictly processed within the browser in which the code is running, so it is suitable for data which the user does not wish to share.
+The STIX visualization is meant to provide producers and consumers of STIX content with a rapid way to visualize the objects in a STIX JSON file, and the relationships between those objects. The visualization is implemented in HTML, CSS, and JavaScript (using the [D3.js](https://d3js.org/) library), and is suitable for standalone use — either on a hosted server or as a local file — or embedded into other applications. Regardless of how deployed, the JavaScript code in this repository does not transmit STIX data to any server; it is strictly processed within the browser in which the code is running, so it is suitable for data which the user does not wish to share.
 
-It visualizes STIX 2 content using echarts, and is 100% browser-based, meaning that you can use it without sending all your data to the server (great!)
+It visualizes STIX 2.0 content using d3, and is 100% browser-based, meaning that you can use it without sending all your data to the server (great!)
 
 ### How does it work?
 
@@ -15,7 +15,7 @@ This code makes a lot of assumptions! It assumes:
 - Everything inside those arrays is an SDO, with an ID, type, and ideally title
 - One of those arrays contains a list of relationships between the other SDOs provided
 
-This should match most STIX 2 content inside a bundle. For a slightly out-of-date example, look at `test.json`.
+This should match most STIX 2.0 content inside a bundle. For a slightly out-of-date example, look at `test.json`.
 
 ### Neat, a graph! What next?
 

@@ -1,971 +1,818 @@
-"use strict";
-
-/*
-Copied from old stix2viz code: define additional graph edge types from
-STIX embedded relationships.  (And convert to a proper Map object.)
-
-keys are the name of the _ref/s property, values are the name of the
-relationship and whether the object with that property should be the
-source_ref in the relationship
-*/
-let refsMapping = new Map(Object.entries({
-    created_by_ref: ["created-by", true],
-    object_marking_refs: ["applies-to", false],
-    object_refs: ["refers-to", true],
-    sighting_of_ref: ["sighting-of", true],
-    observed_data_refs: ["observed", true],
-    where_sighted_refs: ["saw", false],
-    object_ref: ["applies-to", true],
-    sample_refs: ["sample-of", false],
-    analysis_sco_refs: ["captured-by", false],
-    contains_refs: ["contains", true],
-    resolves_to_refs: ["resolves-to", true],
-    belongs_to_ref: ["belongs-to", true],
-    from_ref: ["from", true],
-    sender_ref: ["sent-by", true],
-    to_refs: ["to", true],
-    cc_refs: ["cc", true],
-    bcc_refs: ["bcc", true],
-    raw_email_ref: ["raw-binary-of", false],
-    parent_directory_ref: ["parent-of", false],
-    content_ref: ["contents-of", false],
-    src_ref: ["source-of", false],
-    dst_ref: ["destination-of", false],
-    src_payload_ref: ["source-payload-of", false],
-    dst_payload_ref: ["destination-payload-of", false],
-    encapsulates_refs: ["encapsulated-by", false],
-    encapsulated_by_ref: ["encapsulated-by", true],
-    opened_connection_refs: ["opened-by", false],
-    creator_user_ref: ["created-by", true],
-    image_ref: ["image-of", false],
-    parent_ref: ["parent-of", false]
-}));
-
-
-/**
- * Instances represent general invalid STIX content passed into the visualizer.
- */
-class STIXContentError extends Error
-{
-    constructor(message=null, opts=null)
-    {
-        // Use a default generic message.
-        if (!message)
-            message = "Invalid STIX content: expected a non-empty mapping"
-            + " (object or Map) which is a single STIX object or bundle with"
-            + " at least one object, or a non-empty array of objects.";
-
-        super(message, opts);
-    }
-}
-
-
-/**
- * Instances represent a particular invalid STIX object.
- */
-class InvalidSTIXObjectError extends STIXContentError
-{
-    constructor(stixObject, opts=null)
-    {
-        let message = "Invalid STIX object: requires at least type and id"
-        + " properties";
-
-        // May as well give some extra info if we know it.  It may seem
-        // silly to say we require an id property... and them give the value
-        // of the id property!  I think users will get the idea.
-        let stixId = stixObject.get("id");
-        if (stixId)
-            message += ": " + stixId;
-
-        super(message, opts);
-
-        this.stixObject = stixObject;
-    }
-}
-
-
-/**
- * Instances represent an invalid configuration value.
- */
-class InvalidConfigError extends Error
-{
-    constructor(message=null, opts=null)
-    {
-        if (!message)
-            message = "Invalid configuration value: must be a JSON or"
-                      + " Javascript object.";
-
-        super(message, opts);
-    }
-}
-
-
-/**
- * Determine whether the given value is a plain javascript object.  E.g. one
- * which was given as an object literal.
- */
-function isPlainObject(value)
-{
-    let result = false;
-
-    // null/undefined would cause errors in Object.getPrototypeOf(), and
-    // {} and [] are actually truthy in javascript!  I don't think anything
-    // falsey could be a plain object.
-    if (value)
-        // https://stackoverflow.com/questions/52001739/what-is-considered-a-plain-object
-        result = Object.getPrototypeOf(value) === Object.prototype;
-
-    return result;
-}
-
-
-/**
- * A JSON.parse() "reviver" function which may be used to cause JSON.parse()
- * to produce a Map instead of a plain javascript object (from a JSON object).
- */
-function mapReviver(key, value)
-{
-    if (isPlainObject(value))
-        return new Map(Object.entries(value));
-    else
-        return value;
-}
-
-
-/**
- * Recursively search through the given value and convert all plain objects
- * found into Map's.
- */
-function recursiveObjectToMap(obj)
-{
-    let newValue;
-
-    if (isPlainObject(obj))
-    {
-        let map = new Map();
-        for (let [key, value] of Object.entries(obj))
-            map.set(key, recursiveObjectToMap(value));
-
-        newValue = map;
-    }
-    else if (Array.isArray(obj))
-        newValue = obj.map(recursiveObjectToMap);
-    else
-        newValue = obj;
-
-    return newValue;
-}
-
-
-/**
- * Convert the given content to a data structure which uses Maps.  E.g. for
- * strings, do the same thing as normal JSON.parse(), but translate JSON
- * objects into Javascript Maps instead of plain objects.  For plain objects,
- * convert them and their sub-objects to Maps.  That way we can use more sane
- * container types.
- *
- * @param stixContent A JSON string, plain object, or array
- * @return The converted content
- */
-function parseToMap(jsonContent)
-{
-    let newValue;
-
-    if (typeof jsonContent === "string" || jsonContent instanceof String)
-        newValue = JSON.parse(jsonContent, mapReviver);
-    else
-        newValue = recursiveObjectToMap(jsonContent);
-
-    return newValue;
-}
-
-
-/**
- * Somewhat the reverse of parseToMap: convert all maps within the given value
- * to plain objects.
- *
- * @param value Any value
- * @return A value without Maps
- */
-function mapToObject(value)
-{
-    if (value instanceof Map)
-    {
-        let obj = {};
-        for (let [subKey, subValue] of value)
-            obj[subKey] = mapToObject(subValue);
-        value = obj;
-    }
-    else if (Array.isArray(value))
-        value = value.map(mapToObject);
-
-    return value;
-}
-
-
-/**
- * Perform a simple sanity check on a STIX object to determine whether it's
- * valid.
- *
- * @param object The STIX object
- * @return true if the object is valid; false if not
- */
-function isValidStixObject(stixObject)
-{
-    // assume we've gone through the normalization process such that we
-    // can assume we have a Map object.  This is more about whether an object
-    // has what we need, than whether we have an object in the first place.
-    return stixObject.has("id") && stixObject.has("type");
-}
-
-
-/**
- * Check whether the given URL resolves to a usable icon file.
- *
- * @param iconURL The URL to check
- * @return true if the URL resolves to a usable file; false if not
- */
-async function iconFileExists(iconURL)
-{
-    let existsPromise = new Promise((resolve, reject) => {
-        let tmpImg = new Image();
-        tmpImg.onload = (event) => resolve(true);
-        tmpImg.onerror = (event) => resolve(false);
-        tmpImg.src = iconURL;
-    });
-
-    return await existsPromise;
-}
-
-
-/**
- * Given a name, modify it to make it unique: add a "(n)" suffix depending
- * on the content of nameCounts.  nameCounts contains the number of times the
- * name was previously seen.  nameCounts is updated as necessary.
- *
- * @param baseName A computed name, which may not be unique
- * @param nameCounts Bookkeeping to support uniquefication, mapping previously
- *      seen base names to counts
- * @return A uniquefied name
- */
-function uniquefyName(baseName, nameCounts)
-{
-    let uniqueName;
-    let nameCount = nameCounts.get(baseName) || 0;
-
-    ++nameCount;
-    nameCounts.set(baseName, nameCount);
-
-    if (nameCount === 1)
-        uniqueName = baseName;
-    else
-        uniqueName = baseName + "(" + nameCount.toString() + ")";
-
-    return uniqueName;
-}
-
-
-/**
- * Find a name for the given STIX object.  This will be the label users see
- * in the graph.  If a name has already been computed for the object, it is
- * returned.  Otherwise, a new name is computed and data structures updated
- * (stixIdToName and nameCounts).
- *
- * @param stixObject a STIX object
- * @param stixIdToName A mapping from IDs of STIX objects to previously
- *      computed names.
- * @param nameCounts A mapping from names to counts, used to uniquefy new names.
- * @param config A config object containing preferences for naming objects;
- *      null to use defaults
- * @return A name
- */
-function nameForStixObject(stixObject, stixIdToName, nameCounts, config=null)
-{
-    let stixId = stixObject.get("id");
-    let stixType = stixObject.get("type");
-
-    let name = stixIdToName.get(stixId);
-    if (!name)
-    {
-        let baseName;
-        let userLabels;
-
-        // Look for an ID-specific label; if that fails, look for a
-        // type-specific label; if that fails, use some hard-coded fallbacks,
-        // which eventually just default to using the STIX type.
-        if (config)
-            userLabels = config.userLabels;
-
-        if (userLabels)
-            baseName = userLabels[stixId];
-
-        if (!baseName)
-        {
-            let typeConfig;
-            if (config)
-                 typeConfig = config[stixType];
-            if (typeConfig)
-            {
-                let labelPropName = typeConfig.display_property;
-                if (labelPropName)
-                    baseName = stixObject.get(labelPropName);
-            }
-        }
-
-        // Copied from old visualizer, fall back to some hard-coded properties
-        if (!baseName)
-            baseName = stixObject.get("name");
-        if (!baseName)
-            baseName = stixObject.get("value");
-        if (!baseName)
-            baseName = stixObject.get("path");
-        if (!baseName)
-            baseName = stixType;
-
-        // Copied from old visualizer: ensure the name isn't too long.
-        if (baseName.length > 100)
-          baseName = baseName.substr(0,100) + '...';
-
-        name = uniquefyName(baseName, nameCounts);
-        stixIdToName.set(stixId, name);
-    }
-
-    return name;
-}
-
-
-/**
- * Find a name for a STIX object with the given ID.  This name will be the
- * label users see in the graph.  If a name has already been computed for the
- * object, it is returned.  Otherwise, a new name is computed and data
- * structures updated (stixIdToName and nameCounts).  If the ID doesn't resolve
- * to a known object, null is returned.
- *
- * @param stixId a STIX ID
- * @param stixIdToObject A mapping from STIX ID to object, representing all of
- *      the objects we know about.
- * @param stixIdToName A mapping from IDs of STIX objects to previously
- *      computed names.
- * @param nameCounts A mapping from names to counts, used to uniquefy new names.
- * @param config A config object containing preferences for naming objects;
- *      null to use defaults
- * @return A name, or null
- */
-function nameForStixId(
-    stixId, stixIdToObject, stixIdToName, nameCounts, config=null
-)
-{
-    let name = stixIdToName.get(stixId) || null;
-    if (!name)
-    {
-        let object = stixIdToObject.get(stixId);
-        if (object)
-            name = nameForStixObject(object, stixIdToName, nameCounts, config);
-    }
-
-    return name;
-}
-
-
-/**
- * Create a URL to an icon file for the given STIX type.  This does not check
- * whether the icon file actually exists.
- *
- * @param stixType the STIX type to get a URL for
- * @param iconPath A path to prepend to an icon filename.  The path is
- *      prepended as <path>/<filename>, i.e. it is separated from the filename
- *      with a forward slash.  If null/undefined, don't prepend a path.
- * @param iconFileName An icon file name.  If falsey, a default is constructed
- *      from the given STIX type.
- * @return A URL of an icon for the given STIX type
- */
-function stixTypeToIconURL(stixType, iconPath, iconFileName)
-{
-    let iconUrl;
-
-    if (!iconFileName)
-        iconFileName = "stix2_"
-            + stixType.replaceAll("-", "_")
-            + "_icon_tiny_round_v1.png";
-
-    if (iconPath === null || iconPath === undefined)
-        iconUrl = iconFileName;
-    else
-        iconUrl = iconPath + "/" + iconFileName;
-
-    return iconUrl;
-}
-
-
-/**
- * Create an object representing an echarts link.  Any changes to link config
- * settings can be made here.
- *
- * @param sourceName A link source name; should be the name of a graph node
- * @param sourceName A link target name; should be the name of a graph node
- * @param label A label to be associated with the link
- * @return A link object
- */
-function makeLinkObject(sourceName, targetName, label)
-{
-    let link = {
-        source: sourceName,
-        target: targetName,
-        label: {
-            formatter: label
-        }
-    };
-
-    return link;
-}
-
-
-/**
- * Create an object representing an echarts node.  Any changes to node config
- * settings can be made here.
- *
- * @param name A node name; will be used to label the node in the graph
- * @param stixObject The STIX object.  Provided in case any info from it is
- *      needed for configuring the node
- * @param categoryIndices A map to look up a STIX type name (used as the
- *      category name) to a category index, which is how we must tag the node.
- * @return A node object
- */
-function makeNodeObject(name, stixObject, categoryIndices)
-{
-    let stixType = stixObject.get("type");
-
-    let node = {
-        name: name,
-        category: categoryIndices.get(stixType),
-        // we don't need to set any icon config here; it is inherited from the
-        // category.
-
-        // I don't know if this is frowned upon, but mouse click events
-        // include this node object.  We can sneak in some useful extra
-        // information for our click handlers.
-        //
-        // Sadly, we must convert back to a plain object, or echarts will
-        // clobber it!
-        _stixObject: mapToObject(stixObject)
-    };
-
-    return node;
-}
-
-
-/**
- * Create a echarts link object from the given STIX relationship object, if
- * possible.  If source or target_ref refers to an unknown object, the link
- * can't be created and null is returned.
- *
- * @param stixRel a STIX relationship object
- * @param stixIdToObject A mapping from STIX ID to object, representing all of
- *      the objects we know about.
- * @param stixIdToName A mapping from IDs of STIX objects to previously
- *      computed names.
- * @param nameCounts A mapping from names to counts, used to uniquefy new names.
- * @param config A config object containing preferences for naming objects;
- *      null to use defaults
- * @return An echarts link object, or null if one could not be created
- */
-function linkForRelationship(
-    stixRel, stixIdToObject, stixIdToName, nameCounts, config=null
-)
-{
-    let sourceRef = stixRel.get("source_ref");
-    let targetRef = stixRel.get("target_ref");
-    let relType = stixRel.get("relationship_type");
-
-    let sourceName = nameForStixId(
-        sourceRef, stixIdToObject, stixIdToName, nameCounts, config
-    );
-    let targetName = nameForStixId(
-        targetRef, stixIdToObject, stixIdToName, nameCounts, config
-    );
-
-    let link = null;
-    if (sourceName && targetName)
-        link = makeLinkObject(sourceName, targetName, relType);
-    else
-        console.warn(
-            "Skipped relationship %s %s %s: missing endpoint object(s)",
-            sourceRef, relType, targetRef
-        );
-
-    return link;
-}
-
-
-/**
- * Search through the top-level properties of the given STIX object, and
- * create echarts links for embedded relationships.
- *
- * @param stixObject a STIX object
- * @param stixIdToObject A mapping from STIX ID to object, representing all of
- *      the objects we know about.
- * @param stixIdToName A mapping from IDs of STIX objects to previously
- *      computed names.
- * @param nameCounts A mapping from names to counts, used to uniquefy new names.
- * @param config A config object containing preferences for naming objects;
- *      null to use defaults
- * @return An array of echarts link objects
- */
-function linksForEmbeddedRelationships(
-    stixObject, stixIdToObject, stixIdToName, nameCounts, config=null
-)
-{
-    let sourceName = nameForStixObject(
-        stixObject, stixIdToName, nameCounts, config
-    );
-    let links = [];
-
-    for (let [propName, value] of stixObject)
-    {
-        let relInfo = refsMapping.get(propName);
-
-        if (relInfo)
-        {
-            // "forward" link direction is referrer->referent
-            // "backward" is referent->referrer
-            let [linkLabel, forward] = relInfo;
-            let refs;
-
-            if (propName.endsWith("_ref"))
-                refs = [value];
-            else
-                refs = value;
-
-            for (let ref of refs)
-            {
-                let targetName = nameForStixId(
-                    ref, stixIdToObject, stixIdToName, nameCounts, config
-                );
-
-                if (targetName)
-                {
-                    let linkSrc, linkDst;
-                    if (forward)
-                        [linkSrc, linkDst] = [sourceName, targetName];
-                    else
-                        [linkSrc, linkDst] = [targetName, sourceName];
-
-                    let link = makeLinkObject(
-                        linkSrc, linkDst, linkLabel
-                    );
-
-                    links.push(link);
-                }
-                else
-                    console.warn(
-                        "Skipped embedded relationship %s %s %s: target object"
-                        + " missing",
-                        stixObject.get("id"), propName, ref
-                    );
-            }
-        }
-    }
-
-    return links;
-}
-
-
-/**
- * Make the nodes and links structures echarts requires, from the given STIX
- * bundle.
- *
- * @param stixObjects an array of STIX objects
- * @param categories Echarts data for categories.  This is an array of objects;
- *      the important part of each object is the "name" property giving the
- *      category name, which is a STIX type.  It is used to tag each echarts
- *      node with a category according to its type.
- * @param config A config object containing preferences for naming objects;
- *      null to use defaults
- * @return nodes and links structures in a 2-element array.
- */
-function makeNodesAndLinks(stixObjects, categories, config=null)
-{
-    // Create a different data structure for the objects: a mapping from ID
-    // to object.  This makes object lookups by STIX ID fast.
-    let stixIdToObject = new Map();
-
-    for (let object of stixObjects)
-        stixIdToObject.set(object.get("id"), object);
-
-    // Tagging a node with its category involves assigning an index into this
-    // categories array.  Would have been easier to just use category names...
-    // anyway, this map enables efficient lookup of a category index by name.
-    let categoryIndices = new Map();
-    for (let [index, category] of categories.entries())
-        categoryIndices.set(category.name, index);
-
-    // List of graph nodes, where each list element is whatever echarts needs
-    // to represent the node.  This is a plain javascript object with a "name"
-    // property at least, to identify the node.
-    let nodes = [];
-
-    // List of links/edges for the graph, where each list element is whatever
-    // echarts needs to represent the link.  This is a plain javascript object
-    // with "source" and "target" properties at least, which represent the
-    // linked nodes.  Source/target can be node names or ordinals with respect
-    // to the above list; here we will just use names.
-    let links = [];
-
-    // Used to uniquefy names.  E.g. first "foo" gets the name, then others
-    // will be "foo(2)", "foo(3)", etc.  This map keeps track of those counts.
-    // Maps the "base" name as computed for the STIX object, to a count.
-    let nameCounts = new Map();
-
-    // Map STIX IDs to the node names we use in the graph.
-    let stixIdToName = new Map();
-
-    for (let [id, object] of stixIdToObject)
-    {
-        if (object.get("type") === "relationship")
-        {
-            let link = linkForRelationship(
-                object, stixIdToObject, stixIdToName, nameCounts, config
-            );
-
-            if (link)
-                links.push(link);
-        }
-        else
-        {
-            let name = nameForStixObject(
-                object, stixIdToName, nameCounts, config
-            );
-            let node = makeNodeObject(name, object, categoryIndices);
-            nodes.push(node);
-
-            let embeddedRelLinks = linksForEmbeddedRelationships(
-                object, stixIdToObject, stixIdToName, nameCounts, config
-            );
-
-            // Seems like there ought to be a better way to extend one array
-            // with the contents of another.
-            links.push(...embeddedRelLinks);
-        }
-    }
-
-    return [nodes, links];
-}
-
-
-/**
- * Create a fallback icon URL to use any time the usual STIX type based
- * icon file is not found.  (Implied: this default is the same, regardless of
- * STIX type.)  Of course, this fallback *should* be known to always exist!
- *
- * @param iconPath The user-configured setting for the icon directory, in case
- *      it is relevant for the fallback; null if one was not configured.
- * @return A URL to an icon
- */
-function getDefaultIconURL(iconPath=null)
-{
-    let defaultURL = stixTypeToIconURL('custom_object', iconPath, null);
-    defaultURL = defaultURL.replace('.png', '.svg');
-
-    return defaultURL;
-}
-
-
-/**
- * Create an echarts categories structure, based on STIX types.  We will have
- * one category per type.
- *
- * @param stixObjects An array of STIX objects
- * @param config User config data
- * @return An array of categories for echarts
- */
-async function makeCategories(stixObjects, config=null)
-{
-    let iconPath = null;
-    if (config)
-        iconPath = config.iconDir;
-
-    let defaultIconURL = getDefaultIconURL(iconPath);
-
-    let stixTypes = new Set();
-
-    // collect our types
-    for (let object of stixObjects)
-        stixTypes.add(object.get("type"));
-
-    // relationships don't correspond to node types...
-    stixTypes.delete("relationship");
-
-    let categories = [];
-    for (let type of stixTypes)
-    {
-        // Choose an icon file according to config settings
-        let iconFileName;
-
-        if (config)
-        {
-            let typeConfig = config[type];
-            if (typeConfig)
-                iconFileName = typeConfig.display_icon;
-        }
-
-        let iconURL = stixTypeToIconURL(type, iconPath, iconFileName);
-
-        let iconExists = await iconFileExists(iconURL);
-        if (!iconExists)
-            iconURL = defaultIconURL;
-
-        let category = {
-            name: type,
-            symbol: "image://" + iconURL
+define(["nbextensions/stix2viz/d3"], function(d3) {
+
+    refRegex = /_refs*$/;
+
+    /* ******************************************************
+     * Viz class constructor.
+     *
+     * Parameters:
+     *     - canvas: <svg> element which will contain the graph
+     *     - config: object containing options for the graph:
+     *         - color: a d3 color scale
+     *         - nodeSize: size of graph nodes, in pixels
+     *         - iconSize: size of icon, in pixels
+     *         - linkMultiplier: multiplier that affects the length of links between nodes
+     *         - width: width of the svg containing the graph
+     *         - height: height of the svg containing the graph
+     *         - iconDir: directory in which the STIX 2 icons are located
+     *     - legendCallback: function that takes an array of type names and create a legend for the graph
+     *     - selectedCallback: function that acts on the data of a node when it is selected
+     * ******************************************************/
+    function Viz(canvas, config, legendCb, selectedCb) {
+        // Init some stuff
+        this.d3Config;
+        this.customConfig;
+        this.legendCallback;
+        this.selectedCallback;
+        this.force; // Determines the "float and repel" behavior of the nodes
+        this.labelForce; // Determines the "float and repel" behavior of the text labels
+        this.svgTop;
+        this.svg;
+        this.typeGroups = {};
+        this.typeIndex = 0;
+
+        this.currentGraph = {
+          nodes: [],
+          edges: []
+        };
+        this.labelGraph = {
+          nodes: [],
+          edges: []
         };
 
-        categories.push(category);
-    }
+        this.idCache = {};
+        // Set defaults for config if needed
+        this.d3Config = {};
+        if (typeof config === 'undefined') config = {};
+        if ('color' in config) { this.d3Config.color = config.color; }
+        else { this.d3Config.color = d3.scale.category20(); }
+        if ('nodeSize' in config) { this.d3Config.nodeSize = config.nodeSize; }
+        else { this.d3Config.nodeSize = 17.5; }
+        if ('iconSize' in config) { this.d3Config.iconSize = config.iconSize; }
+        else { this.d3Config.iconSize = 37; }
+        if ('linkMultiplier' in config) { this.d3Config.linkMultiplier = config.linkMultiplier; }
+        else { this.d3Config.linkMultiplier = 20; }
+        if ('width' in config) { this.d3Config.width = config.width; }
+        else { this.d3Config.width = 900; }
+        if ('height' in config) { this.d3Config.height = config.height; }
+        else { this.d3Config.height = 450; }
+        if ('iconDir' in config) { this.d3Config.iconDir = config.iconDir; }
+        else { this.d3Config.iconDir = "icons"; }
+        // To differentiate multiple graphs on same page
+        if ('id' in config) { this.id = config.id; }
+        else { this.id = 0; }
 
-    return categories;
-}
+        if (typeof legendCb === 'undefined') { this.legendCallback = function(){}; }
+        else { this.legendCallback = legendCb; }
+        if (typeof selectedCb === 'undefined') { this.selectedCallback = function(){}; }
+        else { this.selectedCallback = selectedCb; }
 
+        // keys are the name of the _ref/s property, values are the name of the
+        // relationship and whether the object with that property should be the
+        // source_ref in the relationship
+        this.refsMapping = {
+            created_by_ref: ["created-by", true],
+            object_marking_refs: ["applies-to", false],
+            object_refs: ["refers-to", true],
+            sighting_of_ref: ["sighting-of", true],
+            observed_data_refs: ["observed", true],
+            where_sighted_refs: ["saw", false],
+            object_ref: ["applies-to", true],
+            sample_refs: ["sample-of", false],
+            analysis_sco_refs: ["captured-by", false],
+            contains_refs: ["contains", true],
+            resolves_to_refs: ["resolves-to", true],
+            belongs_to_ref: ["belongs-to", true],
+            from_ref: ["from", true],
+            sender_ref: ["sent-by", true],
+            to_refs: ["to", true],
+            cc_refs: ["cc", true],
+            bcc_refs: ["bcc", true],
+            raw_email_ref: ["raw-binary-of", false],
+            parent_directory_ref: ["parent-of", false],
+            content_ref: ["contents-of", false],
+            src_ref: ["source-of", false],
+            dst_ref: ["destination-of", false],
+            src_payload_ref: ["source-payload-of", false],
+            dst_payload_ref: ["destination-payload-of", false],
+            encapsulates_refs: ["encapsulated-by", false],
+            encapsulated_by_ref: ["encapsulated-by", true],
+            opened_connection_refs: ["opened-by", false],
+            creator_user_ref: ["created-by", true],
+            image_ref: ["image-of", false],
+            parent_ref: ["parent-of", false]
+        }
 
-/**
- * Create an echarts legend structure based on the given categories.
- *
- * @param categories An echarts categories array.  This is an array of objects
- *      where each object has a "name" property (at least) giving the category
- *      name (which is a STIX type).
- * @return An echarts legend object
- */
-function makeLegend(categories)
-{
-    let legendData = [];
-    for (let category of categories)
-    {
-        let entry = {
-            name: category.name,
-            icon: category.symbol
-        };
-
-        legendData.push(entry);
-    }
-
-    let legend = {
-        data: legendData,
-        orient: "vertical",
-        left: "right",
-        top: "bottom",
-        itemWidth: 14 // Prevent squashed icons
+        canvas.style.width = this.d3Config.width;
+        canvas.style.height = this.d3Config.height;
+        this.force = d3.layout.force().charge(-400).linkDistance(this.d3Config.linkMultiplier * this.d3Config.nodeSize).size([this.d3Config.width, this.d3Config.height]);
+        this.labelForce = d3.layout.force().gravity(0).linkDistance(25).linkStrength(8).charge(-120).size([this.d3Config.width, this.d3Config.height]);
+        this.svgTop = d3.select('#' + canvas.id);
+        this.svg = this.svgTop.append("g");
     };
 
-    return legend;
-}
+    /* ******************************************************
+     * Attempts to build and display the graph from an
+     * arbitrary input string. If parsing the string does not
+     * produce valid JSON, fails gracefully and alerts the user.
+     *
+     * Parameters:
+     *     - content: string of valid STIX 2 content
+     *     - config: 
+     *     - callback: optional function to call after building the graph
+     *     - onError: optional function to call if an error is encountered while parsing input
+     * ******************************************************/
+    Viz.prototype.vizStix = function(content, config, callback, onError) {
+      try {
+        // Saving this to a variable stops the rest of the function from executing on parse failure
+        parsed = this.parseContent(content);
+      }
+      catch (err) {
+        alert("Something went wrong!\n\nError:\n" + err);
+        if (typeof onError !== 'undefined') onError();
+        return;
+      }
 
-
-/**
- * Config can be given as JSON or an object.  Normalize whatever we are given
- * to an object.
- *
- * @param config configuration as given to the visualizer
- * @return A configuration object
- * @throw InvalidConfigError if the given config value is invalid
- */
-function normalizeConfig(config)
-{
-    if (typeof config === "string" || config instanceof String)
-        try
-        {
-            config = JSON.parse(config);
+      if (config) {
+        try {
+          if (typeof config === 'string' || config instanceof String) {
+            this.customConfig = JSON.parse(config);
+          } else {
+            this.customConfig = config;
+          }
+        } catch (err) {
+          alert("Something went wrong!\nThe custom config does not seem to be proper JSON.\nPlease fix or remove it and try again.\n\nError:\n" + err);
+          if (typeof onError !== 'undefined') onError();
+          return;
         }
-        catch(err)
-        {
-            throw new InvalidConfigError(null, {cause: err});
-        }
+      }
 
-    else if (!isPlainObject(config))
-        throw new InvalidConfigError();
-
-    return config;
-}
-
-
-/**
- * STIX content input to the visualizer can take different forms.  This
- * function normalizes it to an array of objects, so subsequent code only
- * deals with a single form.  Each object is itself normalized to a Map
- * instance (as are all sub-objects).
- *
- * This function also does some simple sanity checks on the input to try to
- * ensure it is valid.
- *
- * @param stixContent STIX content as given to the visualizer
- * @return An array of objects
- * @throw STIXContentError if any errors are found in the input
- */
-function normalizeContent(stixContent)
-{
-    let stixObjects;
-
-    try
-    {
-        stixContent = parseToMap(stixContent);
-    }
-    catch (err)
-    {
-        // wrap misc errors (e.g. JSON.parse() errors, which are SyntaxErrors)
-        // with our generic STIX content error
-        if (err instanceof STIXContentError)
-            throw err;
-        throw new STIXContentError(null, {cause: err});
-    }
-
-    if (stixContent instanceof Map && stixContent.size > 0)
-    {
-        if (stixContent.get("type") === "bundle")
-            stixObjects = stixContent.get("objects") || [];
-        else
-            // Assume we were given a single object
-            stixObjects = [stixContent];
-    }
-    else if (Array.isArray(stixContent))
-        stixObjects = stixContent;
-    else
-        throw new STIXContentError();
-
-    if (!Array.isArray(stixObjects) || stixObjects.length <= 0)
-        throw new STIXContentError();
-
-    // Do a simple validity check on our individual STIX objects.
-    for (let stixObject of stixObjects)
-        if (!isValidStixObject(stixObject))
-            throw new InvalidSTIXObjectError(stixObject);
-
-    return stixObjects;
-}
-
-
-/**
- * The entrypoint for users of this module: create a graph which visualizes
- * the content in the given STIX bundle.  The content will be added to the
- * webpage DOM under the given element.
- *
- * @param echarts The echarts module object
- * @param domElement the parent element where the chart is to be located in a
- *      web page
- * @param stixContent STIX content as a JSON string, object, or array of
- *      objects.
- * @param config A config object containing preferences for naming objects;
- *      null to use defaults
- * @return The chart object.  May be used perform certain options on the
- *      chart, e.g. dispose of it.
- */
-async function makeGraph(echarts, domElement, stixContent, config=null)
-{
-    if (config !== null)
-        config = normalizeConfig(config);
-
-    let stixObjects = normalizeContent(stixContent);
-
-    let categories = await makeCategories(stixObjects, config);
-    let legend = makeLegend(categories);
-
-    let [nodes, links] = makeNodesAndLinks(stixObjects, categories, config);
-
-    let initOpts = {
-        renderer: "svg"  // or "canvas"
+      this.buildNodes(parsed);
+      this.initGraph();
+      if (typeof callback !== 'undefined') callback();
     };
 
-    let chartOpts = {
-        legend: legend,
-        series: {
-            type: "graph",
-            // Make graph zoomable.
-            // using true or "move" here to enable panning seems to often cause
-            // the whole graph to move when dragging one node.  Seems like a
-            // bug...
-            roam: true,
-            // disable draggable nodes for now, due to echarts bugs
-            draggable: false,
-            layout: "force",
-            force: {
-                // causes nodes to repel each other
-                repulsion: 1000,
-                // causes layout to distance linked nodes by this amount.
-                // (so if farther, this is an attractive force; if nearer, it
-                // is repulsive.)
-                edgeLength: 200,
-                // causes nodes to be attracted to the center
-                gravity: 0.1
-            },
-            // Applies to node labels.  Move them a bit so they don't
-            // completely cover the icon.
-            label: {
-                show: true,
-                align: "left",
-                verticalAlign: "bottom",
-                offset: [22,0],
-                color: "#000",
-                textBorderColor: "#fff",
-                textBorderWidth: 2,
-                fontWeight: "bold",
-                fontSize: 13
-            },
-            // draw arrowheads on the target end of the links
-            edgeSymbol: ["none", "arrow"],
-            // Add curvature to parallel edges
-            autoCurveness: true,
-            categories: categories,
-            nodes: nodes,
-            links: links,
+    Viz.prototype.parseContent = function(content) {
+      if (typeof content === 'string' || content instanceof String) {
+        return this.parseContent(JSON.parse(content));
+      }
+      else if (content.constructor === Array) {
+        if (this.arrHasAllStixObjs(content)) {
+          return {
+            "objects": content
+          };
+        }
+        else {
+          throw "Input contains one or more invalid STIX objects";
+        }
+      }
+      else if (this.isStixObj(content)) {
+        if (content.type == "bundle") {
+          return content;
+        } else {
+          return {
+            "objects": [content]
+          };
+        }
+      }
+      else {
+        throw "Input is neither parseable JSON nor a STIX object";
+      }
+    };
 
-            // Misc aesthetic adjustments
+    /* ******************************************************
+     * Returns true if the JavaScript object passed in has
+     * properties required by all STIX objects.
+     * ******************************************************/
+    Viz.prototype.isStixObj = function(obj) {
+      if ('type' in obj && 'id' in obj) {
+        return true;
+      } else {
+        return false;
+      }
+    };
 
-            // Make icons larger
-            symbolSize: 40,
-            // Make arrowheads a little larger
-            edgeSymbolSize: 15,
-            // thicken edges to make them easier to see
-            lineStyle: {
-                width: 2,
-                opacity: 1
-            },
-            // Thicken edge label font to make it easier to read
-            edgeLabel: {
-                show: true,
-                fontWeight: "bold"
-            },
-            // Enable single node selection, define a style for a selected
-            // node.
-            selectedMode: "single",
-            select: {
-                itemStyle: {
-                    shadowBlur: 10,
-                    shadowColor: "#000",
-                    shadowOffsetX: 5,
-                    shadowOffsetY: 5
-                }
+    /* ******************************************************
+     * Returns true if the JavaScript array passed in has
+     * only objects such that each object has properties
+     * required by all STIX objects.
+     * ******************************************************/
+    Viz.prototype.arrHasAllStixObjs = function(arr) {
+      return arr.reduce((accumulator, currentObj) => {
+        return accumulator && (this.isStixObj(currentObj));
+      }, true);
+    };
+
+    /* ******************************************************
+     * Generates the components on the chart from the JSON data
+     * ******************************************************/
+    Viz.prototype.initGraph = function() {
+      var _this = this;
+      this.force.nodes(this.currentGraph.nodes).links(this.currentGraph.edges).start();
+      this.labelForce.nodes(this.labelGraph.nodes).links(this.labelGraph.edges).start();
+
+      // create filter with id #drop-shadow
+      // height=130% so that the shadow is not clipped
+      var filter = this.svg.append("svg:defs").append("filter")
+          .attr("id", "drop-shadow")
+          .attr("height", "200%")
+          .attr("width", "200%")
+          .attr("x", "-50%") // x and y have to have negative offsets to
+          .attr("y", "-50%"); // stop the edges from getting cut off
+      // translate output of Gaussian blur to the right and downwards with 2px
+      // store result in offsetBlur
+      filter.append("feOffset")
+          .attr("in", "SourceAlpha")
+          .attr("dx", 0)
+          .attr("dy", 0)
+          .attr("result", "offOut");
+      // SourceAlpha refers to opacity of graphic that this filter will be applied to
+      // convolve that with a Gaussian with standard deviation 3 and store result
+      // in blur
+      filter.append("feGaussianBlur")
+          .attr("in", "offOut")
+          .attr("stdDeviation", 7)
+          .attr("result", "blurOut");
+      filter.append("feBlend")
+          .attr("in", "SourceGraphic")
+          .attr("in2", "blurOut")
+          .attr("mode", "normal");
+
+      // Adds style directly because it wasn't getting picked up by the style sheet
+      var link = this.svg.selectAll('path.link').data(this.currentGraph.edges).enter().append('path')
+          .attr('class', 'link')
+          .style("stroke", "#aaa")
+          .style('fill', "#aaa")
+          .style("stroke-width", "3px")
+          .attr('id', function(d, i) { return "link" + _this.id + "_" + i; })
+          .on('click', function(d, i) { handleSelected(d, this); });
+
+      // Create the text labels that will be attatched to the paths
+      var linktext = this.svg.append("svg:g").selectAll("g.linklabelholder").data(this.currentGraph.edges);
+      linktext.enter().append("g").attr("class", "linklabelholder")
+         .append("text")
+         .attr("class", "linklabel")
+         .style("font-size", "13px")
+         .attr("text-anchor", "start")
+         .style("fill","#000")
+       .append("textPath")
+        .attr("xlink:href",function(d,i) { return "#link" + _this.id + "_" + i;})
+        .attr("startOffset", "20%")
+        .text(function(d) {
+          return d.label;
+        });
+      var linklabels = this.svg.selectAll('.linklabel');
+
+      var node = this.svg.selectAll("g.node")
+          .data(this.currentGraph.nodes)
+        .enter().append("g")
+          .attr("class", "node")
+          .call(this.force.drag); // <-- What does the "call()" function do?
+        node.append("circle")
+          .attr("r", this.d3Config.nodeSize)
+          .style("fill", function(d) { return _this.d3Config.color(d.typeGroup); });
+      var nodeIcon = node.append("image")
+          .attr("x", "-" + (this.d3Config.nodeSize + 0.5) + "px")
+          .attr("y", "-" + (this.d3Config.nodeSize + 1.5)  + "px")
+          .attr("width", this.d3Config.iconSize + "px")
+          .attr("height", this.d3Config.iconSize + "px");
+      nodeIcon.each(function(d) {
+          _this.setNodeIcon(d3.select(this), d.type);
+      });
+      node.on('click', function(d, i) { _this.handleSelected(d, this); }); // If they're holding shift, release
+
+      // Fix on click/drag, unfix on double click
+      this.force.drag().on('dragstart', function(d, i) {
+        d3.event.sourceEvent.stopPropagation(); // silence other listeners
+        _this.handlePin(d, this, true);
+      });//d.fixed = true });
+      node.on('dblclick', function(d, i) { _this.handlePin(d, this, false); });//d.fixed = false });
+
+      // Right click will greatly dim the node and associated edges
+      // >>>>>>> Does not currently work <<<<<<<
+      node.on('contextmenu', function(d) {
+        if(d.dimmed) {
+          d.dimmed = false; // <-- What is this? Where is this set? How does this work?
+          d.attr("class", "node");
+        } else {
+          d.dimmed = true;
+          d.attr("class", "node dimmed");
+        }
+      });
+
+      var anchorNode = this.svg.selectAll("g.anchorNode").data(this.labelForce.nodes()).enter().append("svg:g").attr("class", "anchorNode");
+      anchorNode.append("svg:circle").attr("r", 0).style("fill", "#FFF");
+            anchorNode.append("svg:text").text(function(d, i) {
+            return i % 2 === 0 ? "" : _this.nameFor(d.node, _this.customConfig);
+        }).style("fill", "#555").style("font-family", "Arial").style("font-size", 12);
+
+      // Code in the "tick" function determines where the elements
+      // should be redrawn every cycle (essentially, it allows the
+      // elements to be animated)
+      this.force.on("tick", function() {
+
+        link.attr("d", function(d) { return _this.drawArrow(d); });
+
+        node.call(function() {
+          this.attr("transform", function(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+          });
+        });
+
+        anchorNode.each(function(d, i) {
+          _this.labelForce.start();
+          if(i % 2 === 0) {
+            d.x = d.node.x;
+            d.y = d.node.y;
+          } else {
+            var b = this.childNodes[1].getBBox();
+
+            var diffX = d.x - d.node.x;
+            var diffY = d.y - d.node.y;
+
+            var dist = Math.sqrt(diffX * diffX + diffY * diffY);
+
+            var shiftX = b.width * (diffX - dist) / (dist * 2);
+            shiftX = Math.max(-b.width, Math.min(0, shiftX));
+            var shiftY = 5;
+            this.childNodes[1].setAttribute("transform", "translate(" + shiftX + "," + shiftY + ")");
+          }
+        });
+
+        anchorNode.call(function() {
+          this.attr("transform", function(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+          });
+        });
+
+        linklabels.attr('transform',function(d,i) {
+          if (d.target.x < d.source.x) {
+            bbox = this.getBBox();
+            rx = bbox.x+bbox.width/2;
+            ry = bbox.y+bbox.height/2;
+            return 'rotate(180 '+rx+' '+ry+')';
+          }
+          else {
+            return 'rotate(0)';
+          }
+        });
+      });
+
+      // Code to handle zooming and dragging the viewing area
+      this.svgTop.call(d3.behavior.zoom()
+        .scaleExtent([0.25, 5])
+        .on("zoom", function() {
+          _this.svg.attr("transform",
+            "translate(" + d3.event.translate + ") " +
+            "scale(" + d3.event.scale + ")"
+          );
+        })
+      )
+      .on("dblclick.zoom", null);
+    };
+
+    /* ******************************************************
+     * Draws an arrow between two points.
+     * ******************************************************/
+    Viz.prototype.drawArrow = function(d) {
+      return this.drawLine(d) + this.drawArrowHead(d);
+    };
+
+    /* ******************************************************
+     * Draws a line between two points
+     * ******************************************************/
+    Viz.prototype.drawLine = function(d) {
+      return this.startAt(d.source) + this.lineTo(d.target);
+    };
+
+    /* ******************************************************
+     * Draws an arrow head.
+     * ******************************************************/
+    Viz.prototype.drawArrowHead = function(d) {
+      var arrowTipPoint = this.calculateArrowTipPoint(d);
+      return this.startAt(arrowTipPoint)
+        + this.lineTo(this.calculateArrowBaseRightCornerPoint(d, arrowTipPoint))
+        + this.lineTo(this.calculateArrowBaseLeftCornerPoint(d, arrowTipPoint))
+        + this.lineTo(arrowTipPoint)
+        + this.closePath();
+    };
+
+    /* ******************************************************
+     * Creates the SVG for a starting point.
+     * ******************************************************/
+    Viz.prototype.startAt = function(startPoint) {
+      return 'M' + startPoint.x + ',' + startPoint.y;
+    };
+
+    /* ******************************************************
+     * Creates the SVG for line to a point.
+     * ******************************************************/
+    Viz.prototype.lineTo = function(endPoint) {
+      return 'L' + endPoint.x + ',' + endPoint.y;
+    };
+
+    /* ******************************************************
+     * Calculates the point at which the arrow tip should be.
+     * ******************************************************/
+    Viz.prototype.calculateArrowTipPoint = function(d) {
+      var nodeRadius = Math.max(this.d3Config.iconSize, this.d3Config.nodeSize) / 2;
+      return this.translatePoint(d.target, this.calculateUnitVectorAlongLine(d), -(this.d3Config.nodeSize + 3));
+    };
+
+    /* ******************************************************
+     * Calculates the point at which the right corner of the
+     * base of the arrow head should be.
+     * ******************************************************/
+    Viz.prototype.calculateArrowBaseRightCornerPoint = function(d, arrowTipPoint) {
+      var arrowBaseWidth = 13;
+      var unitVector = this.calculateUnitVectorAlongLine(d);
+      var arrowBasePoint = this.calculateArrowBaseCentrePoint(d, arrowTipPoint);
+      return this.translatePoint(arrowBasePoint, this.calculateNormal(unitVector), -arrowBaseWidth / 2);
+    };
+
+    /* ******************************************************
+     * Calculates the point at which the left corner of the
+     * base of the arrow head should be.
+     * ******************************************************/
+    Viz.prototype.calculateArrowBaseLeftCornerPoint = function(d, arrowTipPoint) {
+      var arrowBaseWidth = 13;
+      var unitVector = this.calculateUnitVectorAlongLine(d);
+      var arrowBasePoint = this.calculateArrowBaseCentrePoint(d, arrowTipPoint);
+      return this.translatePoint(arrowBasePoint, this.calculateNormal(unitVector), arrowBaseWidth / 2);
+    };
+
+    /* ******************************************************
+     * Calculates the point at the centre of the base of the
+     * arrow head.
+     * ******************************************************/
+    Viz.prototype.calculateArrowBaseCentrePoint = function(d, arrowTipPoint) {
+      var arrowHeadLength = 13;
+      return this.translatePoint(arrowTipPoint, this.calculateUnitVectorAlongLine(d), -arrowHeadLength);
+    };
+
+    /* ******************************************************
+     * Translates a point.
+     * ******************************************************/
+    Viz.prototype.translatePoint = function(startPoint, directionUnitVector, distance) {
+      return { x: startPoint.x + distance * directionUnitVector.x, y: startPoint.y + distance * directionUnitVector.y };
+    };
+
+    /* ******************************************************
+     * Calculates a unit vector along a particular line.
+     * ******************************************************/
+    Viz.prototype.calculateUnitVectorAlongLine = function(d) {
+      var dx = d.target.x - d.source.x;
+      var dy = d.target.y - d.source.y;
+      var dr = Math.sqrt(dx * dx + dy * dy);
+      return { x: dx / dr, y: dy / dr };
+    };
+
+    /* ******************************************************
+     * Calculates a normal to a unit vector.
+     * ******************************************************/
+    Viz.prototype.calculateNormal = function(unitVector) {
+      return { x: -unitVector.y, y: unitVector.x };
+    };
+
+    /* ******************************************************
+     * Closes an SVG path.
+     * ******************************************************/
+    Viz.prototype.closePath = function() {
+      return 'Z';
+    };
+
+    /* ******************************************************
+     * Screens out D3 chart data from the presentation.
+     * Also makes values more readable.
+     * Called as the 2nd parameter to JSON.stringify().
+     * ******************************************************/
+    function replacer(key, value) {
+      var blacklist = ["typeGroup", "index", "weight", "x", "y", "px", "py", "fixed", "dimmed"];
+      if (blacklist.indexOf(key) >= 0) {
+        return undefined;
+      }
+      // Some of the potential values are not very readable (IDs
+      // and object references). Let's see if we can fix that.
+      // Lots of assumptions being made about the structure of the JSON here...
+      var dictlist = ['definition', 'objects'];
+      if (Array.isArray(value)) {
+        if (key === 'kill_chain_phases') {
+          var newValue = [];
+          value.forEach(function (item) {
+            newValue.push(item.phase_name)
+          });
+          return newValue;
+        } else if (key === 'granular_markings' || key === 'external_references') {
+          var newValue = [];
+          value.forEach(function (item) {
+            newValue.push(JSON.stringify(item));
+          });
+          return newValue.join(", ");
+        } else {
+          return value.join(", ");
+        }
+      } else if (/--/.exec(value) && !(key === "id")) {
+        if (!(this.idCache[value] === null || this.idCache[value] === undefined)) {
+          // IDs are gross, so let's display something more readable if we can
+          // (unless it's actually the node id)
+          return this.currentGraph.nodes[this.idCache[value]].name;
+        }
+      } else if (dictlist.indexOf(key) >= 0) {
+        return JSON.stringify(value);
+      }
+      return value;
+    };
+
+    /* ******************************************************
+     * Adds class "selected" to last graph element clicked
+     * and removes it from all other elements.
+     *
+     * Takes datum and element as input.
+     * ******************************************************/
+    Viz.prototype.handleSelected = function(d, el) {
+      var selectedReplacer = replacer.bind(this);
+      jsonString = JSON.stringify(d, selectedReplacer, 2); // get only the STIX values
+      purified = JSON.parse(jsonString); // make a new JSON object from the STIX values
+
+      // Pretty up the keys
+      for (var key in purified) {
+        if (d.hasOwnProperty(key)) {
+          var keyString = key;
+          if (refRegex.exec(key)) { // key is "created_by_ref"... let's pretty that up
+            keyString = key.replace(/_(refs*)?/g, " ").trim();
+          } else {
+            keyString = keyString.replace(/_/g, ' ');
+          }
+          keyString = keyString.charAt(0).toUpperCase() + keyString.substr(1).toLowerCase() // Capitalize it
+          keyString += ":";
+
+          purified[keyString] = purified[key];
+          delete purified[key];
+        }
+      }
+
+      this.selectedCallback(purified);
+      d3.select('.selected').classed('selected', false);
+      d3.select(el).classed('selected', true);
+    };
+
+    /* ******************************************************
+     * Handles pinning and unpinning of nodes.
+     *
+     * Takes datum, element, and boolean as input.
+     * ******************************************************/
+    Viz.prototype.handlePin = function(d, el, pinBool) {
+      d.fixed = pinBool;
+      d3.select(el).classed("pinned", pinBool);
+    };
+
+    /* ******************************************************
+     * Parses the JSON input and builds the arrays used by
+     * initGraph().
+     *
+     * Takes a JSON object as input.
+     * ******************************************************/
+    Viz.prototype.buildNodes = function(package) {
+      var _this = this;
+      var relationships = [];
+      if(package.hasOwnProperty('objects')) {
+        this.parseSDOs(package['objects']);
+
+        // Get embedded relationships
+        package['objects'].forEach(function(item) {
+          if (item['type'] === 'relationship') {
+            relationships.push(item);
+            return;
+          }
+          Object.keys(item).forEach(function(key, index) {
+            if (key.endsWith("_ref") && _this.refsMapping.hasOwnProperty(key)) {
+              var source = (_this.refsMapping[key][1] === true) ? item["id"] : item[key];
+              var target = (_this.refsMapping[key][1] === true) ? item[key] : item["id"];
+              var relType = _this.refsMapping[key][0];
+              relationships.push({'source_ref': source,
+                                  'target_ref': target,
+                                  'relationship_type': relType});
             }
-        }
+            else if (key.endsWith("_refs") && _this.refsMapping.hasOwnProperty(key)) {
+              item[key].forEach(function(refID) {
+                var source = (_this.refsMapping[key][1] === true) ? item["id"] : refID;
+                var target = (_this.refsMapping[key][1] === true) ? refID : item["id"];
+                var relType = _this.refsMapping[key][0];
+                relationships.push({'source_ref': source,
+                                    'target_ref': target,
+                                    'relationship_type': relType});
+              });
+            }
+          });
+        });
+      };
+
+      this.addRelationships(relationships);
+
+      // Add the legend so we know what's what
+      this.legendCallback(Object.keys(this.typeGroups));
     };
 
-    // 2nd arg here is for theming.  E.g. could use "dark" for a dark themed
-    // graph.
-    let chart = echarts.init(domElement, null, initOpts);
-    chart.setOption(chartOpts);
+    /* ******************************************************
+     * Uses regex to check whether the specified value for
+     *  display_icon in customConfig is a valid URL.
+     *
+     * Note: The protocol MUST be supplied in the image URL
+     *  (e.g. https)
+     *
+     * The regex expression below is based on:
+     * https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url 
+     * ******************************************************/
+    Viz.prototype.validUrl = function(imageUrl) {
+      var pattern = new RegExp('^(https?:\\/\\/)'+ // protocol
+                           '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|'+ // domain name
+                           '((\\d{1,3}\\.){3}\\d{1,3}))'+ // ip (v4) address
+                           '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ //port
+                           '(\\?[;&amp;a-z\\d%_.~+=-]*)?'+ // query string
+                           '(\\#[-a-z\\d_]*)?$','i');
+      return pattern.test(imageUrl);
+    };
 
-    return chart;
-}
+    /* ******************************************************
+     * Returns the name to use for an SDO Node
+     *
+     * Determines what name to use in the following order:
+     * 1) A user-chosen ID-specific label via customConfig.userLabels.<id>
+     * 2) The value of a user-chosen type-specific SDO property given via
+     *    customConfig.<type>.display_property
+     * 3) The SDO's "name" property
+     * 4) The SDO's "value" property
+     * 5) The SDO's "type" property
+     * ******************************************************/
+    Viz.prototype.nameFor = function(sdo) {
 
+      let name = null;
 
-/**
- * Create and return an object which is this file's module.
- */
-function makeModule(echarts)
-{
-    let module = {
-        makeGraph: (domElement, stixContent, config=null) =>
-            makeGraph(echarts, domElement, stixContent, config)
+      if (this.customConfig !== undefined) {
+        if ("userLabels" in this.customConfig &&
+            sdo.id in this.customConfig.userLabels)
+          name = this.customConfig.userLabels[sdo.id];
+        else if (sdo.type in this.customConfig)
+          name = sdo[this.customConfig[sdo.type].display_property];
+
+        if (name && name.length > 100)
+          name = name.substr(0,100) + '...';  // For space-saving
+      }
+
+      if (!name) {
+        if (sdo.name !== undefined) {
+          name = sdo.name;
+        } else if (sdo.value !== undefined) {
+          name = sdo.value;
+        } else if (sdo.path !== undefined) {
+          name = sdo.path;
+        } else {
+          name = sdo.type;
+        }
+      }
+
+      return name;
+    };
+
+    /* ******************************************************
+     * Returns the icon to use for an SDO Node
+     *
+     * Determines which icon to use in the following order:
+     * 1) A display_icon set in the config (must be in the icon directory)
+     * 2) A default icon for the SDO type, bundled with this library
+     * ******************************************************/
+    Viz.prototype.iconFor = function(typeName) {
+      if (this.customConfig !== undefined && typeName in this.customConfig) {
+        let customIcon = this.customConfig[typeName].display_icon;
+        if (customIcon !== undefined) {
+          if (this.validUrl(customIcon)) {
+            return customIcon;
+          } else {
+            typeIcon = this.d3Config.iconDir + '/' + customIcon;
+            return typeIcon;
+          }
+        }
+      }
+      if (typeName !== undefined) {
+        typeIcon = this.d3Config.iconDir + "/stix2_" + typeName.replace(/\-/g, '_') + "_icon_tiny_round_v1.png";
+        return typeIcon;
+      }
+    };
+
+    /* ******************************************************
+     * Sets the icon on a STIX object node
+     *
+     * If the image doesn't load properly, a default 'custom object'
+     * icon will be used instead
+     * ******************************************************/
+    Viz.prototype.setNodeIcon = function(node, stixType) {
+      var _this = this;
+      var tmpImg = new Image();
+      tmpImg.onload = function() {
+        // set the node's icon to this image if it loaded properly
+        node.attr("xlink:href", tmpImg.src);
+      }
+      tmpImg.onerror = function() {
+        // set the node's icon to the default if this image could not load
+        node.attr("xlink:href", _this.d3Config.iconDir + "/stix2_custom_object_icon_tiny_round_v1.svg")
+      }
+      tmpImg.src = _this.iconFor(stixType, _this.customConfig);
+    };
+
+    /* ******************************************************
+     * Parses valid SDOs from an array of potential SDO
+     * objects (ideally from the data object)
+     *
+     * Takes an array of objects as input.
+     * ******************************************************/
+    Viz.prototype.parseSDOs = function(container) {
+      var cap = container.length;
+      for(var i = 0; i < cap; i++) {
+        // So, in theory, each of these should be an SDO. To be sure, we'll check to make sure it has an `id` and `type`. If not, raise an error and ignore it.
+        var maybeSdo = container[i];
+        if(maybeSdo.id === undefined || maybeSdo.type === undefined) {
+          console.error("Should this be an SDO???", maybeSdo);
+        } else {
+          this.addSdo(maybeSdo);
+        }
+      }
+    };
+
+    /* ******************************************************
+     * Adds an SDO node to the graph
+     *
+     * Takes a valid SDO object as input.
+     * ******************************************************/
+    Viz.prototype.addSdo = function(sdo) {
+      if(this.idCache[sdo.id]) {
+        console.log("Skipping already added object!", sdo);
+      } else if(sdo.type === 'relationship') {
+        console.log("Skipping relationship object!", sdo);
+      } else {
+        if(this.typeGroups[sdo.type] === undefined) {
+          this.typeGroups[sdo.type] = this.typeIndex++;
+        }
+        sdo.typeGroup = this.typeGroups[sdo.type];
+
+        this.idCache[sdo.id] = this.currentGraph.nodes.length; // Edges reference nodes by their array index, so cache the current length. When we add, it will be correct
+        this.currentGraph.nodes.push(sdo);
+
+        this.labelGraph.nodes.push({node: sdo}); // Two labels will orbit the node, we display the less crowded one and hide the more crowded one.
+        this.labelGraph.nodes.push({node: sdo});
+
+        this.labelGraph.edges.push({
+          source : (this.labelGraph.nodes.length - 2),
+          target : (this.labelGraph.nodes.length - 1),
+          weight: 1
+        });
+      }
+    };
+
+    /* ******************************************************
+     * Adds relationships to the graph based on the array of
+     * relationships contained in the data.
+     *
+     * Takes an array as input.
+     * ******************************************************/
+    Viz.prototype.addRelationships = function(relationships) {
+      for(var i = 0; i < relationships.length; i++) {
+        var rel = relationships[i];
+        if(this.idCache[rel.source_ref] === null || this.idCache[rel.source_ref] === undefined) {
+          console.error("Couldn't find source!", rel);
+        } else if (this.idCache[rel.target_ref] === null || this.idCache[rel.target_ref] === undefined) {
+          console.error("Couldn't find target!", rel);
+        } else {
+          this.currentGraph.edges.push({source: this.idCache[rel.source_ref], target: this.idCache[rel.target_ref], label: rel.relationship_type});
+        }
+      }
+    };
+
+    /* ******************************************************
+     * Resets the graph so it can be rebuilt
+     * *****************************************************/
+    Viz.prototype.vizReset = function() {
+      this.typeGroups = {};
+      this.typeIndex = 0;
+
+      this.currentGraph = {
+        nodes: [],
+        edges: []
+      };
+      this.labelGraph = {
+        nodes: [],
+        edges: []
+      };
+
+      this.idCache = {};
+
+      this.force.stop();
+      this.labelForce.stop();
+      this.svg.remove();
+    };
+
+    module = {
+        "Viz": Viz
     };
 
     return module;
-}
-
-
-define(["nbextensions/stix2viz/echarts"], makeModule);
+});

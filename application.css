@@ -30,10 +30,8 @@ h1 img {
   right: 0;
 }
 
-#canvas {
+svg {
   border: solid 1px black;
-  width: 100%;
-  height: 600px;
 }
 
 #uploader {
@@ -55,18 +53,23 @@ h1 img {
 #canvas-wrapper {
   margin: 25px;
   float: left;
-  width: 60%;
 }
 
 .sidebar {
   right: 25px;
   width: 350px;
-  display: inline-block;
+  float: right;
 }
 
 .sidebar h2 {
   text-align: center;
   margin-top: 0;
+}
+
+#legend {
+  margin-top: 25px;
+  padding: 25px;
+  background-color: #fafafa;
 }
 
 #selected {
@@ -163,3 +166,8 @@ pre {
 .hidden {
   display: none;
 }
+
+/*.selected {
+  >>> This style is in the header of the index.html file for comptibility reasons! <<<
+  filter: url("#drop-shadow");
+}*/
