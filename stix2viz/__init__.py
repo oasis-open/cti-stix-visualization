@@ -12,7 +12,7 @@ def display(data, config=None, width=800, height=600):
         viz_args.append(config)
 
     h = """
-    <svg id='chart{id}' style="width:{width}px;height:{height}px;"></svg>
+    <svg id='chart{id}' style="width:{width}px;height:{height}px;border:solid 1px gray;"></svg>
 
     <script type="text/javascript">
         require(["nbextensions/stix2viz/stix2viz"], function(stix2viz) {{
