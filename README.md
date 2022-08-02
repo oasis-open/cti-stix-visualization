@@ -74,8 +74,9 @@ Initially, the associated TC members have designated one or more persons to serv
 
 **<a id="currentMaintainers">Current Maintainers of this TC Open Repository</a>**
 
-  * [Chris Lenk](mailto:clenk@mitre.org); GitHub ID: [https://github.com/clenk](https://github.com/clenk); WWW: [MITRE](https://www.mitre.org)
  * [Jason Keirstead](mailto:Jason.Keirstead@ca.ibm.com); GitHub ID: [https://github.com/JasonKeirstead](https://github.com/JasonKeirstead); WWW: [IBM](http://www.ibm.com/)
+ * [Emily Ratliff](mailto:Emily.Ratliff@ibm.com); GitHub ID: [https://github.com/ejratl](https://github.com/ejratl); WWW: [IBM](http://www.ibm.com/)
+ * [Duncan Sparrell](mailto:duncan@sfractal.com); GitHub ID: [https://github.com/sparrell](https://github.com/sparrell); WWW: [sFractal](http://sfractal.com/)
 
 ## <a id="aboutOpenRepos">About OASIS TC Open Repositories</a>
 
