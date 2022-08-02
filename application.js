@@ -16,9 +16,7 @@ require.config({
     }
 });
 
-require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2viz) {
-
-
+require(["domReady!", "stix2viz/stix2viz/stix2viz", "lib/stix2vizcore"], function (document, stix2viz) {
     // Init some stuff
     // For optimization purposes, look into moving these to local variables
     var visualizer;

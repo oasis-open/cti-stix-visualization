@@ -1,0 +1,25 @@
+{
+  "name": "cti-stix-visualization-dwj",
+  "version": "0.0.1",
+  "main": "lib/stix2vizcore.js",
+  "repository": "git@github.com:dwjohnston/cti-stix-visualization.git",
+  "author": "David Johnston <david@blacksheepcode.com>",
+  "license": "SEE LICNESE",
+  "scripts": {
+    "clean": "rm -rf lib",
+    "build": "tsc",
+    "start": "serve .",
+    "lint": "eslint ./stix2viz/stix2viz/stix2viz.js"
+  },
+  "peerDependencies": {
+    "d3": "^3.5.14"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
+    "@typescript-eslint/parser": "^5.17.0",
+    "d3": "^3.5.14",
+    "eslint": "^8.12.0",
+    "serve": "^13.0.2",
+    "typescript": "^4.6.3"
+  }
+}

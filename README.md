@@ -1,4 +1,115 @@
+
 # cti-stix-visualization
+
+## Installation
+
+D3 is required as a peer dependency. 
+
+TODO POSSIBLY UPDATE
+
+```
+npm i cti-stix-to-vis 
+```
+
+## Basic Use
+
+
+```js
+import d3 from "d3"; 
+import initViz from "cti-stix-to-viz"; 
+
+
+const Viz = initViz(d3); 
+
+const vizInstance = new Viz(document.getElementById("my-svg"), {
+  id: "my-svg" 
+}); 
+
+vizInstance.vizStix(testData, {
+  //config
+}); 
+
+```
+
+
+## Example usage with React: 
+
+
+TODO probably a good idea to add a link to code-sandbox
+
+```jsx
+import React, { useEffect, useRef } from 'react';
+import './App.css';
+
+import { testData } from './testData';
+import d3 from "d3";
+
+
+//TODO UPDATE THIS
+import initViz from "cti-stix-visualization-dwj";
+
+
+const Viz = initViz(d3);
+
+
+function App() {
+
+  const svgRef = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+
+    console.log(svgRef);
+    if (svgRef.current) {
+      const vizInstance = new Viz(svgRef.current, {
+        id: 'foo',
+
+      });
+
+      vizInstance.vizStix(testData, {}, (...args) => {
+        console.log("vizCallBack", args);
+      }, (...args) => {
+        console.log("errorCallback", args)
+      });
+    }
+  }, [svgRef]);
+  return (
+    <div className="App" >
+      <svg ref={svgRef} id='foo'></svg>
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+
+## Local use
+
+
+Install dependencies
+
+```
+yarn
+```
+
+Build the compiled code (required for local server)
+
+```
+yarn build
+```
+
+Start local server
+
+```
+yarn start
+```
+
+Open your browser to http://localhost:3000
+
+
+
+
+
 
 *This is an [OASIS TC Open Repository](https://www.oasis-open.org/resources/open-repositories/). See the [Governance](#governance) section for more information.*
 
