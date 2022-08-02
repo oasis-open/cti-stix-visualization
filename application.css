@@ -5,6 +5,12 @@ html, body {
   font-weight: 300;
 }
 
+ul li div {
+  height: 37px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 h1 {
   font-size: 36px;
   font-weight: 300;
@@ -28,10 +34,13 @@ h1 img {
   bottom: 0;
   left: 0;
   right: 0;
+  padding-bottom: 25px;
+  width: auto;
 }
 
 svg {
   border: solid 1px black;
+  width: auto;
 }
 
 #uploader {
@@ -53,6 +62,7 @@ svg {
 #canvas-wrapper {
   margin: 25px;
   float: left;
+  width: auto;
 }
 
 .sidebar {
@@ -74,31 +84,65 @@ svg {
 
 #selected {
   margin-top: 25px;
-  padding: 25px;
   background-color: #fafafa;
   cursor: pointer;
+  float: left;
+  width: 50%;
 }
 
-#selection > div {
-  padding: .5em 0 .5em 2%;
+#linkedNodesGroup {
+  margin-top: 25px;
+  background-color: #fafafa;
+  cursor: pointer;
+  float: right;
+  width: 50%;
 }
 
-#selection > .odd {
-  background-color: #e5e5e5;
+div.top-wrapper {
+  display: table-row;
+  width: 100%;
 }
 
-#selection > div > div {
-  display: inline-block;
-  vertical-align: top;
-}
-
-#selection > div > .type {
+div.wrapper > div > .type {
   width: 30%;
   font-weight: bold;
 }
 
-#selection > div > .value {
-  width: 65%;
+div.wrapper {
+  margin-left: 2em;
+  width: 100%;
+  overflow-wrap: break-word;
+  display: inline-block;
+}
+
+span.title {
+  font-weight: normal;
+  color: purple;
+}
+
+span.num_value {
+  color: orange;
+  cursor: text;
+}
+
+span.text_value {
+  color: darkblue;
+  cursor: text;
+}
+
+span.ref_value_resolved {
+  color: lightblue;
+  text-decoration: underline;
+  cursor: context-menu;
+}
+
+span.ref_value_unresolved {
+  color: red;
+  text-decoration: underline;
+  cursor: not-allowed;
+}
+
+div.wrapper > div > .value {
   word-wrap: break-word;
 }
 
@@ -133,20 +177,10 @@ li {
   margin: 0;
 }
 
-ul li div {
-  width: 37px;
-  height: 37px;
-  display: inline-block;
-  vertical-align: middle;
-}
 
 ul > li > p {
   display: inline-block;
   margin: 5px 10px;
-}
-
-pre {
-  white-space: pre-wrap;
 }
 
 .dimmed {

@@ -23,6 +23,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     // For optimization purposes, look into moving these to local variables
     var visualizer;
     selectedContainer = document.getElementById('selection');
+    linkedNodes = document.getElementById('linkedNodes');
     uploader = document.getElementById('uploader');
     canvasContainer = document.getElementById('canvas-container');
     canvas = document.getElementById('canvas');
@@ -32,7 +33,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
      * Resizes the canvas based on the size of the window
      * ******************************************************/
     function resizeCanvas() {
-      var cWidth = document.getElementById('legend').offsetLeft - 52;
+      const container = document.getElementById("canvas-container");
+      var cWidth = container.clientWidth - document.getElementById('legend').width - 52;
       var cHeight = window.innerHeight - document.getElementsByTagName('h1')[0].offsetHeight - 27;
       document.getElementById('canvas-wrapper').style.width = cWidth;
       canvas.style.width = cWidth;
@@ -62,8 +64,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       cfg = {
         iconDir: "stix2viz/stix2viz/icons"
       }
-      visualizer = new stix2viz.Viz(canvas, cfg, populateLegend, populateSelected);
-      visualizer.vizStix(content, customConfig, vizCallback, errorCallback);
+      visualizer = new stix2viz.Viz(canvas, cfg, populateLegend, populateSelected, populateList);
+      visualizer.vizStix(content, customConfig, vizCallback, errorCallback, 200, true);
     }
 
     /* ----------------------------------------------------- *
@@ -161,35 +163,199 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     function populateSelected(d) {
       // Remove old values from HTML
       selectedContainer.innerHTML = "";
+      linkedNodes.innerHTML = "<ol></ol>";
+      populateParent(selectedContainer, d, 0);
+      const links = visualizer.linkMap[d.id];
 
-      var counter = 0;
+      // build out the list of all linked objects to the current one
+      for(let i = 0; i < links.length; i++) {
+        const cur = visualizer.objectMap[links[i].target];
+        let name = links[i].type + ": " + cur.type;
 
-      Object.keys(d).forEach(function(key) { // Make new HTML elements and display them
-        // Create new, empty HTML elements to be filled and injected
-        var div = document.createElement('div');
-        var type = document.createElement('div');
-        var val = document.createElement('div');
-
-        // Assign classes for proper styling
-        if ((counter % 2) != 0) {
-          div.classList.add("odd"); // every other row will have a grey background
+        if(links[i].flip) {
+          text = cur.type + " had " + links[i].type;
         }
-        type.classList.add("type");
-        val.classList.add("value");
+
+        addListElement(linkedNodes.firstChild, cur, name, "mainList");
+      }
+    }
+
+    function populateParent(parent, d) {
+      Object.keys(d).forEach(function(key) {
+        // skip embedded in a basic pass since they should be handled by a call directly to that array
+        if(key == "__embeddedLinks" || key == "__isEmbedded") {
+          return;
+        }
+
+        // Create new, empty HTML elements to be filled and injected
+        const title = document.createElement('span');
+        const wrapper = document.createElement('div');
+        const isRef = key.endsWith("_ref") || key.endsWith("_refs"); // controls the style of children and if they should be clickable
+
+        title.classList.add("title");
+        title.innerText = key + ": ";
+        wrapper.classList.add("wrapper");
+        wrapper.appendChild(title);
 
         // Add the text to the new inner html elements
         var value = d[key];
-        type.innerText = key;
-        val.innerText = value;
+        
+        if(Array.isArray(value) && value.length > 0) {
+          const open = document.createElement('span');
+          open.innerText = "[";
+          wrapper.appendChild(open);
+          if(typeof value[0] === "object" && value[0] !== null) {
+            for(let i = 0; i < value.length; i++) {
+              const subWrapper = document.createElement('div');
+              subWrapper.classList.add("wrapper");
+
+              const openObj = document.createElement('span');
+              openObj.innerText = "{";
+              subWrapper.appendChild(openObj);
+              populateParent(subWrapper, value[i]);
+
+              const closeObj = document.createElement('div');
+              closeObj.innerText = "}";
+              subWrapper.appendChild(closeObj);
+
+              wrapper.appendChild(subWrapper);
+            }
+          }
+          else {
+            
+
+            for(let i = 0; i < value.length; i++) {
+              const subWrapper = document.createElement('div');
+              subWrapper.classList.add("wrapper");
+              const element = value[i];
+              const val = document.createElement('span');
+              if(isRef) {
+                if(element in visualizer.objectMap) {
+                  val.classList.add("ref_value_resolved");
+                  val.onclick = function() {
+                    populateByUUID(element)
+                    selectedContainer.scrollIntoView();
+                  }
+                }
+                else {
+                  val.classList.add("ref_value_unresolved");
+                }
+              }
+              else if(typeof element == "string") {
+                val.classList.add("text_value");
+              }
+              else {
+                val.classList.add("num_value");
+              }
+              
+              val.innerText = element;
+              val.classList.add("value");
+              subWrapper.appendChild(val);
+              wrapper.appendChild(subWrapper);
+            }
+          }
+
+          const close = document.createElement('span');
+          close.innerText = "]";
+          wrapper.appendChild(close);
+        }
+        else if(typeof value === "object" && value !== null) {
+          const openObj = document.createElement('span');
+          openObj.innerText = "{";
+          wrapper.appendChild(openObj);
+          populateParent(wrapper, value);
+
+          const closeObj = document.createElement('span');
+          closeObj.innerText = "}";
+          wrapper.appendChild(closeObj);
+        }
+        else {
+          const val = document.createElement('span');
+          if(isRef) {
+            if(value in visualizer.objectMap) {
+              val.classList.add("ref_value_resolved");
+              val.onclick = function() {
+                populateByUUID(value);
+                selectedContainer.scrollIntoView();
+              }
+            }
+            else {
+              val.classList.add("ref_value_unresolved");
+            }
+          }
+          else if(typeof value == "string") {
+            val.classList.add("text_value");
+          }
+          else {
+            val.classList.add("num_value");
+          }
+
+          val.innerText = value;
+          val.classList.add("value");
+          wrapper.appendChild(val);
+        }
 
         // Add new divs to "Selected Node"
-        div.appendChild(type);
-        div.appendChild(val);
-        selectedContainer.appendChild(div);
-
-        // increment the class counter
-        counter += 1;
+        
+        parent.appendChild(wrapper);
       });
+    }
+
+    function populateByUUID(uuid) {
+      if(uuid in visualizer.objectMap) {
+        populateSelected(visualizer.objectMap[uuid]);
+      }
+      else {
+        alert(uuid + " was not found in this STIX");
+      }
+    }
+
+    /**
+     * This builds the list of objects when a graph representation would be too slow
+     * 
+     * @param object[] objects 
+     */
+    function populateList(objects) {
+      // make sure we hide the canvas and display the list
+      const simpleListWrapper = document.getElementById('simple-list-container');
+      simpleListWrapper.classList.remove("hidden");
+      const simpleList = document.getElementById('simple-list');
+      const canvasGroup = document.getElementById("canvas-group")
+      canvasGroup.classList.add("hidden"); // we need to make sure we hide the canvas
+      canvasGroup.classList.remove("top-wrapper"); // we need to make sure we hide the canvas
+      simpleList.innerHTML = "";
+
+      for(let i = 0; i < objects.length; i++) {
+        let name = objects[i]["type"];
+        if("name" in objects[i]) {
+          name = name + ": " + objects[i]["name"];
+        }
+
+        addListElement(simpleList, objects[i], name, "mainList");
+      }
+    }
+
+    function addListElement(parent, cur, summaryText, listName) {
+      const entry = document.createElement("li");
+      const details = document.createElement("details");
+      const summary = document.createElement("summary");
+      summary.innerText = summaryText;
+
+      const radio = document.createElement("input");
+      radio.setAttribute("type", "radio");
+      radio.setAttribute("name", listName);
+      radio.setAttribute("value", cur.id);
+
+      radio.onclick = function() {
+        populateByUUID(cur.id);
+        selectedContainer.scrollIntoView();
+      }
+
+      summary.appendChild(radio);
+      details.appendChild(summary);
+      populateParent(details, cur);
+      entry.appendChild(details);
+      parent.appendChild(entry);
     }
 
     /* ******************************************************
@@ -315,6 +481,5 @@ is not serving JSON, or is not running a webserver.\n\nA GitHub Gist can be crea
     uploader.addEventListener('dragover', handleDragOver, false);
     uploader.addEventListener('drop', handleFileDrop, false);
     window.onresize = resizeCanvas;
-    document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
     fetchJsonFromUrl();
 });

@@ -1,6 +1,7 @@
 define(["nbextensions/stix2viz/d3"], function(d3) {
 
     refRegex = /_refs*$/;
+    var parsed; // provides a single store for all parsed content
 
     /* ******************************************************
      * Viz class constructor.
@@ -18,7 +19,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      *     - legendCallback: function that takes an array of type names and create a legend for the graph
      *     - selectedCallback: function that acts on the data of a node when it is selected
      * ******************************************************/
-    function Viz(canvas, config, legendCb, selectedCb) {
+    function Viz(canvas, config, legendCb, selectedCb, textWriterCb) {
         // Init some stuff
         this.d3Config;
         this.customConfig;
@@ -30,15 +31,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         this.svg;
         this.typeGroups = {};
         this.typeIndex = 0;
-
-        this.currentGraph = {
-          nodes: [],
-          edges: []
-        };
-        this.labelGraph = {
-          nodes: [],
-          edges: []
-        };
+        this.textWriterCallback = textWriterCb;
+        this.clearGraph();
 
         this.idCache = {};
         // Set defaults for config if needed
@@ -79,7 +73,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
             where_sighted_refs: ["saw", false],
             object_ref: ["applies-to", true],
             sample_refs: ["sample-of", false],
-            analysis_sco_refs: ["captured-by", false],
+            sample_ref: ["sample-for", false],
+            analysis_sco_refs: ["yielded", true],
             contains_refs: ["contains", true],
             resolves_to_refs: ["resolves-to", true],
             belongs_to_ref: ["belongs-to", true],
@@ -103,6 +98,49 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
             parent_ref: ["parent-of", false]
         }
 
+        // A list of object types that will be embedded if certain conditions are met
+        // All conditions must match for it to be embedded.
+        Viz.embeddedMapping = {
+          "malware-analysis": {
+            "conditions": [
+              {
+                "type": "requiredProperty",
+                "name": "sample_ref"
+              },
+              {
+                "type": "missingProperty",
+                "name": "analysis_sco_refs"
+              }
+            ],
+            "embeded_target": "sample_ref"
+          },
+          "note": {
+            "conditions": [],
+            "embeded_target": "object_refs"
+          },
+          "opinion": {
+            "conditions": [],
+            "embeded_target": "object_refs"
+          },
+          "sighting": {
+            "conditions": [
+              {
+                "type": "missingProperty",
+                "name": "observed_data_refs"
+              },
+              {
+                "type": "missingProperty",
+                "name": "where_sighted_refs"
+              }
+            ],
+            "embeded_target": "sighting_of_ref"
+          }
+        }
+
+        this.objectMap = {}; // used to find object information that was embedded
+        this.linkMap = {}; // used to store all links in the format of: {"target": <id>, "type": <string>, "flip": <boolean>}
+
+
         canvas.style.width = this.d3Config.width;
         canvas.style.height = this.d3Config.height;
         this.force = d3.layout.force().charge(-400).linkDistance(this.d3Config.linkMultiplier * this.d3Config.nodeSize).size([this.d3Config.width, this.d3Config.height]);
@@ -122,7 +160,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      *     - callback: optional function to call after building the graph
      *     - onError: optional function to call if an error is encountered while parsing input
      * ******************************************************/
-    Viz.prototype.vizStix = function(content, config, callback, onError) {
+    Viz.prototype.vizStix = function(content, config, callback, onError, maxCount, hideEmbedded) {      
       try {
         // Saving this to a variable stops the rest of the function from executing on parse failure
         parsed = this.parseContent(content);
@@ -147,7 +185,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
         }
       }
 
-      this.buildNodes(parsed);
+      const relationships = this.buildNodes(parsed, maxCount, hideEmbedded);
+
       this.initGraph();
       if (typeof callback !== 'undefined') callback();
     };
@@ -310,8 +349,14 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       // should be redrawn every cycle (essentially, it allows the
       // elements to be animated)
       this.force.on("tick", function() {
+        link.attr("d", function(d) { 
+          const res = _this.drawArrow(d);
 
-        link.attr("d", function(d) { return _this.drawArrow(d); });
+          // sometimes invalid links show up so we should skip drawing their paths
+          if(!res.includes("NaN")) {
+            return res;
+          }
+        });
 
         node.call(function() {
           this.attr("transform", function(d) {
@@ -481,6 +526,28 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       return 'Z';
     };
 
+    function checkEmbeddedConditions(obj) {
+      if(obj["type"] in Viz.embeddedMapping) {
+        const mapping = Viz.embeddedMapping[obj["type"]];
+        for(let i = 0; i < mapping["conditions"].length; i++) {
+          if(mapping["conditions"][i]["type"] == "requiredProperty") {
+            if(!(mapping["conditions"][i]["name"] in obj)) {
+              return false;
+            }
+          }
+          else if(mapping["conditions"][i]["type"] == "missingProperty") {
+            if(mapping["conditions"][i]["name"] in obj) {
+              return false;
+            }
+          }
+        }
+
+        return true; // all conditions must match or they will have returned false
+      }
+
+      return false;
+    }
+
     /* ******************************************************
      * Screens out D3 chart data from the presentation.
      * Also makes values more readable.
@@ -491,35 +558,11 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       if (blacklist.indexOf(key) >= 0) {
         return undefined;
       }
-      // Some of the potential values are not very readable (IDs
-      // and object references). Let's see if we can fix that.
-      // Lots of assumptions being made about the structure of the JSON here...
-      var dictlist = ['definition', 'objects'];
-      if (Array.isArray(value)) {
-        if (key === 'kill_chain_phases') {
-          var newValue = [];
-          value.forEach(function (item) {
-            newValue.push(item.phase_name)
-          });
-          return newValue;
-        } else if (key === 'granular_markings' || key === 'external_references') {
-          var newValue = [];
-          value.forEach(function (item) {
-            newValue.push(JSON.stringify(item));
-          });
-          return newValue.join(", ");
-        } else {
-          return value.join(", ");
-        }
-      } else if (/--/.exec(value) && !(key === "id")) {
-        if (!(this.idCache[value] === null || this.idCache[value] === undefined)) {
-          // IDs are gross, so let's display something more readable if we can
-          // (unless it's actually the node id)
-          return this.currentGraph.nodes[this.idCache[value]].name;
-        }
-      } else if (dictlist.indexOf(key) >= 0) {
-        return JSON.stringify(value);
+      // we use __ to mark internal values as no STIX property can begin with this
+      else if(key.startsWith("__")) {
+        return undefined;
       }
+
       return value;
     };
 
@@ -531,25 +574,8 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      * ******************************************************/
     Viz.prototype.handleSelected = function(d, el) {
       var selectedReplacer = replacer.bind(this);
-      jsonString = JSON.stringify(d, selectedReplacer, 2); // get only the STIX values
+      jsonString = JSON.stringify(d, selectedReplacer, 5); // get only the STIX values
       purified = JSON.parse(jsonString); // make a new JSON object from the STIX values
-
-      // Pretty up the keys
-      for (var key in purified) {
-        if (d.hasOwnProperty(key)) {
-          var keyString = key;
-          if (refRegex.exec(key)) { // key is "created_by_ref"... let's pretty that up
-            keyString = key.replace(/_(refs*)?/g, " ").trim();
-          } else {
-            keyString = keyString.replace(/_/g, ' ');
-          }
-          keyString = keyString.charAt(0).toUpperCase() + keyString.substr(1).toLowerCase() // Capitalize it
-          keyString += ":";
-
-          purified[keyString] = purified[key];
-          delete purified[key];
-        }
-      }
 
       this.selectedCallback(purified);
       d3.select('.selected').classed('selected', false);
@@ -572,11 +598,14 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
      *
      * Takes a JSON object as input.
      * ******************************************************/
-    Viz.prototype.buildNodes = function(package) {
+    Viz.prototype.buildNodes = function(package, maxCount, hideEmbedded) {
       var _this = this;
-      var relationships = [];
+      const relationships = [];
+      let count = 0;
+      let graphObjects;
+
       if(package.hasOwnProperty('objects')) {
-        this.parseSDOs(package['objects']);
+        graphObjects = this.preParseSDOs(package['objects'], hideEmbedded);
 
         // Get embedded relationships
         package['objects'].forEach(function(item) {
@@ -584,34 +613,132 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
             relationships.push(item);
             return;
           }
-          Object.keys(item).forEach(function(key, index) {
-            if (key.endsWith("_ref") && _this.refsMapping.hasOwnProperty(key)) {
-              var source = (_this.refsMapping[key][1] === true) ? item["id"] : item[key];
-              var target = (_this.refsMapping[key][1] === true) ? item[key] : item["id"];
-              var relType = _this.refsMapping[key][0];
-              relationships.push({'source_ref': source,
-                                  'target_ref': target,
-                                  'relationship_type': relType});
-            }
-            else if (key.endsWith("_refs") && _this.refsMapping.hasOwnProperty(key)) {
-              item[key].forEach(function(refID) {
-                var source = (_this.refsMapping[key][1] === true) ? item["id"] : refID;
-                var target = (_this.refsMapping[key][1] === true) ? refID : item["id"];
-                var relType = _this.refsMapping[key][0];
-                relationships.push({'source_ref': source,
-                                    'target_ref': target,
-                                    'relationship_type': relType});
-              });
-            }
-          });
+
+          count += item.__isEmbedded ? 0 : 1; // make a running count for every visible object
+
+          recursiveCheck(_this, relationships, item["id"], item, "", item.__isEmbedded);
         });
       };
 
       this.addRelationships(relationships);
 
+      if(count <= maxCount) {
+        this.loadGraphContent(graphObjects, relationships);
+      }
+      else {
+        if(confirm("This file contains " + count + " nodes do you wish to display it as a list?")) {
+          this.textWriterCallback(graphObjects);
+        }
+        else {
+          this.loadGraphContent(graphObjects, relationships);
+        }
+      }
+    };
+
+    Viz.prototype.loadGraphContent = function(objects, relationships) {
+      this.parseSDOs(objects);
+      
+        // add the relationships which actually are in the graph
+        for(var i = 0; i < relationships.length; i++) {
+          var rel = relationships[i];
+          if(rel.source_ref in this.objectMap && rel.target_ref in this.objectMap) {
+            if((rel.source_ref in this.idCache) && (rel.target_ref in this.idCache)) {
+              this.currentGraph.edges.push({source: this.idCache[rel.source_ref], target: this.idCache[rel.target_ref], label: rel.relationship_type});
+            }
+          }
+        }
+
       // Add the legend so we know what's what
       this.legendCallback(Object.keys(this.typeGroups));
-    };
+    }
+
+    function recursiveCheck(_this, relationships, id, item, relationship_prefix = "", isEmbedded = false) {
+      Object.keys(item).forEach(function(key, index) {
+
+        if (key.endsWith("_ref")) {
+          let isSource = true;
+          var source = id;
+          var target = item[key];
+          let relType = relationship_prefix + " " + key;
+
+          if(key in _this.refsMapping) {
+            relType = _this.refsMapping[key][0];
+            isSource = _this.refsMapping[key][1];
+          }
+          else {
+            relType = relType.substring(0, relType.length - 4).replace("_", " ");
+          }
+
+          if(isSource) {
+              relationships.push({'source_ref': source,
+                    'target_ref': target,
+                    'relationship_type': relType,
+                    'isEmbedded': isEmbedded
+                  });
+            }
+            else {
+              relationships.push({'source_ref': target,
+                    'target_ref': source,
+                    'relationship_type': relType,
+                    'isEmbedded': isEmbedded
+                  });
+            }
+        }
+        else if (key.endsWith("_refs")) {
+          item[key].forEach(function(refID) {
+            var source = id;
+            var target = refID;
+            let relType = relationship_prefix + " " + key;
+            let isSource = true;
+
+            if(key in _this.refsMapping) {
+              relType = _this.refsMapping[key][0]
+              isSource = _this.refsMapping[key][1];
+            }
+            else {
+              relType = relType.substring(0, relType.length - 5).replace("_", " ");
+            }
+
+            if(isSource) {
+              relationships.push({'source_ref': source,
+                    'target_ref': target,
+                    'relationship_type': relType,
+                    'isEmbedded': isEmbedded
+                  });
+            }
+            else {
+              relationships.push({'source_ref': target,
+                    'target_ref': source,
+                    'relationship_type': relType,
+                    'isEmbedded': isEmbedded
+                  });
+            }
+          });
+        }
+        else if (Array.isArray(item[key])) {
+          for(let i = 0; i < item[key].length; i++) {
+            if(typeof item[key][i] === "object" && item[key][i] !== null) {
+              recursiveCheck(_this, relationships, id, item[key][i], key, isEmbedded);
+            }
+          }
+        }
+        else if (typeof item[key] === "object" && item[key] !== null) {
+          recursiveCheck(_this, relationships, id, item[key], key, isEmbedded);
+        }
+        
+      });
+    }
+
+    Viz.prototype.clearGraph = function() {
+      this.currentGraph = {
+        nodes: [],
+        edges: []
+      };
+      this.labelGraph = {
+        nodes: [],
+        edges: []
+      };
+    }
 
     /* ******************************************************
      * Uses regex to check whether the specified value for
@@ -719,6 +846,44 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       tmpImg.src = _this.iconFor(stixType, _this.customConfig);
     };
 
+    /**
+     * Parse the container and generate an object and link map for non-D3 functions
+     * 
+     * @param object[] container 
+     */
+    Viz.prototype.preParseSDOs = function(container, hideEmbedded) {
+      const cap = container.length;
+      const graphObjects = [];
+      for(let i = 0; i < cap; i++) {
+        // So, in theory, each of these should be an SDO. To be sure, we'll check to make sure it has an `id` and `type`. If not, raise an error and ignore it.
+        var maybeSdo = container[i];
+
+        if(hideEmbedded) {
+          maybeSdo.__isEmbedded = checkEmbeddedConditions(maybeSdo);
+        }
+        else {
+          maybeSdo.__isEmbedded = false;
+        }
+
+        // store all objects in a dictionary so they can be accessed for link returns
+        const selectedReplacer = replacer.bind(this);
+        jsonString = JSON.stringify(maybeSdo, selectedReplacer, 5); // get only the STIX values
+        purified = JSON.parse(jsonString); // make a new JSON object from the STIX values
+        this.objectMap[maybeSdo["id"]] = purified;
+        this.linkMap[maybeSdo["id"]] = [];
+
+        if(!maybeSdo.__isEmbedded) {
+          if(maybeSdo.id === undefined || maybeSdo.type === undefined) {
+            console.error("Should this be an SDO???", maybeSdo);
+          } else {
+            graphObjects.push(container[i]);
+          }
+        }
+      }
+
+      return graphObjects;
+    }
+
     /* ******************************************************
      * Parses valid SDOs from an array of potential SDO
      * objects (ideally from the data object)
@@ -730,11 +895,7 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
       for(var i = 0; i < cap; i++) {
         // So, in theory, each of these should be an SDO. To be sure, we'll check to make sure it has an `id` and `type`. If not, raise an error and ignore it.
         var maybeSdo = container[i];
-        if(maybeSdo.id === undefined || maybeSdo.type === undefined) {
-          console.error("Should this be an SDO???", maybeSdo);
-        } else {
-          this.addSdo(maybeSdo);
-        }
+        this.addSdo(maybeSdo);
       }
     };
 
@@ -769,20 +930,23 @@ define(["nbextensions/stix2viz/d3"], function(d3) {
     };
 
     /* ******************************************************
-     * Adds relationships to the graph based on the array of
-     * relationships contained in the data.
+     * Adds relationships to the backend link store which will be added to
+     * the graph if the size is workable
      *
      * Takes an array as input.
      * ******************************************************/
     Viz.prototype.addRelationships = function(relationships) {
       for(var i = 0; i < relationships.length; i++) {
         var rel = relationships[i];
-        if(this.idCache[rel.source_ref] === null || this.idCache[rel.source_ref] === undefined) {
+        if(!(rel.source_ref in this.objectMap)) {
           console.error("Couldn't find source!", rel);
-        } else if (this.idCache[rel.target_ref] === null || this.idCache[rel.target_ref] === undefined) {
+        }
+        else if(!(rel.target_ref in this.objectMap)) {
           console.error("Couldn't find target!", rel);
-        } else {
-          this.currentGraph.edges.push({source: this.idCache[rel.source_ref], target: this.idCache[rel.target_ref], label: rel.relationship_type});
+        }
+        else {
+          this.linkMap[rel.target_ref].push({"target": rel.source_ref, "type": rel.relationship_type, "flip": true});
+          this.linkMap[rel.source_ref].push({"target": rel.target_ref, "type": rel.relationship_type, "direction": false});
         }
       }
     };
