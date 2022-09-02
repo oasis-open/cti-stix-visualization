@@ -52,6 +52,10 @@ require(["module1", "module2"], function(module1, module2) {
 
 So you need to add your AMD implementation to your web page, and then use modules as above.  With respect to stix2viz, you may need further configuration to ensure the module is found, especially since it was written to work as a Jupyter notebook extension.  You may consult [index.html](index.html) and [application.js](application.js) for inspiration.
 
+### How do I run it locally?
+
+To run a local copy of the STIX visualizer, just point your browser to index.html after you clone the repo.
+
 ### Acknowlegements
 
 The icons used in the generated graphs are by Bret Jordan, licensed under the Creative Commons Attribution-ShareAlike (CC BY-SA) License, Version 4.0.
