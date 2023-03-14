@@ -1,46 +1,32 @@
-html, body {
-  padding: 0;
+body {
   margin: 0;
   font-family: "Helvetica", sans-serif;
-  font-weight: 300;
 }
 
-ul li div {
-  height: 37px;
-  display: inline-block;
-  vertical-align: middle;
+#top-header-bar
+{
+    background-color: #fafafa;
+    margin-bottom: 10px;
+    padding: 20px;
 }
 
-h1 {
+#top-header-bar h1
+{
   font-size: 36px;
-  font-weight: 300;
-  background-color: #fafafa;
-  margin: 0;
-  padding: 20px;
+  font-weight: normal;
+  display: inline;
 }
 
-h1 img {
-  position: absolute;
-  width: 32px;
-  height: 32px;
-  top: 25px;
-  right: 25px;
-  border: 0;
+#top-header-bar a
+{
+    float: right;
 }
 
-#uploader, #canvas-container {
-  position: absolute;
-  top: 81px;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding-bottom: 25px;
-  width: auto;
-}
-
-svg {
+#canvas {
   border: solid 1px black;
-  width: auto;
+  width: 100%;
+  height: 600px;
+  overflow: auto;
 }
 
 #uploader {
@@ -60,90 +46,87 @@ svg {
 }
 
 #canvas-wrapper {
-  margin: 25px;
+  margin: 0 10px 0 10px;
   float: left;
-  width: auto;
+  width: 60%;
 }
 
 .sidebar {
-  right: 25px;
-  width: 350px;
-  float: right;
+  width: 34%;
+  display: inline-block;
+  vertical-align: top;
+  margin-bottom: 10px;
+  padding: 25px;
+  background-color: #fafafa;
+  overflow: auto;
 }
 
 .sidebar h2 {
-  text-align: center;
-  margin-top: 0;
-}
-
-#legend {
-  margin-top: 25px;
-  padding: 25px;
-  background-color: #fafafa;
-}
-
-#selected {
-  margin-top: 25px;
-  background-color: #fafafa;
-  cursor: pointer;
-  float: left;
-  width: 50%;
-}
-
-#linkedNodesGroup {
-  margin-top: 25px;
-  background-color: #fafafa;
-  cursor: pointer;
-  float: right;
-  width: 50%;
-}
-
-div.top-wrapper {
-  display: table-row;
-  width: 100%;
-}
-
-div.wrapper > div > .type {
-  width: 30%;
-  font-weight: bold;
-}
-
-div.wrapper {
-  margin-left: 2em;
-  width: 100%;
-  overflow-wrap: break-word;
-  display: inline-block;
-}
-
-span.title {
   font-weight: normal;
-  color: purple;
+  text-align: center;
 }
 
-span.num_value {
-  color: orange;
-  cursor: text;
+#legend-content {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-span.text_value {
-  color: darkblue;
-  cursor: text;
+#legend-content img {
+    vertical-align: middle;
+    margin-right: 0.5em;
 }
 
-span.ref_value_resolved {
-  color: lightblue;
-  text-decoration: underline;
-  cursor: context-menu;
+#legend-content td {
+    width: 50%;
 }
 
-span.ref_value_unresolved {
-  color: red;
-  text-decoration: underline;
-  cursor: not-allowed;
+#legend-content .typeHidden {
+    font-style: italic;
+    color: gray;
 }
 
-div.wrapper > div > .value {
-  word-wrap: break-word;
+.selected-object-object-content {
+    margin-left: 2em;  /* affects indentation of object properties */
+}
+
+.selected-object-prop-name {
+    color: purple;
+    margin-right: 0.5em;  /* space out prop name from its value. */
+}
+
+.selected-object-list {
+    padding-left: 2em; /* affects indentation of list items */
+    margin: 0; /* snug lists up with what's above/below them */
+    list-style: none;  /* drop the list item numbering */
+}
+
+.selected-object-text-value {
+    color: darkblue;
+}
+
+.selected-object-text-value-ref {
+    color: lightblue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* If a reference is to an object which is not in the graph */
+.selected-object-text-value-ref-dangling {
+    color: red;
+    text-decoration: underline;
+    cursor: not-allowed;
+}
+
+.selected-object-nontext-value {
+    color: orange;
+}
+
+.list-view-item {
+    cursor: pointer;
+}
+
+.list-view-selected {
+    background-color: lightgray;
 }
 
 #paste-area-stix-json {
@@ -152,44 +135,8 @@ div.wrapper > div > .value {
 }
 
 #paste-area-custom-config {
-  height: 25em;
+  height: 35em;
   width: 40em;
-}
-
-h2 {
-  font-weight: 200;
-}
-
-line, .link {
-  stroke-width: 5;
-  stroke: #aaa;
-}
-
-ul {
-  list-style-type: none;
-  text-align: left;
-  padding: 0;
-  margin: 0;
-}
-
-li {
-  padding: 5px 0px;
-  margin: 0;
-}
-
-
-ul > li > p {
-  display: inline-block;
-  margin: 5px 10px;
-}
-
-.dimmed {
-  opacity: 0.9;
-}
-
-.pinned {
-  stroke: black;
-  stroke-width: 5;
 }
 
 .linkish:hover {
@@ -200,8 +147,3 @@ ul > li > p {
 .hidden {
   display: none;
 }
-
-/*.selected {
-  >>> This style is in the header of the index.html file for comptibility reasons! <<<
-  filter: url("#drop-shadow");
-}*/
