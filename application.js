@@ -658,63 +658,6 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         populateConnections(stixObject, edgeDataSet, stixIdToObject);
     }
 
-    function populateByUUID(uuid) {
-      if(uuid in visualizer.objectMap) {
-        populateSelected(visualizer.objectMap[uuid]);
-      }
-      else {
-        alert(uuid + " was not found in this STIX");
-      }
-    }
-
-    /**
-     * This builds the list of objects when a graph representation would be too slow
-     * 
-     * @param object[] objects 
-     */
-    function populateList(objects) {
-      // make sure we hide the canvas and display the list
-      const simpleListWrapper = document.getElementById('simple-list-container');
-      simpleListWrapper.classList.remove("hidden");
-      const simpleList = document.getElementById('simple-list');
-      const canvasGroup = document.getElementById("canvas-group")
-      canvasGroup.classList.add("hidden"); // we need to make sure we hide the canvas
-      canvasGroup.classList.remove("top-wrapper"); // we need to make sure we hide the canvas
-      simpleList.innerHTML = "";
-
-      for(let i = 0; i < objects.length; i++) {
-        let name = objects[i]["type"];
-        if("name" in objects[i]) {
-          name = name + ": " + objects[i]["name"];
-        }
-
-        addListElement(simpleList, objects[i], name, "mainList");
-      }
-    }
-
-    function addListElement(parent, cur, summaryText, listName) {
-      const entry = document.createElement("li");
-      const details = document.createElement("details");
-      const summary = document.createElement("summary");
-      summary.innerText = summaryText;
-
-      const radio = document.createElement("input");
-      radio.setAttribute("type", "radio");
-      radio.setAttribute("name", listName);
-      radio.setAttribute("value", cur.id);
-
-      radio.onclick = function() {
-        populateByUUID(cur.id);
-        selectedContainer.scrollIntoView();
-      }
-
-      summary.appendChild(radio);
-      details.appendChild(summary);
-      populateParent(details, cur);
-      entry.appendChild(details);
-      parent.appendChild(entry);
-    }
-
     /* ******************************************************
      * Toggle the view between the data entry container and
      * the view container
