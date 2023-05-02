@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 
   <head>
@@ -5,17 +6,17 @@
     <meta charset="utf-8"/>
     <link rel="stylesheet" type="text/css" href="application.css" />
     <script src="require.js" data-main="application"></script>
-    <style>
-      .selected {
-        /* Drop-shadow SVG styling has to go here for compatibility reasons */
-        filter: url("#drop-shadow");
-      }
-    </style>
   </head>
 
   <body>
-    <h1><span id="header">STIX Visualizer</span> <span id="chosen-files"></span>
-    <a href="https://github.com/oasis-open/cti-stix-visualization/"><img src="GitHub-Mark-64px.png" alt="View source on GitHub"></a></h1>
+    <div id="top-header-bar">
+      <h1>
+        <span id="header">STIX Visualizer</span><span id="chosen-files"></span>
+      </h1>
+      <a href="https://github.com/oasis-open/cti-stix-visualization/">
+        <img src="GitHub-Mark-64px.png" alt="View source on GitHub" width="32" height="32">
+      </a>
+    </div>
 
     <div id="uploader">
       <p>Drop some STIX 2.x here!</p>
@@ -32,37 +33,32 @@
       <button id="paste-parser">Parse</button>
       <br />
       <p>-- Configuration --</p>
-      <textarea id="paste-area-custom-config" name="pasted" placeholder="Copy/Paste, in JSON format, (if you want to specify this) your custom config for the graph as such: &#10;{&#10;&#34;&lt;object_type&gt;&#34;: &#10;&#9;{&#10;&#9;&#9;&#34;display_property&#34;: &#60;nameOfProperty&#62;, &#10;&#9;&#9;&#34;display_icon&#34;: &#60;nameOfIconFile&#62;&#10;&#9;},&#10;&quot;userLabels&quot;:&#10;&#9;{&#10;&#9;&#9;&quot;&lt;STIX ID&gt;&quot;: &quot;a label&quot;,&#10;&#9;&#9;...&#10;&#9;}&#10;}&#10;&#10;&quot;&lt;object_type&gt;&quot; lets you customize labels per-type; &quot;userLabels&quot; lets you customize labels per-ID.  For type-specific customization, please note that the above properties are the only currently-supported properties, and at least 1 of them has to be specified.  ID-specific label customization will take priority over type-specific labels."></textarea>
+      <textarea id="paste-area-custom-config" name="pasted" placeholder="Copy/Paste, in JSON format, (if you want to specify this) your custom config for the graph as such: &#10;{&#10;&quot;&lt;objectType&gt;&quot;: &#10;&#9;{&#10;&#9;&#9;&quot;displayProperty&quot;: &lt;nameOfProperty&gt;, &#10;&#9;&#9;&quot;displayIcon&quot;: &lt;nameOfIconFile&gt;,&#10;&#9;&#9;&quot;embeddedRelationships&quot;: [...relationships...]&#10;&#9;},&#10;&quot;userLabels&quot;:&#10;&#9;{&#10;&#9;&#9;&quot;&lt;STIX ID&gt;&quot;: &quot;a label&quot;,&#10;&#9;&#9;...&#10;&#9;},&#10;&quot;include&quot;: &lt;STIX object filter criteria&gt;,&#10;&quot;exclude&quot;: &lt;STIX object filter criteria&gt;&#10;}&#10;&#10;&quot;&lt;objectType&gt;&quot; lets you customize labels per-type; &quot;userLabels&quot; lets you customize labels per-ID.  For type-specific customization, please note that the above properties are the only currently-supported properties, and at least 1 of them has to be specified.  ID-specific label customization will take priority over type-specific labels.&#10;&#10;Each relationship in the &quot;embeddedRelationships&quot; list is a [&quot;&lt;property path&gt;&quot;, &quot;&lt;edge label&gt;&quot;, &lt;edge direction boolean&gt;] triple.  The property path should refer to a _ref(s) property somewhere within objects of that type."></textarea>
     </div>
     <div id="canvas-container" class="hidden">
-      <div id="canvas-group" class="top-wrapper">
-        <div id="canvas-wrapper">
-          <svg id="canvas"></svg>
-          <p>Nodes are draggable! (Node will 'pin' on mouseup)</p>
-          <p>Double-click a pinned node to unpin it!</p>
-        </div>
-        <div id="legend" class="sidebar">
-          <h2>Legend</h2>
-          <ul id="legend-content"></ul>
-        </div>
+      <div id="canvas-wrapper">
+        <div id="canvas"></div>
+        <p>Dragging anywhere will pan the viewing area.</p>
+        <p>Use the mouse wheel to zoom.</p>
+        <p>Click the 'Selected Node' area to expand/shrink it.</p>
+        <p>Click legend items to toggle visibility of nodes of a particular STIX type.</p>
       </div>
-      <form name="mainList">
-        <div id="simple-list-container" class="hidden top-wrapper">
-          <ol id="simple-list"></ol>
-        </div>
-        <div class="top-wrapper">
-          <div id="selected">
-            <h2>Selected Node</h2>
-            <div id="selection">
-            </div>
-          </div>
-          <div id="linkedNodesGroup">
-            <h2>Linked Nodes</h2>
-            <div id="linkedNodes">
-            </div>
-          </div>
-        </div>
-    </form>
+      <div id="selected" class="sidebar">
+        <h2>Selected Node</h2>
+        <div id="selection"></div>
+      </div>
+      <div id="connections" class="sidebar">
+        <h2>Linked Nodes</h2>
+        <h3>Incoming Edges:</h3>
+        <div id="connections-incoming"></div>
+        <h3>Outgoing Edges:</h3>
+        <div id="connections-outgoing"></div>
+      </div>
+      <div id="legend" class="sidebar">
+        <table id="legend-content">
+          <caption><h2>Legend</h2></caption>
+        </table>
+      </div>
     </div>
   </body>
 </html>
