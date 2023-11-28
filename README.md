@@ -80,7 +80,8 @@ Initially, the associated TC members have designated one or more persons to serv
 
  * [Jason Keirstead](mailto:Jason.Keirstead@ca.ibm.com); GitHub ID: [https://github.com/JasonKeirstead](https://github.com/JasonKeirstead); WWW: [IBM](http://www.ibm.com/)
  * [Emily Ratliff](mailto:Emily.Ratliff@ibm.com); GitHub ID: [https://github.com/ejratl](https://github.com/ejratl); WWW: [IBM](http://www.ibm.com/)
- * [Duncan Sparrell](mailto:duncan@sfractal.com); GitHub ID: [https://github.com/sparrell](https://github.com/sparrell); WWW: [sFractal](http://sfractal.com/)
+ * [Rich Piazza](mailto:rpiazza@mitre.org); GitHub ID: [https://github.com/rpiazza](https://github.com/rpiazza) WWW: [MITRE](http://www.mitre.org/)
+
 
 ## <a id="aboutOpenRepos">About OASIS TC Open Repositories</a>
 
