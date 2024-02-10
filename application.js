@@ -116,20 +116,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         }
     }
 
-    function searchByName(searchText, stixIdToObject){
-        //name이 일치하는 STIX Object가 있다면 해당 객체를 반환
-      for (let stixObject of stixIdToObject.values()){
-            if (stixObject.get('name') === searchText)
-                return stixObject;
-        }
-        //name이 일치하는 STIX Object가 없다면 null을 반환
-        return null;
-    }
-
-    function searchNameHandler(edgeDataSet, stixIdToObject){
+    function searchNameHandler(edgeDataSet, stixIdToObject, stixNameToObject){
         var searchText = document.getElementById("searchInput").value;
-        //여기서 searchText로 검색 진행
-        let stixObject = searchByName(searchText,stixIdToObject);
+        //여기서 searchText로 검색 진행 (일치하는 키 있으면 객체가, 없으면 undefined가 된다)
+        let stixObject = stixNameToObject.get(searchText);
         //일치하는 노드가 있다면, 
         if(stixObject)
         {
@@ -139,8 +129,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             populateSelected(stixObject, edgeDataSet, stixIdToObject);
         }
         //일치하는 노드가 없다면,
-      else
-      {
+        else
+        {
             //Graph : canvas클릭한 상태
             //Selected Node : "No results"
             view.selectNode(undefined);
@@ -175,6 +165,11 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         {
             let [nodeDataSet, edgeDataSet, stixIdToObject]
                 = stix2viz.makeGraphData(content, customConfig);
+
+            let stixNameToObject = new Map();
+
+            for (let object of stixIdToObject.values())
+                stixNameToObject.set(object.get("name"), object);            
 
             let wantsList = false;
             if (nodeDataSet.length > 200)
@@ -228,14 +223,14 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             searchButton.addEventListener(
                 "click", e => {
                     e.stopPropagation(),
-                    searchNameHandler(edgeDataSet, stixIdToObject)
+                    searchNameHandler(edgeDataSet, stixIdToObject, stixNameToObject)
                 }
             );
             //enter 입력 처리
             searchInput.addEventListener("keydown", function(event){
                 if(event.keyCode === 13) {
                   event.stopPropagation(),
-                  searchNameHandler(edgeDataSet, stixIdToObject)
+                  searchNameHandler(edgeDataSet, stixIdToObject, stixNameToObject)
                 }
             });
 
