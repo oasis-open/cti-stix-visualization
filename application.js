@@ -116,6 +116,37 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         }
     }
 
+    function searchByName(searchText, stixIdToObject){
+        //name이 일치하는 STIX Object가 있다면 해당 객체를 반환
+      for (let stixObject of stixIdToObject.values()){
+            if (stixObject.get('name') === searchText)
+                return stixObject;
+        }
+        //name이 일치하는 STIX Object가 없다면 null을 반환
+        return null;
+    }
+
+    function searchNameHandler(edgeDataSet, stixIdToObject){
+        var searchText = document.getElementById("searchInput").value;
+        //여기서 searchText로 검색 진행
+        let stixObject = searchByName(searchText,stixIdToObject);
+        //일치하는 노드가 있다면, 
+        if(stixObject)
+        {
+            //Graph : 해당 노드 클릭한 상태
+            //Selected Node : 해당 노드 내용
+            view.selectNode(stixObject.get('id'));
+            populateSelected(stixObject, edgeDataSet, stixIdToObject);
+        }
+        //일치하는 노드가 없다면,
+      else
+      {
+            //Graph : canvas클릭한 상태
+            //Selected Node : "No results"
+            view.selectNode(undefined);
+            populateSelected(new Map([["", "(No Result)"]]), edgeDataSet, stixIdToObject);
+        }
+    }
 
     /* ******************************************************
      * Initializes the view, then renders it.
@@ -176,6 +207,37 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
                     e => graphViewClickHandler(e, edgeDataSet, stixIdToObject)
                 );
             }
+
+            // <div id="canvas-container"> 요소를 선택
+            let searchDiv = document.querySelector("#canvas-container");
+
+            // 입력 필드를 생성
+            let searchInput = document.createElement("input");
+            searchInput.setAttribute("type", "text");
+            searchInput.setAttribute("id", "searchInput");
+
+            // 검색 버튼을 생성
+            let searchButton = document.createElement("button");
+            searchButton.setAttribute("id", "searchButton");
+            searchButton.textContent = "search SDO";
+
+            // 입력 필드와 검색 버튼을 <div id="selected"> 요소의 자식 요소로 추가
+            searchDiv.insertBefore(searchInput, searchDiv.children[1]);
+            searchDiv.insertBefore(searchButton, searchDiv.children[2]);
+
+            searchButton.addEventListener(
+                "click", e => {
+                    e.stopPropagation(),
+                    searchNameHandler(edgeDataSet, stixIdToObject)
+                }
+            );
+            //enter 입력 처리
+            searchInput.addEventListener("keydown", function(event){
+                if(event.keyCode === 13) {
+                  event.stopPropagation(),
+                  searchNameHandler(edgeDataSet, stixIdToObject)
+                }
+            });
 
             populateLegend(...view.legendData);
         }
