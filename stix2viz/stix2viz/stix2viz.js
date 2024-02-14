@@ -1410,11 +1410,11 @@ class GraphView extends STIXContentView
      */
      selectNode(stixId)
      {
-         if (stixId) {
-             this.graph.selectNodes([stixId]);
-         } else {
-             this.graph.unselectAll();
-         }      
+        if (stixId) {
+            this.graph.selectNodes([stixId]);
+        } else {
+            this.graph.unselectAll();
+        }      
      }
 
     /**

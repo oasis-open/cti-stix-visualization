@@ -116,27 +116,37 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         }
     }
 
+    
     function searchNameHandler(edgeDataSet, stixIdToObject, stixNameToObject){
         var searchText = document.getElementById("searchInput").value;
         //여기서 searchText로 검색 진행 (일치하는 키 있으면 객체가, 없으면 undefined가 된다)
         let stixObject = stixNameToObject.get(searchText);
-        //일치하는 노드가 있다면, 
         if(stixObject)
         {
-            //Graph : 해당 노드 클릭한 상태
-            //Selected Node : 해당 노드 내용
             view.selectNode(stixObject.get('id'));
             populateSelected(stixObject, edgeDataSet, stixIdToObject);
         }
-        //일치하는 노드가 없다면,
         else
         {
-            //Graph : canvas클릭한 상태
-            //Selected Node : "No results"
             view.selectNode(undefined);
             populateSelected(new Map([["", "(No Result)"]]), edgeDataSet, stixIdToObject);
         }
     }
+
+
+    function suggestionListClickHandler(edgeDataSet, stixIdToObject, stixObject){
+        if(stixObject)
+        {
+            view.selectNode(stixObject.get('id'));
+            populateSelected(stixObject, edgeDataSet, stixIdToObject);
+        }
+        else
+        {
+            view.selectNode(undefined);
+            populateSelected(new Map([["", "(No Result)"]]), edgeDataSet, stixIdToObject);
+        }
+    }
+
 
     /* ******************************************************
      * Initializes the view, then renders it.
@@ -167,7 +177,6 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
                 = stix2viz.makeGraphData(content, customConfig);
 
             let stixNameToObject = new Map();
-
             for (let object of stixIdToObject.values())
                 stixNameToObject.set(object.get("name"), object);            
 
@@ -203,30 +212,56 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
                 );
             }
 
-            // <div id="canvas-container"> 요소를 선택
-            let searchDiv = document.querySelector("#canvas-container");
-
-            // 입력 필드를 생성
             let searchInput = document.createElement("input");
             searchInput.setAttribute("type", "text");
             searchInput.setAttribute("id", "searchInput");
+            searchInput.classList.add("search-input");
 
-            // 검색 버튼을 생성
             let searchButton = document.createElement("button");
             searchButton.setAttribute("id", "searchButton");
             searchButton.textContent = "search SDO";
 
-            // 입력 필드와 검색 버튼을 <div id="selected"> 요소의 자식 요소로 추가
+            let suggestionList = document.createElement("ul");
+            suggestionList.setAttribute("id", "suggestions");
+            suggestionList.classList.add("suggestions")
+
+            let searchDiv = document.querySelector("#canvas-container");
             searchDiv.insertBefore(searchInput, searchDiv.children[1]);
             searchDiv.insertBefore(searchButton, searchDiv.children[2]);
+            searchDiv.insertBefore(suggestionList, searchDiv.children[3]);
 
+            searchInput.addEventListener('input', function() {
+                const keyword = this.value;
+                const matchedResults = [];
+
+                for (let key of stixNameToObject.keys()){
+                    if (key){
+                        if(key.includes(keyword)){
+                            matchedResults.push(key);
+                        }
+                    }
+                }
+
+                suggestionList.innerHTML = '';
+
+                for (let result of matchedResults){
+                    const li = document.createElement('li');
+                    li.textContent = result;
+                    li.addEventListener(
+                        "click", e => {
+                            e.stopPropagation(),
+                            suggestionListClickHandler(edgeDataSet, stixIdToObject, stixNameToObject.get(li.textContent))
+                        }
+                    );
+                    suggestionList.appendChild(li);
+                }
+            });
             searchButton.addEventListener(
                 "click", e => {
                     e.stopPropagation(),
                     searchNameHandler(edgeDataSet, stixIdToObject, stixNameToObject)
                 }
             );
-            //enter 입력 처리
             searchInput.addEventListener("keydown", function(event){
                 if(event.keyCode === 13) {
                   event.stopPropagation(),
