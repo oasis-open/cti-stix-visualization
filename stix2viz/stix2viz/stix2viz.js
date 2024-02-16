@@ -1408,10 +1408,14 @@ class GraphView extends STIXContentView
     /**
      * Set the graph selection to the node corresponding to the given STIX ID.
      */
-    selectNode(stixId)
-    {
-        this.graph.selectNodes([stixId]);
-    }
+     selectNode(stixId)
+     {
+        if (stixId) {
+            this.graph.selectNodes([stixId]);
+        } else {
+            this.graph.unselectAll();
+        }      
+     }
 
     /**
      * Enable physics in this graph view

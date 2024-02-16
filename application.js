@@ -116,6 +116,37 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         }
     }
 
+    
+    function searchNameHandler(edgeDataSet, stixIdToObject, stixNameToObject){
+        var searchText = document.getElementById("searchInput").value;
+        //여기서 searchText로 검색 진행 (일치하는 키 있으면 객체가, 없으면 undefined가 된다)
+        let stixObject = stixNameToObject.get(searchText);
+        if(stixObject)
+        {
+            view.selectNode(stixObject.get('id'));
+            populateSelected(stixObject, edgeDataSet, stixIdToObject);
+        }
+        else
+        {
+            view.selectNode(undefined);
+            populateSelected(new Map([["", "(No Result)"]]), edgeDataSet, stixIdToObject);
+        }
+    }
+
+
+    function suggestionListClickHandler(edgeDataSet, stixIdToObject, stixObject){
+        if(stixObject)
+        {
+            view.selectNode(stixObject.get('id'));
+            populateSelected(stixObject, edgeDataSet, stixIdToObject);
+        }
+        else
+        {
+            view.selectNode(undefined);
+            populateSelected(new Map([["", "(No Result)"]]), edgeDataSet, stixIdToObject);
+        }
+    }
+
 
     /* ******************************************************
      * Initializes the view, then renders it.
@@ -144,6 +175,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         {
             let [nodeDataSet, edgeDataSet, stixIdToObject]
                 = stix2viz.makeGraphData(content, customConfig);
+
+            let stixNameToObject = new Map();
+            for (let object of stixIdToObject.values())
+                stixNameToObject.set(object.get("name"), object);            
 
             let wantsList = false;
             if (nodeDataSet.length > 200)
@@ -176,6 +211,63 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
                     e => graphViewClickHandler(e, edgeDataSet, stixIdToObject)
                 );
             }
+
+            let searchInput = document.createElement("input");
+            searchInput.setAttribute("type", "text");
+            searchInput.setAttribute("id", "searchInput");
+            searchInput.classList.add("search-input");
+
+            let searchButton = document.createElement("button");
+            searchButton.setAttribute("id", "searchButton");
+            searchButton.textContent = "search SDO";
+
+            let suggestionList = document.createElement("ul");
+            suggestionList.setAttribute("id", "suggestions");
+            suggestionList.classList.add("suggestions")
+
+            let searchDiv = document.querySelector("#canvas-container");
+            searchDiv.insertBefore(searchInput, searchDiv.children[1]);
+            searchDiv.insertBefore(searchButton, searchDiv.children[2]);
+            searchDiv.insertBefore(suggestionList, searchDiv.children[3]);
+
+            searchInput.addEventListener('input', function() {
+                const keyword = this.value;
+                const matchedResults = [];
+
+                for (let key of stixNameToObject.keys()){
+                    if (key){
+                        if(key.includes(keyword)){
+                            matchedResults.push(key);
+                        }
+                    }
+                }
+
+                suggestionList.innerHTML = '';
+
+                for (let result of matchedResults){
+                    const li = document.createElement('li');
+                    li.textContent = result;
+                    li.addEventListener(
+                        "click", e => {
+                            e.stopPropagation(),
+                            suggestionListClickHandler(edgeDataSet, stixIdToObject, stixNameToObject.get(li.textContent))
+                        }
+                    );
+                    suggestionList.appendChild(li);
+                }
+            });
+            searchButton.addEventListener(
+                "click", e => {
+                    e.stopPropagation(),
+                    searchNameHandler(edgeDataSet, stixIdToObject, stixNameToObject)
+                }
+            );
+            searchInput.addEventListener("keydown", function(event){
+                if(event.keyCode === 13) {
+                  event.stopPropagation(),
+                  searchNameHandler(edgeDataSet, stixIdToObject, stixNameToObject)
+                }
+            });
 
             populateLegend(...view.legendData);
         }
