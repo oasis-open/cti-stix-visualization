@@ -27402,6 +27402,10 @@
 	      };
 
 	      if (this.selected || this.hover) {
+			/*
+			 * @leesoomin
+			 * Analysis: can assign custom design to the clicked node & connected edge here.
+			 */
 	        if (this.chooser === true) {
 	          if (this.selected) {
 	            var selectedWidth = this.options.selectionWidth;
@@ -27413,7 +27417,7 @@
 	            }
 
 	            values.width = Math.max(values.width, 0.3 / this.body.view.scale);
-	            values.color = this.options.color.highlight;
+	            values.color = "#DF0101";
 	            values.shadow = this.options.shadow.enabled;
 	          } else if (this.hover) {
 	            var hoverWidth = this.options.hoverWidth;
