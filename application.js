@@ -788,6 +788,17 @@ is not serving JSON, or is not running a webserver.\n\nA GitHub Gist can be crea
       }
     }
 
+    function handleFilterDate() {
+        if(!view)
+          return;
+  
+        let startDate = document.getElementById("startDate").value;
+        let endDate = document.getElementById("endDate").value;
+        //alert(startDate + " " + endDate);
+        view.toggleStixDate(startDate, endDate);
+      }
+  
+
     /* ******************************************************
      * When the page is ready, setup the visualization and bind events
      * ******************************************************/
@@ -799,6 +810,7 @@ is not serving JSON, or is not running a webserver.\n\nA GitHub Gist can be crea
     uploader.addEventListener('drop', handleFileDrop, false);
     document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
     document.getElementById("legend").addEventListener("click", legendClickHandler, {capture: true});
-
+    // filter date
+    document.getElementById("filter-date").addEventListener("click", handleFilterDate, false);
     fetchJsonFromUrl();
 });
