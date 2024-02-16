@@ -1188,9 +1188,14 @@ class GraphView extends STIXContentView
         this.#nodeDataSet = new visjs.DataSet();
 
         nodeDataSet.forEach((item, id) => {
+            let tmp = stixIdToObject.get(id).get("created");
+            
+            // tmp를 Date객체로 변환
+            let reform = new Date(tmp);
             this.#nodeDataSet.add({
                 ...item,
-                group: stixIdToObject.get(id).get("type")
+                group: stixIdToObject.get(id).get("type"),
+                createdDate: reform.toISOString()
             });
         });
 
@@ -1405,6 +1410,115 @@ class GraphView extends STIXContentView
         this.edgeDataSet.updateOnly(toggledEdges);
     }
 
+    // start와 end 사이의 created object property를 가진 노드만 보이게 하는 함수
+    toggleStixDate(start, end)
+    {
+        let startDate = new Date(start);
+        let endDate = new Date(end);
+
+        alert("startDate: " + startDate);
+        alert("endDate: " + endDate);
+
+
+        let nodes = this.nodeDataSet.get({
+            filter: item => item.createdDate >= startDate.toISOString() && item.createdDate <= endDate.toISOString(),
+            fields: ["id", "hidden"]
+        });
+
+        if (nodes.length === 0){
+            alert("There is no node between the dates");
+            return;
+        }
+
+        this.enablePhysics();
+
+        let hiding = false;
+
+        let toggledNodes = [];
+        let toggledEdges = [];
+
+        // An edge could connect two nodes of the same type.  Ensure we don't
+        // toggle an edge more than once!
+        let toggledEdgeIds = new Set();
+
+        for (let node of nodes)
+        {
+            // Toggling the node is simple
+            toggledNodes.push({
+                id: node.id, hidden: hiding, physics: !hiding
+            });
+
+            // Toggling the edges is more complex...
+            let edgesForNode = this.edgeDataSet.get({
+                // find (a) edges connecting to 'node'; (b) edges with the
+                // right visibility; (c) edges we have not already seen.
+                filter: item => (item.from === node.id || item.to === node.id)
+                    && !item.hidden === hiding && !toggledEdgeIds.has(item.id),
+                fields: ["id", "from", "to"]
+            }); // undefined같은 경우도 있어서 !item.hidden으로 해야함.
+
+            for (let edge of edgesForNode)
+            {
+                let otherEndId;
+                if (edge.from === node.id)
+                    otherEndId = edge.to;
+                else
+                    otherEndId = edge.from;
+
+                let otherEndNode = this.nodeDataSet.get(
+                    otherEndId,
+                    {fields: ["createdDate", "hidden"]}
+                );
+                
+                if (!otherEndNode.hidden
+                    || otherEndNode.createdDate >= startDate.toISOString() && otherEndNode.createDate <= endDate.toISOString())
+                {
+                    toggledEdges.push({
+                        id: edge.id, hidden: false, physics: true
+                    });
+                    toggledEdgeIds.add(edge.id);
+                }
+            }
+        }
+
+        this.nodeDataSet.updateOnly(toggledNodes);
+        this.edgeDataSet.updateOnly(toggledEdges);
+
+        // 나머지 노드들은 모두 숨김
+        let otherNodes = this.nodeDataSet.get({
+            filter: item => item.createdDate < startDate.toISOString() || item.createdDate > endDate.toISOString(),
+            fields: ["id", "hidden"]
+        });
+
+        let hiddenNodes = [];
+        let hiddenEdges = [];
+        let hiddenEdgeIds = new Set();
+
+        for (let node of otherNodes)
+        {
+            hiddenNodes.push({
+                id: node.id, hidden: true, physics: false
+            });
+            
+            let edgesForNode = this.edgeDataSet.get({
+                filter: item => (item.from === node.id || item.to === node.id)
+                    && !item.hidden === true && !hiddenEdgeIds.has(item.id),
+                fields: ["id", "from", "to"]
+            }); // undefined같은 경우도 있어서 !item.hidden으로 해야함.
+
+            for (let edge of edgesForNode)
+            {
+                hiddenEdges.push({
+                    id: edge.id, hidden: true, physics: false
+                });
+                hiddenEdgeIds.add(edge.id);
+            }
+        }
+
+        this.nodeDataSet.updateOnly(hiddenNodes);
+        this.edgeDataSet.updateOnly(hiddenEdges);
+    }
+    
     /**
      * Set the graph selection to the node corresponding to the given STIX ID.
      */
