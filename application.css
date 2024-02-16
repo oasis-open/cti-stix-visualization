@@ -147,3 +147,14 @@ body {
 .hidden {
   display: none;
 }
+
+#search-input {
+  width: 150px;
+  height: 15px;
+}
+
+#suggestions {
+  width: 150px;
+  height: 100px;
+  overflow: auto;
+}
