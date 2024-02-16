@@ -1416,10 +1416,6 @@ class GraphView extends STIXContentView
         let startDate = new Date(start);
         let endDate = new Date(end);
 
-        alert("startDate: " + startDate);
-        alert("endDate: " + endDate);
-
-
         let nodes = this.nodeDataSet.get({
             filter: item => item.createdDate >= startDate.toISOString() && item.createdDate <= endDate.toISOString(),
             fields: ["id", "hidden"]
