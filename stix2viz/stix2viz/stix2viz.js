@@ -1542,6 +1542,15 @@ class GraphView extends STIXContentView
     {
         this.#network.setOptions( { physics: false } );
     }
+
+    isHidden(searchInput)
+    {
+        let nodes = this.nodeDataSet.get({
+            filter: item => item.label === searchInput,
+            fields: ["label", "hidden"]
+        });
+        return nodes[0].hidden;
+    }
 }
 
 

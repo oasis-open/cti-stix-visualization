@@ -123,8 +123,16 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         let stixObject = stixNameToObject.get(searchText);
         if(stixObject)
         {
-            view.selectNode(stixObject.get('id'));
-            populateSelected(stixObject, edgeDataSet, stixIdToObject);
+            if(view.isHidden(searchText) === true)
+            {
+                view.selectNode(undefined);
+                populateSelected(new Map([["", "(Hidden)"]]), edgeDataSet, stixIdToObject);
+            }
+            else
+            {
+                view.selectNode(stixObject.get('id'));
+                populateSelected(stixObject, edgeDataSet, stixIdToObject);
+            }
         }
         else
         {
