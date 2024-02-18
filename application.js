@@ -123,15 +123,15 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         let stixObject = stixNameToObject.get(searchText);
         if(stixObject)
         {
-            if(view.isHidden(searchText) === true)
-            {
-                view.selectNode(undefined);
-                populateSelected(new Map([["", "(Hidden)"]]), edgeDataSet, stixIdToObject);
-            }
-            else
+            if(!view.isHidden(searchText))
             {
                 view.selectNode(stixObject.get('id'));
                 populateSelected(stixObject, edgeDataSet, stixIdToObject);
+            }
+            else
+            {
+                view.selectNode(undefined);
+                populateSelected(new Map([["", "(Hidden)"]]), edgeDataSet, stixIdToObject);
             }
         }
         else
@@ -244,7 +244,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
 
                 for (let key of stixNameToObject.keys()){
                     if (key){
-                        if(key.includes(keyword)){
+                        if(key.includes(keyword) && !view.isHidden(key)){
                             matchedResults.push(key);
                         }
                     }
