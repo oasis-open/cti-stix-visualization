@@ -873,21 +873,6 @@ is not serving JSON, or is not running a webserver.\n\nA GitHub Gist can be crea
       }
     }
 
-    function selectedNodeClick() {
-      let selected = document.getElementById('selected');
-      if (selected.className.indexOf('clicked') === -1) {
-        selected.className += " clicked";
-        selected.style.position = 'absolute';
-        selected.style.left = '25px';
-        selected.style.width = (window.innerWidth - 110) + "px";
-        selected.style.top = (document.getElementById('canvas').offsetHeight + 25) + "px";
-        selected.scrollIntoView(true);
-      } else {
-        selected.className = "sidebar"
-        selected.removeAttribute("style")
-      }
-    }
-
     function handleFilterDate() {
         if(!view)
           return;
@@ -908,7 +893,6 @@ is not serving JSON, or is not running a webserver.\n\nA GitHub Gist can be crea
     document.getElementById('header').addEventListener('click', resetPage, false);
     uploader.addEventListener('dragover', handleDragOver, false);
     uploader.addEventListener('drop', handleFileDrop, false);
-    document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
     document.getElementById("legend").addEventListener("click", legendClickHandler, {capture: true});
     // filter date
     document.getElementById("filter-date").addEventListener("click", handleFilterDate, false);
