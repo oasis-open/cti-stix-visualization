@@ -6,6 +6,20 @@
     <meta charset="utf-8"/>
     <link rel="stylesheet" type="text/css" href="application.css" />
     <script src="require.js" data-main="application"></script>
+    <!-- toggle tooltip for "How to use" -->
+    <script src="tooltip.js"></script>
+    <style>
+      .tooltip {
+        position: fixed;
+        padding: 10px 20px;
+        border: 1px solid #b3c9ce;
+        border-radius: 4px;
+        text-align: left;
+        color: #333;
+        background: #fff;
+        box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+      }
+    </style>
   </head>
 
   <body>
@@ -44,11 +58,11 @@
         <button id="filter-date">Filter</button>
       </div>
       <div id="canvas-wrapper">
+        <button data-tooltip="Dragging anywhere will pan the viewing area.<br>
+                              Use the mouse wheel to zoom.<br>
+                              Click the 'Selected Node' area to expand/shrink it.<br>
+                              Click legend items to toggle visibility of nodes of a particular STIX type.">How to use</button>
         <div id="canvas"></div>
-        <p>Dragging anywhere will pan the viewing area.</p>
-        <p>Use the mouse wheel to zoom.</p>
-        <p>Click the 'Selected Node' area to expand/shrink it.</p>
-        <p>Click legend items to toggle visibility of nodes of a particular STIX type.</p>
       </div>
       <div id="selected" class="sidebar">
         <h2>Selected Node</h2>
