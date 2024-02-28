@@ -306,18 +306,59 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
       evt.preventDefault();
       evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
     }
+    
     function handleFiles(files) {
-      // files is a FileList of File objects (in our case, just one)
-
-      for (var i = 0, f; f = files[i]; i++) {
-        document.getElementById('chosen-files').innerText += f.name + " ";
-        let customConfig = document.getElementById('paste-area-custom-config').value;
-        var r = new FileReader();
-        r.onload = function(e) {vizStixWrapper(e.target.result, customConfig);};
-        r.readAsText(f);
+        let customConfig = '';
+        let jsonData = {};
+      
+        // 단일 파일 텍스트로 읽어오는 함수
+        function readFile(file) {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+      
+            reader.onload = function (e) {
+              const data = JSON.parse(e.target.result);
+              resolve(data);
+            };
+      
+            reader.onerror = function (e) {
+              reject(e);
+            };
+      
+            reader.readAsText(file);
+          });
+        }
+      
+        // FileList 배열로 변환
+        const filesArray = Array.from(files);
+      
+        // 모든 파일 읽고 데이터 결합하는 Promise
+        Promise.all(filesArray.map(readFile))
+          .then((fileDataArray) => {
+            // 여러 파일에서 데이터 결합
+            jsonData = fileDataArray.reduce((acc, curr) => {
+              if (curr.type === 'bundle') {
+                // type이 bundle이면 objects 값만 추출
+                return acc.concat(curr.objects || []);
+              } else {
+                // bundle이 아니면 그대로 결합
+                return acc.concat(curr);
+              }
+            }, []);
+      
+            jsonData = JSON.stringify(jsonData);
+      
+            vizStixWrapper(jsonData, customConfig);
+      
+            document.getElementById('chosen-files').innerText = filesArray.map(file => file.name).join(' ');
+          })
+          .catch((error) => {
+            console.error('Error reading file:', error);
+          });
+      
+        linkifyHeader();
       }
-      linkifyHeader();
-    }
+
     /* ---------------------------------------------------- */
 
     /* ******************************************************
