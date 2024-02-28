@@ -6,6 +6,20 @@
     <meta charset="utf-8"/>
     <link rel="stylesheet" type="text/css" href="application.css" />
     <script src="require.js" data-main="application"></script>
+    <!-- toggle tooltip for "How to use" -->
+    <script src="tooltip.js"></script>
+    <style>
+      .tooltip {
+        position: fixed;
+        padding: 10px 20px;
+        border: 1px solid #b3c9ce;
+        border-radius: 4px;
+        text-align: left;
+        color: #333;
+        background: #fff;
+        box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+      }
+    </style>
   </head>
 
   <body>
@@ -20,7 +34,7 @@
 
     <div id="uploader">
       <p>Drop some STIX 2.x here!</p>
-      <input type="file" id="files" name="files" /><br>
+      <input type="file" id="files" name="files" multiple/><br>
       <p>-- OR --</p>
       <p>Fetch some STIX 2.x from this URL!</p>
       <input type="text" id="url" name="url" placeholder="Paste URL here" /><br>
@@ -36,12 +50,19 @@
       <textarea id="paste-area-custom-config" name="pasted" placeholder="Copy/Paste, in JSON format, (if you want to specify this) your custom config for the graph as such: &#10;{&#10;&quot;&lt;objectType&gt;&quot;: &#10;&#9;{&#10;&#9;&#9;&quot;displayProperty&quot;: &lt;nameOfProperty&gt;, &#10;&#9;&#9;&quot;displayIcon&quot;: &lt;nameOfIconFile&gt;,&#10;&#9;&#9;&quot;embeddedRelationships&quot;: [...relationships...]&#10;&#9;},&#10;&quot;userLabels&quot;:&#10;&#9;{&#10;&#9;&#9;&quot;&lt;STIX ID&gt;&quot;: &quot;a label&quot;,&#10;&#9;&#9;...&#10;&#9;},&#10;&quot;include&quot;: &lt;STIX object filter criteria&gt;,&#10;&quot;exclude&quot;: &lt;STIX object filter criteria&gt;&#10;}&#10;&#10;&quot;&lt;objectType&gt;&quot; lets you customize labels per-type; &quot;userLabels&quot; lets you customize labels per-ID.  For type-specific customization, please note that the above properties are the only currently-supported properties, and at least 1 of them has to be specified.  ID-specific label customization will take priority over type-specific labels.&#10;&#10;Each relationship in the &quot;embeddedRelationships&quot; list is a [&quot;&lt;property path&gt;&quot;, &quot;&lt;edge label&gt;&quot;, &lt;edge direction boolean&gt;] triple.  The property path should refer to a _ref(s) property somewhere within objects of that type."></textarea>
     </div>
     <div id="canvas-container" class="hidden">
+      <div id="date-selector">
+        <label for="startDate">Start Date:</label>
+        <input type="date" id="startDate" name="date" placeholder="start" />
+        <label for="endDate">End Date:</label>
+        <input type="date" id="endDate" name="date" placeholder="end" />
+        <button id="filter-date">Filter</button>
+      </div>
       <div id="canvas-wrapper">
+        <button data-tooltip="Dragging anywhere will pan the viewing area.<br>
+                              Use the mouse wheel to zoom.<br>
+                              Click the 'Selected Node' area to expand/shrink it.<br>
+                              Click legend items to toggle visibility of nodes of a particular STIX type.">How to use</button>
         <div id="canvas"></div>
-        <p>Dragging anywhere will pan the viewing area.</p>
-        <p>Use the mouse wheel to zoom.</p>
-        <p>Click the 'Selected Node' area to expand/shrink it.</p>
-        <p>Click legend items to toggle visibility of nodes of a particular STIX type.</p>
       </div>
       <div id="selected" class="sidebar">
         <h2>Selected Node</h2>
