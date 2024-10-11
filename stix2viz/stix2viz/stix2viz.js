@@ -16,7 +16,7 @@ separated by dots.  See getValuesAtPath().
 */
 let embeddedRelationships = new Map([
     [null, [
-        ["created_by_ref", "created-by", true],
+        // ["created_by_ref", "created-by", true],
         ["object_marking_refs", "applies-to", false]
     ]],
     ["directory", [
