@@ -83,7 +83,7 @@ let embeddedRelationships = new Map([
         ["parent_ref", "parent-of", false]
     ]],
     ["report", [
-        ["object_refs", "refers-to", true]
+        // ["object_refs", "refers-to", true]
     ]],
     ["sighting", [
         ["sighting_of_ref", "sighting-of", true],
