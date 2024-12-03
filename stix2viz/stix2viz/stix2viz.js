@@ -92,7 +92,27 @@ let embeddedRelationships = new Map([
     ]],
     ["windows-registry-key", [
         ["creator_user_ref", "created-by", true]
+    ]],
+    // added for Incident and other IRF extensions
+    ["impact", [
+         [ "impacted_refs", "impacted_by", false ] 
+    ]],
+    ["incident", [ 
+         [ "extensions.extension-definition--ef765651-680c-498d-9894-99799f2fa126.event_refs", "has_event", true],
+         [ "extensions.extension-definition--ef765651-680c-498d-9894-99799f2fa126.impact_refs", "has_impact", true],
+         [ "extensions.extension-definition--ef765651-680c-498d-9894-99799f2fa126.task_refs", "has_task", true]
+    ]],
+    ["event", [
+         [ "sighting_refs", "evidence", true],
+         [ "next_event_refs", "next_event", true]
+    ]],
+    ["task", [
+         [ "next_task_refs", "next_task", true]
+    ]],
+    ["identity", [
+        [ "extensions.extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498.email_addresses.email_address_ref", "email_addr", true]
     ]]
+    
 ]);
 
 
