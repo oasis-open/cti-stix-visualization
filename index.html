@@ -38,6 +38,12 @@
     <div id="canvas-container" class="hidden">
       <div id="canvas-wrapper">
         <div id="canvas"></div>
+        <div id="timelineControls">
+          <label for="timeline">Timeline</label>
+          <input type="range" id="timeline" name="timeline" min="0" max="0" step="1" disabled/>
+          <label for="timelineCheckbox">Cumulative</label>
+          <input type="checkbox" id="timelineCheckbox" name="cumulative" checked disabled/>
+        </div>
         <p>Dragging anywhere will pan the viewing area.</p>
         <p>Use the mouse wheel to zoom.</p>
         <p>Click the 'Selected Node' area to expand/shrink it.</p>

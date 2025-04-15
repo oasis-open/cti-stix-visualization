@@ -796,6 +796,15 @@ function makeNodeObject(name, stixObject)
         label: name
     };
 
+    // Easier to work with epoch milliseconds in javascript, since Date objects
+    // don't seem to have any nice natural way to compare them.
+    if (stixObject.has("modified"))
+        node.version = new Date(stixObject.get("modified")).valueOf();
+    else if (stixObject.has("created"))
+        node.version = new Date(stixObject.get("created")).valueOf();
+    else
+        node.version = null;
+
     return node;
 }
 
@@ -998,6 +1007,13 @@ class STIXContentView
     }
 
     /**
+     * Set the nodes with the given IDs to visible, and the others to hidden.
+     */
+    setVisible(ids)
+    {
+    }
+
+    /**
      * Set the selection to the view element corresponding to the given STIX
      * ID.
      *
@@ -1116,6 +1132,19 @@ class ListView extends STIXContentView
 
             if (stixObject && stixObject.get("type") === stixType)
                 li.classList.toggle("hidden");
+        }
+    }
+
+    setVisible(ids)
+    {
+        let listItems = this.#contentRoot.getElementsByTagName("li");
+
+        for (let li of listItems)
+        {
+            if (ids.has(li.id))
+                li.classList.remove("hidden");
+            else
+                li.classList.add("hidden");
         }
     }
 
@@ -1404,6 +1433,31 @@ class GraphView extends STIXContentView
         this.nodeDataSet.updateOnly(toggledNodes);
         this.edgeDataSet.updateOnly(toggledEdges);
     }
+
+    setVisible(ids)
+    {
+        let changedNodes = [];
+        this.nodeDataSet.forEach(function(node){
+            if (ids.has(node.id) && node.hidden)
+                // should be visible but is not
+                changedNodes.push({
+                    id: node.id,
+                    hidden: false,
+                    physics: true
+                });
+            else if (!ids.has(node.id) && !node.hidden)
+                // should be hidden but is not
+                changedNodes.push({
+                    id: node.id,
+                    hidden: true,
+                    physics: false
+                });
+        });
+
+        if (changedNodes.length > 0)
+            this.nodeDataSet.updateOnly(changedNodes);
+    }
+
 
     /**
      * Set the graph selection to the node corresponding to the given STIX ID.
