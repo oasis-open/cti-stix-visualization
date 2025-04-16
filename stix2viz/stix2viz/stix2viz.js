@@ -110,8 +110,8 @@ let embeddedRelationships = new Map([
          [ "next_task_refs", "next_task", true]
     ]],
     ["identity", [
-        [ "extensions.extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498.email_addresses.email_address_ref", "email_addr", true]
-        [ "extensions.extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498.social_media_accounts.user_accoint_ref", "user_account", true]
+        [ "extensions.extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498.email_addresses.email_address_ref", "email_addr", true],
+        [ "extensions.extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498.social_media_accounts.user_account_ref", "user_account", true]
     ]]
     
 ]);
