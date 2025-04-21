@@ -147,3 +147,7 @@ body {
 .hidden {
   display: none;
 }
+
+#timeline {
+  width: 100%;
+}

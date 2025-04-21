@@ -800,6 +800,53 @@ function makeEdgeObject(sourceRef, targetRef, label, stixId=null)
     return edge;
 }
 
+var timelineTimestamps = {                                   
+    "attack-pattern": ["modified", "created"],
+    "campaign": ["last_seen", "first_seen", "modified", "created"],
+    "course-of-action": ["modified", "created"],
+    "identity": ["modified", "created"],
+    "incident": ["modified", "created"],
+    "indicator": ["modified", "created"],
+    "infrastructure": ["modified", "created"],
+    "intrusion-set": ["last_seen", "first_seen", "modified", "created"],
+    "location": ["created"],
+    "malware": ["last_seen", "first_seen", "modified", "created"],
+    "malware-analysis": ["modified", "created"],
+    "note": ["modified", "created"],
+    "observed-data": ["last_observed", "first_observed", "modified", "created"],
+    "opinion": ["modified", "created"],
+    "report": ["modified", "created"],
+    "threat-actor": ["last_seen", "first_seen","modified", "created"],
+    "tool": ["modified", "created"],
+    "vulnerability": ["modified", "created"],
+
+    "relationship": ["start_time", "modified", "created"],
+    "sighting": ["last_seen", "first_seen", "modified", "created"]
+};
+
+function determineTimestamp(stixObject, properties)
+{
+    for (let prop of properties)
+    {
+        if (stixObject.has(prop)) {
+            return new Date(stixObject.get(prop)).valueOf()
+        }
+    }
+    return null
+}
+
+function determineTimestampForSCO(stixObject, observedDataNodes)
+{
+    let sco_id = stixObject.get("id")
+    for (let obsData of observedDataNodes)
+    {
+        let obj_refs = stixObject.get("object_refs")
+        if (obj_refs.includes(sco_id)) {
+            return determineTimestamp(stixObject, timelineTimestamps["observed-data"])
+        }
+    }
+    return null
+}
 
 /**
  * Create an object representing an visjs network node.  Any changes to node
@@ -810,12 +857,22 @@ function makeEdgeObject(sourceRef, targetRef, label, stixId=null)
  *      needed for configuring the node
  * @return A node object
  */
-function makeNodeObject(name, stixObject)
+function makeNodeObject(name, stixObject, observedDataNodes)
 {
     let node = {
         id: stixObject.get("id"),
         label: name
     };
+    let stixType = stixObject.get("type");
+
+    // Easier to work with epoch milliseconds in javascript, since Date objects
+    // don't seem to have any nice natural way to compare them.
+    if (stixType in timelineTimestamps)
+        node.version = determineTimestamp(stixObject,timelineTimestamps[stixType])
+    else if (observedDataNodes > 0)
+        node.version = determineTimestampForSCO(stixObject, observedDataNodes)
+    else
+    node.version = null
 
     return node;
 }
@@ -1019,6 +1076,13 @@ class STIXContentView
     }
 
     /**
+     * Set the nodes with the given IDs to visible, and the others to hidden.
+     */
+    setVisible(ids)
+    {
+    }
+
+    /**
      * Set the selection to the view element corresponding to the given STIX
      * ID.
      *
@@ -1137,6 +1201,19 @@ class ListView extends STIXContentView
 
             if (stixObject && stixObject.get("type") === stixType)
                 li.classList.toggle("hidden");
+        }
+    }
+
+    setVisible(ids)
+    {
+        let listItems = this.#contentRoot.getElementsByTagName("li");
+
+        for (let li of listItems)
+        {
+            if (ids.has(li.id))
+                li.classList.remove("hidden");
+            else
+                li.classList.add("hidden");
         }
     }
 
@@ -1426,6 +1503,31 @@ class GraphView extends STIXContentView
         this.edgeDataSet.updateOnly(toggledEdges);
     }
 
+    setVisible(ids)
+    {
+        let changedNodes = [];
+        this.nodeDataSet.forEach(function(node){
+            if (ids.has(node.id) && node.hidden)
+                // should be visible but is not
+                changedNodes.push({
+                    id: node.id,
+                    hidden: false,
+                    physics: true
+                });
+            else if (!ids.has(node.id) && !node.hidden)
+                // should be hidden but is not
+                changedNodes.push({
+                    id: node.id,
+                    hidden: true,
+                    physics: false
+                });
+        });
+
+        if (changedNodes.length > 0)
+            this.nodeDataSet.updateOnly(changedNodes);
+    }
+
+
     /**
      * Set the graph selection to the node corresponding to the given STIX ID.
      */
@@ -1686,6 +1788,19 @@ function edgesForEmbeddedRelationships(stixObject, stixIdToObject, config=null)
     return edges;
 }
 
+function selectObservedDataNodes(stixNodes)
+{
+    let listOfObservedDataNodes = [];
+
+    for (let object of stixNodes)
+    {
+        if (object.get("type") === 'observed-data') 
+        {
+            listOfObservedDataNodes.push(object);
+        }
+    }
+    return listOfObservedDataNodes;      
+}
 
 /**
  * Make node and edge datasets derived from STIX content, representing a graph.
@@ -1699,6 +1814,8 @@ function edgesForEmbeddedRelationships(stixObject, stixIdToObject, config=null)
  */
 function makeNodesAndEdges(stixIdToObject, config=null)
 {
+    let stixNodes = stixIdToObject.values();
+
     // List of graph nodes, where each list element is whatever visjs needs
     // to represent the node.  This is a plain javascript object with an
     // "id" property at least, to identify the node.
@@ -1718,6 +1835,8 @@ function makeNodesAndEdges(stixIdToObject, config=null)
     // Map STIX IDs to the node names we use in the graph.
     let stixIdToName = new Map();
 
+    let observedDataNodes = selectObservedDataNodes(stixNodes)
+
     for (let object of stixIdToObject.values())
     {
         let stixType = object.get("type");
@@ -1735,7 +1854,7 @@ function makeNodesAndEdges(stixIdToObject, config=null)
             let name = nameForStixObject(
                 object, stixIdToName, nameCounts, config
             );
-            let node = makeNodeObject(name, object);
+            let node = makeNodeObject(name, object, observedDataNodes);
             nodes.push(node);
 
             let embeddedRelEdges = edgesForEmbeddedRelationships(
