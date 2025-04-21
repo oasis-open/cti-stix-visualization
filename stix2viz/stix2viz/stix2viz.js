@@ -848,8 +848,10 @@ function makeNodeObject(name, stixObject, observedDataNodes)
     // don't seem to have any nice natural way to compare them.
     if (stixType in timelineTimestamps)
         node.version = determineTimestamp(stixObject,timelineTimestamps[stixType])
-    else
+    else if (observedDataNodes > 0)
         node.version = determineTimestampForSCO(stixObject, observedDataNodes)
+    else
+    node.version = null
 
     return node;
 }
