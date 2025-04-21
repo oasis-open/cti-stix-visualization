@@ -804,7 +804,9 @@ var timelineTimestamps = {
     "attack-pattern": ["modified", "created"],
     "campaign": ["last_seen", "first_seen", "modified", "created"],
     "course-of-action": ["modified", "created"],
+    "event": ["start_time", "modified", "created"],
     "identity": ["modified", "created"],
+    "task": ["start_time", "modified", "created"],
     "incident": ["modified", "created"],
     "indicator": ["modified", "created"],
     "infrastructure": ["modified", "created"],
@@ -816,6 +818,7 @@ var timelineTimestamps = {
     "observed-data": ["last_observed", "first_observed", "modified", "created"],
     "opinion": ["modified", "created"],
     "report": ["modified", "created"],
+    "task": ["start_time", "modified", "created"],
     "threat-actor": ["last_seen", "first_seen","modified", "created"],
     "tool": ["modified", "created"],
     "vulnerability": ["modified", "created"],
@@ -828,9 +831,8 @@ function determineTimestamp(stixObject, properties)
 {
     for (let prop of properties)
     {
-        if (stixObject.has(prop)) {
+        if (stixObject.has(prop))
             return new Date(stixObject.get(prop)).valueOf()
-        }
     }
     return null
 }
@@ -869,10 +871,16 @@ function makeNodeObject(name, stixObject, observedDataNodes)
     // don't seem to have any nice natural way to compare them.
     if (stixType in timelineTimestamps)
         node.version = determineTimestamp(stixObject,timelineTimestamps[stixType])
+    // default behavior
+    else if (stixObject.has("modified"))
+        node.version = new Date(stixObject.get("modified")).valueOf();
+    else if (stixObject.has("created"))
+        node.version = new Date(stixObject.get("created")).valueOf();
+    // SCOs (they don't have modified or created timestamps)
     else if (observedDataNodes > 0)
         node.version = determineTimestampForSCO(stixObject, observedDataNodes)
     else
-    node.version = null
+        node.version = null
 
     return node;
 }
