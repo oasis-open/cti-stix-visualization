@@ -820,9 +820,8 @@ function determineTimestampForSCO(stixObject, observedDataNodes)
     for (let obsData of observedDataNodes)
     {
         let obj_refs = stixObject.get("object_refs")
-        if (obj_refs.includes(sco_id)) {
+        if (obj_refs.includes(sco_id))
             return determineTimestamp(stixObject, timelineTimestamps["observed-data"])
-        }
     }
     return null
 }
@@ -848,10 +847,16 @@ function makeNodeObject(name, stixObject, observedDataNodes)
     // don't seem to have any nice natural way to compare them.
     if (stixType in timelineTimestamps)
         node.version = determineTimestamp(stixObject,timelineTimestamps[stixType])
+        // default behavior
+    else if (stixObject.has("modified"))
+        node.version = new Date(stixObject.get("modified")).valueOf();
+    else if (stixObject.has("created"))
+        node.version = new Date(stixObject.get("created")).valueOf();
+    // SCOs (they don't have modified or created timestamps)
     else if (observedDataNodes > 0)
         node.version = determineTimestampForSCO(stixObject, observedDataNodes)
     else
-    node.version = null
+        node.version = null
 
     return node;
 }
