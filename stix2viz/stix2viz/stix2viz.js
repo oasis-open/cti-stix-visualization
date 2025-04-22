@@ -804,7 +804,7 @@ const timelineTimestamps = {
     "attack-pattern": ["modified", "created"],
     "campaign": ["last_seen", "first_seen", "modified", "created"],
     "course-of-action": ["modified", "created"],
-    "event": ["start_time", "modified", "created"],
+    //"event": ["start_time", "modified", "created"],
     "identity": ["modified", "created"],
     "task": ["start_time", "modified", "created"],
     "incident": ["modified", "created"],
@@ -827,30 +827,22 @@ const timelineTimestamps = {
     "sighting": ["last_seen", "first_seen", "modified", "created"]
 };
 
-function determineTimestamp(stixObject, timestampList, config)
+function determineTimestampFromConfig(stixObject, stixType, config)
+{
+    if (config.has(stixType)) {
+        let typeConfig = config.get(stixType);
+        if (typeConfig.has("timestampList"))
+            return determineTimestamp(stixObject, typeConfig.get("timestampList"), null);
+    }
+    return null
+}
+
+function determineTimestamp(stixObject, timestampList)
 {
     for (let prop of timestampList)
     {
         if (stixObject.has(prop))
             return new Date(stixObject.get(prop)).valueOf()
-    }
-    
-    if (config) {
-        stixType = stixObject.get("type");
-        if (config.has(stixType)) {
-            let typeConfig = config.get(stixType);
-            if (typeConfig.has("timestampList"))
-                return determineTimestamp(stixObject, typeConfig.get("timestampList"), null);
-        }
-    }
-    
-    if (config) {
-        stixType = stixObject.get("type");
-        if (config.has(stixType)) {
-            let typeConfig = config.get(stixType);
-            if (typeConfig.has("timestampList"))
-                return determineTimestamp(stixObject, typeConfig.get("timestampList"), null);
-        }
     }
     return null
 }
@@ -861,7 +853,7 @@ function determineTimestampForSCO(stixObject, observedDataNodes)
     for (let obsData of observedDataNodes)
     {
         let obj_refs = stixObject.get("object_refs")
-        if (obj_refs.includes(sco_id))
+        if (!(obj_refs == null) &&  obj_refs.includes(sco_id))
             return determineTimestamp(stixObject, timelineTimestamps["observed-data"])
     }
     return null
@@ -875,7 +867,11 @@ function determineTimestampForSCO(stixObject, observedDataNodes)
  * @param stixObject The STIX object.  Provided in case any info from it is
  *      needed for configuring the node
  * @return A node object
+ * 
+ * Easier to work with epoch milliseconds in javascript, since Date objects
+ * don't seem to have any nice natural way to compare them.
  */
+
 function makeNodeObject(name, stixObject, observedDataNodes, config=null)
 {
     let node = {
@@ -884,21 +880,24 @@ function makeNodeObject(name, stixObject, observedDataNodes, config=null)
     };
     let stixType = stixObject.get("type");
 
-    // Easier to work with epoch milliseconds in javascript, since Date objects
-    // don't seem to have any nice natural way to compare them.
+    node.version = null
     if (stixType in timelineTimestamps)
-        node.version = determineTimestamp(stixObject, timelineTimestamps[stixType], config)
-    // default behavior
-    else if (stixObject.has("modified"))
-        node.version = new Date(stixObject.get("modified")).valueOf();
-    else if (stixObject.has("created"))
-        node.version = new Date(stixObject.get("created")).valueOf();
-    // SCOs (they don't have modified or created timestamps)
-    else if (observedDataNodes > 0)
-        node.version = determineTimestampForSCO(stixObject, observedDataNodes)
-    else
-        node.version = null
-
+        node.version = determineTimestamp(stixObject, timelineTimestamps[stixType])
+    else {
+        if (config) {
+            // check the config
+            node.version = determineTimestampFromConfig(stixObject, stixType, config)
+            if (node.version === null)
+            // default behavior
+                if (stixObject.has("modified"))
+                    node.version = new Date(stixObject.get("modified")).valueOf();
+                else if (stixObject.has("created"))
+                    node.version = new Date(stixObject.get("created")).valueOf();
+        }
+        if (node.version === null && observedDataNodes.length > 0)
+            // still null, maybe it is an SCO
+            node.version = determineTimestampForSCO(stixObject, observedDataNodes)
+    }
     return node;
 }
 
