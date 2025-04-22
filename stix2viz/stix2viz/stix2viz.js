@@ -811,7 +811,7 @@ const timelineTimestamps = {
     "indicator": ["modified", "created"],
     "infrastructure": ["modified", "created"],
     "intrusion-set": ["last_seen", "first_seen", "modified", "created"],
-    "location": ["created"],
+    "location": ["modified", "created"],
     "malware": ["last_seen", "first_seen", "modified", "created"],
     "malware-analysis": ["modified", "created"],
     "note": ["modified", "created"],
@@ -854,7 +854,7 @@ function determineTimestampForSCO(stixObject, observedDataNodes)
     {
         let obj_refs = stixObject.get("object_refs")
         if (!(obj_refs == null) &&  obj_refs.includes(sco_id))
-            return determineTimestamp(stixObject, timelineTimestamps["observed-data"])
+            return determineTimestamp(obsData, timelineTimestamps["observed-data"])
     }
     return null
 }
