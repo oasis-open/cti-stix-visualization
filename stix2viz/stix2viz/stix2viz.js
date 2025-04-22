@@ -800,7 +800,7 @@ function makeEdgeObject(sourceRef, targetRef, label, stixId=null)
     return edge;
 }
 
-var timelineTimestamps = {                                   
+const timelineTimestamps = {                                   
     "attack-pattern": ["modified", "created"],
     "campaign": ["last_seen", "first_seen", "modified", "created"],
     "course-of-action": ["modified", "created"],
@@ -827,12 +827,30 @@ var timelineTimestamps = {
     "sighting": ["last_seen", "first_seen", "modified", "created"]
 };
 
-function determineTimestamp(stixObject, properties)
+function determineTimestamp(stixObject, timestampList, config)
 {
-    for (let prop of properties)
+    for (let prop of timestampList)
     {
         if (stixObject.has(prop))
             return new Date(stixObject.get(prop)).valueOf()
+    }
+    
+    if (config) {
+        stixType = stixObject.get("type");
+        if (config.has(stixType)) {
+            let typeConfig = config.get(stixType);
+            if (typeConfig.has("timestampList"))
+                return determineTimestamp(stixObject, typeConfig.get("timestampList"), null);
+        }
+    }
+    
+    if (config) {
+        stixType = stixObject.get("type");
+        if (config.has(stixType)) {
+            let typeConfig = config.get(stixType);
+            if (typeConfig.has("timestampList"))
+                return determineTimestamp(stixObject, typeConfig.get("timestampList"), null);
+        }
     }
     return null
 }
@@ -843,9 +861,8 @@ function determineTimestampForSCO(stixObject, observedDataNodes)
     for (let obsData of observedDataNodes)
     {
         let obj_refs = stixObject.get("object_refs")
-        if (obj_refs.includes(sco_id)) {
+        if (obj_refs.includes(sco_id))
             return determineTimestamp(stixObject, timelineTimestamps["observed-data"])
-        }
     }
     return null
 }
@@ -859,7 +876,7 @@ function determineTimestampForSCO(stixObject, observedDataNodes)
  *      needed for configuring the node
  * @return A node object
  */
-function makeNodeObject(name, stixObject, observedDataNodes)
+function makeNodeObject(name, stixObject, observedDataNodes, config=null)
 {
     let node = {
         id: stixObject.get("id"),
@@ -870,7 +887,7 @@ function makeNodeObject(name, stixObject, observedDataNodes)
     // Easier to work with epoch milliseconds in javascript, since Date objects
     // don't seem to have any nice natural way to compare them.
     if (stixType in timelineTimestamps)
-        node.version = determineTimestamp(stixObject,timelineTimestamps[stixType])
+        node.version = determineTimestamp(stixObject, timelineTimestamps[stixType], config)
     // default behavior
     else if (stixObject.has("modified"))
         node.version = new Date(stixObject.get("modified")).valueOf();
@@ -1862,7 +1879,7 @@ function makeNodesAndEdges(stixIdToObject, config=null)
             let name = nameForStixObject(
                 object, stixIdToName, nameCounts, config
             );
-            let node = makeNodeObject(name, object, observedDataNodes);
+            let node = makeNodeObject(name, object, observedDataNodes, config);
             nodes.push(node);
 
             let embeddedRelEdges = edgesForEmbeddedRelationships(
