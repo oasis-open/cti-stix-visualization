@@ -832,7 +832,7 @@ const timelineTimestamps = {
  * @param stixObject The STIX object.  Provided to provide any info from it is
  *      needed for configuring the node
  * @param stixType The STIX type of the stixObject
-* @param config Config data used for specifying timeline timestamps; null
+ * @param config Config data used for specifying timeline timestamps; null
  *      to use default settings (a Map instance)
  * @return A Date object
  * 
