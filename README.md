@@ -28,13 +28,13 @@ If you want to load another JSON file, just click on the title at the top of the
 Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-visualization). Upload a JSON file, paste some valid JSON text, or provide the URL for an external JSON file. The URL for an external JSON file can be provided on the main page or as a URL parameter: https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json.  To run STIXViz locally see the section below.
 
 #### Customizing the graph's appearance
-You can also optionally customize the nodes, text and icons associated with each object type, shown on the graph. There is a separate field that accepts JSON (format is specified on the visualizer page), and allows you to specify a custom icon and/or a custom property to be shown. You can specify one custom icon and/or display property per type of object; you can overwrite the icon and/or text displayed for existing STIX object types, or for your own custom object types. Note that the custom icon must be located in the visualizer's `icons` directory. Alternatively, you can specify the custom icon via a web URL, in which case you must specify the protocol (e.g. https).  Additional customization involves the timeline, which is discussed in the following section.
+You can also optionally customize the nodes, text and icons associated with each object type, shown on the graph. The Configration textarea at the bottom of the page that accepts JSON (format is specified on the visualizer page), allows you to specify a custom icon and/or a custom property to be shown. You can specify one custom icon and/or display property per type of object; you can overwrite the icon and/or text displayed for existing STIX object types, or for your own custom object types. Note that the custom icon must be located in the visualizer's `icons` directory. Alternatively, you can specify the custom icon via a web URL, in which case you must specify the protocol (e.g. https).  Additional customization involves the timeline, which is discussed in the following section.
 
-### Using the Timeline
+#### Using the Timeline
 
-The graphs displayed by STIXViz can often be overwhelming.  Using Customization window and the Legend of the website can de-emphasize nodes and edges that are not of interest.  Another way to do this is to make use of the timeline, which is found under the graph.  When the graph is originally displayed, it will contain all of the nodes and edges based on any customization.  Notice the timeline is all the way to the right.  You can move the time icon to show the graph based on the timestamps of the nodes.  The default option is to see the nodes and edges cumulatively, but using the checkbox below the timeline, it is possible to see only the nodes and edges at a specific timestamp. 
+Graphs displayed with STIXViz can be unwieldy.  As described above, nodes not of interest can be hidden by using the Legend.  The Timeline feature offers a further option for reducing the nodes and edges that are visible. When a graph is initially displayed, its nodes and edges will be shown according to any customizations, and the timeline selector (shown beneath the graph) will be fully elapsed (expanded all the way to the right).  Sliding the timeline selector left (and right) changes the date of the timeline. By default, the timeline display is cumulative, meaning that nodes and edges with timestamps at or before the timeline date value will be displayed. Unchecking the “Cumulative timeline” option will display only nodes and edges with timestamps matching the specific timeline date. 
 
-#### Integrating the visualizer
+### Integrating the visualizer
 You can integrate the visualizer into your own web application. The visualizer is implemented as an [AMD](https://en.wikipedia.org/wiki/Asynchronous_module_definition) module that exports the `Viz` class. You can create a new `Viz` instance and visualize your STIX content using code like the following:
 
 ```javascript
@@ -60,10 +60,10 @@ So you need to add your AMD implementation to your web page, and then use module
 
 To run a local copy of the STIX visualizer, just point your browser to `index.html` in the top level directory after you clone the STIXViz repository (https://github.com/oasis-open/cti-stix-visualization).  This will open STIXViz running locally in your browser.  
 
-One advantage of running locally is to customize STIXViz more permanently. Customizations made in the configuration window are only in effect for that session.  To make more permanent changes to your local STIXViz for some of the customizations, you need to edit the javascript code.  This is often the case when you are using STIX extensions. You need to inform STIXViz what the embedded relationships and timeline timestamp list you want for those extensions.
+One advantage of running locally is to customize STIXViz more permanently. Customizations made in the configuration textarea are only in effect for that session.  To make more permanent changes to your local STIXViz for some of the customizations, you need to edit the javascript code.  This is often the case when you are using STIX extensions. You need to inform STIXViz what the embedded relationships and timeline timestamp list you want for those extensions.
 Make your additions in `stixviz/stixviz/stixviz.js` to the `embeddedRelationships` variable on line 17 and the `timelineTimestamps` constant on line 803.
 
-Additionally, any icons for STIX object extenstions should be added to the `stixviz/stixviz/icons` directory.
+Additionally, any icons for STIX object extensions should be added to the `stixviz/stixviz/icons` directory.
 
 ### Acknowlegements
 
