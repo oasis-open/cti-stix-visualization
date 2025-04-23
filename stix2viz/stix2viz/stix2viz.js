@@ -806,7 +806,6 @@ const timelineTimestamps = {
     "course-of-action": ["modified", "created"],
     "event": ["start_time", "modified", "created"],
     "identity": ["modified", "created"],
-    "task": ["start_time", "modified", "created"],
     "incident": ["modified", "created"],
     "indicator": ["modified", "created"],
     "infrastructure": ["modified", "created"],
@@ -827,6 +826,18 @@ const timelineTimestamps = {
     "sighting": ["last_seen", "first_seen", "modified", "created"]
 };
 
+/**
+ * Determine the timestamp based on any configuration information
+ *
+ * @param stixObject The STIX object.  Provided to provide any info from it is
+ *      needed for configuring the node
+ * @param stixType The STIX type of the stixObject
+* @param config Config data used for specifying timeline timestamps; null
+ *      to use default settings (a Map instance)
+ * @return A Date object
+ * 
+ */
+
 function determineTimestampFromConfig(stixObject, stixType, config)
 {
     if (config.has(stixType)) {
@@ -837,6 +848,17 @@ function determineTimestampFromConfig(stixObject, stixType, config)
     return null
 }
 
+/**
+ * Determine the timestamp based on the properties of the timestamp list
+ *
+ * @param stixObject The STIX object.  Provided to provide any info from it is
+ *      needed for configuring the node
+ * @param timestampList List of properties to be considered for the timestamp, in order of their consideration
+ *
+ * @return A Date object
+ * 
+ */
+
 function determineTimestamp(stixObject, timestampList)
 {
     for (let prop of timestampList)
@@ -846,6 +868,16 @@ function determineTimestamp(stixObject, timestampList)
     }
     return null
 }
+
+/**
+ * Determine the timestamp to use for SCOs, based on their relationship to observed data objects
+ *
+ * @param stixObject The STIX object.  Provided to provide any info from it is
+ *      needed for configuring the node
+ * @param observedDataNodes The observed-data STIX objects in the graph
+ * @return A Date object
+ * 
+ */
 
 function determineTimestampForSCO(stixObject, observedDataNodes)
 {
@@ -866,6 +898,9 @@ function determineTimestampForSCO(stixObject, observedDataNodes)
  * @param name A node name; will be used to label the node in the graph
  * @param stixObject The STIX object.  Provided in case any info from it is
  *      needed for configuring the node
+ * @param observedDataNodes The observed-data STIX objects in the graph
+ * @param config Config data used for specifying timeline timestamps; null
+ *      to use default settings (a Map instance)
  * @return A node object
  * 
  * Easier to work with epoch milliseconds in javascript, since Date objects
