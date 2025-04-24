@@ -26,14 +26,22 @@ You can also optionally customize the nodes, text and icons associated with each
 Graphs displayed with STIXViz can be unwieldy.  As described above, nodes not of interest can be hidden by using the Legend.  The Timeline feature offers a further option for reducing the nodes and edges that are visible. When a graph is initially displayed, its nodes and edges will be shown according to any customizations, and the timeline selector (shown beneath the graph) will be fully elapsed (expanded all the way to the right).  Sliding the timeline selector left (and right) changes the date of the timeline. By default, the timeline display is cumulative, meaning that nodes and edges with timestamps at or before the timeline date value will be displayed. Unchecking the “Cumulative timeline” option will display only nodes and edges with timestamps matching the specific timeline date. SCOs do not have any timestamp properties themselves but their timestamp may be determined based on their relationship to observed data objects.
 
 ### Integrating the visualizer
-You can integrate the visualizer into your own web application. The visualizer is implemented as an [AMD](https://en.wikipedia.org/wiki/Asynchronous_module_definition) module that exports the `Viz` class. You can create a new `Viz` instance and visualize your STIX content using code like the following:
+You can integrate the visualizer into your own web application. The visualizer is implemented as an [AMD](https://en.wikipedia.org/wiki/Asynchronous_module_definition) module that exports a few functions for making the raw graph data and the visualizations. You can visualize your STIX content using code like the following:
 
 ```javascript
-visualizer = new stix2viz.Viz(mySvgElement);
-visualizer.vizStix(content);
+let [nodeDataSet, edgeDataSet, stixIdToObject]
+    = stix2viz.makeGraphData(stixContent, config);
+
+let view = stix2viz.makeGraphView(
+    domNode, nodeDataSet, edgeDataSet, stixIdToObject,
+    config
+);
 ```
 
-Finally, you can use `visualizer.vizReset()` if you need to clear the graph.
+The first step creates the raw graph data, and the second uses that to
+create the graph view.  The returned view object is an instance of an
+internal class which has some methods useful for eventing, destroying the
+view, etc.  See [README.Javascript.rst](README.Javascript.rst) for details.
 
 #### Technical Details
 
