@@ -2,24 +2,15 @@
 
 *This is an [OASIS TC Open Repository](https://www.oasis-open.org/resources/open-repositories/). See the [Governance](#governance) section for more information.*
 
-The STIX visualization is meant to provide producers and consumers of STIX content with a rapid way to visualize the objects in a STIX JSON file, and the relationships between those objects. The visualization is implemented in HTML, CSS, and JavaScript (using the [D3.js](https://d3js.org/) library), and is suitable for standalone use — either on a hosted server or as a local file — or embedded into other applications. Regardless of how deployed, the JavaScript code in this repository does not transmit STIX data to any server; it is strictly processed within the browser in which the code is running, so it is suitable for data which the user does not wish to share.
+The STIX visualization is meant to provide producers and consumers of STIX content with a rapid way to visualize the objects in a STIX JSON file, and the relationships between those objects. The visualization is implemented in HTML, CSS, and JavaScript (using the [vis.js](https://visjs.org/) library), and is suitable for standalone use — either on a hosted server or as a local file — or embedded into other applications. Regardless of how deployed, the JavaScript code in this repository does not transmit STIX data to any server; it is strictly processed within the browser in which the code is running, so it is suitable for data which the user does not wish to share.
 
 To emphasize, it is 100% browser-based, meaning that you can view a STIX 2.x graph it without sending all your data to the server (great!).
 
 ### How does it work?
 
-This code makes a lot of assumptions! It assumes:
+The source - a file you upload, text you paste, or an external server link is valid JSON.  Run the stix-validator to be sure. For a slightly out-of-date example, look at `test.json`.
 
-- The source - a file you upload, text you paste, or an external server - provides valid JSON
-- That JSON has a bunch of keys and values, some of which are arrays
-- Everything inside those arrays is an SDO, with an ID, type, and ideally title
-- One of those arrays contains a list of relationships between the other SDOs provided
-
-This should match most STIX 2.x content inside a bundle. Run the stix-validator to be sure. For a slightly out-of-date example, look at `test.json`.
-
-### Neat, a graph! What next?
-
-Click on nodes or paths to get more detailed information for that element (and to pin nodes in place). If you want to unpin a pinned node, double-click it.  Click on a STIX type in the Legend to make nodes of that type disappear (or appear).
+Click on nodes or paths to get more detailed information for that element. Click on a STIX type in the Legend to make nodes of that type disappear (or appear).
 
 If you want to load another JSON file, just click on the title at the top of the page ("STIX Visualizer") to go back to the input options.
 
@@ -28,7 +19,7 @@ If you want to load another JSON file, just click on the title at the top of the
 Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-visualization). Upload a JSON file, paste some valid JSON text, or provide the URL for an external JSON file. The URL for an external JSON file can be provided on the main page or as a URL parameter: https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json.  To run STIXViz locally see the section below.
 
 #### Customizing the graph's appearance
-You can also optionally customize the nodes, text and icons associated with each object type, shown on the graph. The Configration textarea at the bottom of the page that accepts JSON (format is specified on the visualizer page), allows you to specify a custom icon and/or a custom property to be shown. You can specify one custom icon and/or display property per type of object; you can overwrite the icon and/or text displayed for existing STIX object types, or for your own custom object types. Note that the custom icon must be located in the visualizer's `icons` directory. Alternatively, you can specify the custom icon via a web URL, in which case you must specify the protocol (e.g. https).  Additional customization involves the timeline, which is discussed in the following section.
+You can also optionally customize the nodes, text and icons associated with each object type, shown on the graph. The Configuration textarea at the bottom of the page that accepts JSON (format is specified on the visualizer page), allows you to specify a custom icon and/or a custom property to be shown. You can specify one custom icon and/or display property per type of object; you can overwrite the icon and/or text displayed for existing STIX object types, or for your own custom object types. Note that the custom icon must be located in the visualizer's `icons` directory. Alternatively, you can specify the custom icon via a web URL, in which case you must specify the protocol (e.g. https).  Additional customization involves the timeline, which is discussed in the following section.
 
 #### Using the Timeline
 
