@@ -16,7 +16,7 @@ separated by dots.  See getValuesAtPath().
 */
 let embeddedRelationships = new Map([
     [null, [
-        ["created_by_ref", "created-by", true],
+        // ["created_by_ref", "created-by", true],
         ["object_marking_refs", "applies-to", false]
     ]],
     ["directory", [
@@ -83,7 +83,7 @@ let embeddedRelationships = new Map([
         ["parent_ref", "parent-of", false]
     ]],
     ["report", [
-        ["object_refs", "refers-to", true]
+        // ["object_refs", "refers-to", true]
     ]],
     ["sighting", [
         ["sighting_of_ref", "sighting-of", true],
@@ -92,7 +92,28 @@ let embeddedRelationships = new Map([
     ]],
     ["windows-registry-key", [
         ["creator_user_ref", "created-by", true]
+    ]],
+    // added for Incident and other IRF extensions
+    ["impact", [
+         [ "impacted_refs", "impacted_by", false ] 
+    ]],
+    ["incident", [ 
+         [ "extensions.extension-definition--ef765651-680c-498d-9894-99799f2fa126.event_refs", "has_event", true],
+         [ "extensions.extension-definition--ef765651-680c-498d-9894-99799f2fa126.impact_refs", "has_impact", true],
+         [ "extensions.extension-definition--ef765651-680c-498d-9894-99799f2fa126.task_refs", "has_task", true]
+    ]],
+    ["event", [
+         [ "sighting_refs", "evidence", true],
+         [ "next_event_refs", "next_event", true]
+    ]],
+    ["task", [
+         [ "next_task_refs", "next_task", true]
+    ]],
+    ["identity", [
+        [ "extensions.extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498.email_addresses.email_address_ref", "email_addr", true],
+        [ "extensions.extension-definition--66e2492a-bbd3-4be6-88f5-cc91a017a498.social_media_accounts.user_account_ref", "user_account", true]
     ]]
+    
 ]);
 
 
@@ -779,6 +800,96 @@ function makeEdgeObject(sourceRef, targetRef, label, stixId=null)
     return edge;
 }
 
+const timelineTimestamps = {                                   
+    "attack-pattern": ["modified", "created"],
+    "campaign": ["last_seen", "first_seen", "modified", "created"],
+    "course-of-action": ["modified", "created"],
+    "event": ["start_time", "modified", "created"],
+    "identity": ["modified", "created"],
+    "incident": ["modified", "created"],
+    "indicator": ["modified", "created"],
+    "infrastructure": ["modified", "created"],
+    "intrusion-set": ["last_seen", "first_seen", "modified", "created"],
+    "location": ["modified", "created"],
+    "malware": ["last_seen", "first_seen", "modified", "created"],
+    "malware-analysis": ["modified", "created"],
+    "note": ["modified", "created"],
+    "observed-data": ["last_observed", "first_observed", "modified", "created"],
+    "opinion": ["modified", "created"],
+    "report": ["modified", "created"],
+    "task": ["start_time", "modified", "created"],
+    "threat-actor": ["last_seen", "first_seen","modified", "created"],
+    "tool": ["modified", "created"],
+    "vulnerability": ["modified", "created"],
+
+    "relationship": ["start_time", "modified", "created"],
+    "sighting": ["last_seen", "first_seen", "modified", "created"]
+};
+
+/**
+ * Determine the timestamp based on any configuration information
+ *
+ * @param stixObject The STIX object.  Provided to provide any info from it is
+ *      needed for configuring the node
+ * @param stixType The STIX type of the stixObject
+ * @param config Config data used for specifying timeline timestamps; null
+ *      to use default settings (a Map instance)
+ * @return A Date object
+ * 
+ */
+
+function determineTimestampFromConfig(stixObject, stixType, config)
+{
+    if (config.has(stixType)) {
+        let typeConfig = config.get(stixType);
+        if (typeConfig.has("timestampList"))
+            return determineTimestamp(stixObject, typeConfig.get("timestampList"), null);
+    }
+    return null
+}
+
+/**
+ * Determine the timestamp based on the properties of the timestamp list
+ *
+ * @param stixObject The STIX object.  Provided to provide any info from it is
+ *      needed for configuring the node
+ * @param timestampList List of properties to be considered for the timestamp, in order of their consideration
+ *
+ * @return A Date object
+ * 
+ */
+
+function determineTimestamp(stixObject, timestampList)
+{
+    for (let prop of timestampList)
+    {
+        if (stixObject.has(prop))
+            return new Date(stixObject.get(prop)).valueOf()
+    }
+    return null
+}
+
+/**
+ * Determine the timestamp to use for SCOs, based on their relationship to observed data objects
+ *
+ * @param stixObject The STIX object.  Provided to provide any info from it is
+ *      needed for configuring the node
+ * @param observedDataNodes The observed-data STIX objects in the graph
+ * @return A Date object
+ * 
+ */
+
+function determineTimestampForSCO(stixObject, observedDataNodes)
+{
+    let sco_id = stixObject.get("id")
+    for (let obsData of observedDataNodes)
+    {
+        let obj_refs = stixObject.get("object_refs")
+        if (!(obj_refs == null) &&  obj_refs.includes(sco_id))
+            return determineTimestamp(obsData, timelineTimestamps["observed-data"])
+    }
+    return null
+}
 
 /**
  * Create an object representing an visjs network node.  Any changes to node
@@ -787,16 +898,44 @@ function makeEdgeObject(sourceRef, targetRef, label, stixId=null)
  * @param name A node name; will be used to label the node in the graph
  * @param stixObject The STIX object.  Provided in case any info from it is
  *      needed for configuring the node
+ * @param observedDataNodes The observed-data STIX objects in the graph
+ * @param config Config data used for specifying timeline timestamps; null
+ *      to use default settings (a Map instance)
  * @return A node object
+ * 
+ * Easier to work with epoch milliseconds in javascript, since Date objects
+ * don't seem to have any nice natural way to compare them.
  */
-function makeNodeObject(name, stixObject)
+
+function makeNodeObject(name, stixObject, observedDataNodes, config=null)
 {
     let node = {
         id: stixObject.get("id"),
         label: name
     };
+    let stixType = stixObject.get("type");
 
-    return node;
+    node.version = null
+    if (config)
+        // check the config first, which may contain an override of timelineTimestamps or
+        // timestamps not in timelineTimestamps
+        node.version = determineTimestampFromConfig(stixObject, stixType, config)
+
+    if (node.version === null)
+        if (stixType in timelineTimestamps)
+            // check timelineTimestamps
+            node.version = determineTimestamp(stixObject, timelineTimestamps[stixType])
+        // nothing in config or timelineTimestamps, use default behavior
+        else if (stixObject.has("modified"))
+            node.version = new Date(stixObject.get("modified")).valueOf();
+        else if (stixObject.has("created"))
+            node.version = new Date(stixObject.get("created")).valueOf();
+
+    if (node.version === null && observedDataNodes.length > 0)
+        // still null, maybe it is an SCO
+        node.version = determineTimestampForSCO(stixObject, observedDataNodes)
+    
+        return node;
 }
 
 
@@ -998,6 +1137,13 @@ class STIXContentView
     }
 
     /**
+     * Set the nodes with the given IDs to visible, and the others to hidden.
+     */
+    setVisible(ids)
+    {
+    }
+
+    /**
      * Set the selection to the view element corresponding to the given STIX
      * ID.
      *
@@ -1116,6 +1262,19 @@ class ListView extends STIXContentView
 
             if (stixObject && stixObject.get("type") === stixType)
                 li.classList.toggle("hidden");
+        }
+    }
+
+    setVisible(ids)
+    {
+        let listItems = this.#contentRoot.getElementsByTagName("li");
+
+        for (let li of listItems)
+        {
+            if (ids.has(li.id))
+                li.classList.remove("hidden");
+            else
+                li.classList.add("hidden");
         }
     }
 
@@ -1405,6 +1564,31 @@ class GraphView extends STIXContentView
         this.edgeDataSet.updateOnly(toggledEdges);
     }
 
+    setVisible(ids)
+    {
+        let changedNodes = [];
+        this.nodeDataSet.forEach(function(node){
+            if (ids.has(node.id) && node.hidden)
+                // should be visible but is not
+                changedNodes.push({
+                    id: node.id,
+                    hidden: false,
+                    physics: true
+                });
+            else if (!ids.has(node.id) && !node.hidden)
+                // should be hidden but is not
+                changedNodes.push({
+                    id: node.id,
+                    hidden: true,
+                    physics: false
+                });
+        });
+
+        if (changedNodes.length > 0)
+            this.nodeDataSet.updateOnly(changedNodes);
+    }
+
+
     /**
      * Set the graph selection to the node corresponding to the given STIX ID.
      */
@@ -1665,6 +1849,19 @@ function edgesForEmbeddedRelationships(stixObject, stixIdToObject, config=null)
     return edges;
 }
 
+function selectObservedDataNodes(stixNodes)
+{
+    let listOfObservedDataNodes = [];
+
+    for (let object of stixNodes)
+    {
+        if (object.get("type") === 'observed-data') 
+        {
+            listOfObservedDataNodes.push(object);
+        }
+    }
+    return listOfObservedDataNodes;      
+}
 
 /**
  * Make node and edge datasets derived from STIX content, representing a graph.
@@ -1678,6 +1875,8 @@ function edgesForEmbeddedRelationships(stixObject, stixIdToObject, config=null)
  */
 function makeNodesAndEdges(stixIdToObject, config=null)
 {
+    let stixNodes = stixIdToObject.values();
+
     // List of graph nodes, where each list element is whatever visjs needs
     // to represent the node.  This is a plain javascript object with an
     // "id" property at least, to identify the node.
@@ -1697,6 +1896,8 @@ function makeNodesAndEdges(stixIdToObject, config=null)
     // Map STIX IDs to the node names we use in the graph.
     let stixIdToName = new Map();
 
+    let observedDataNodes = selectObservedDataNodes(stixNodes)
+
     for (let object of stixIdToObject.values())
     {
         let stixType = object.get("type");
@@ -1714,7 +1915,7 @@ function makeNodesAndEdges(stixIdToObject, config=null)
             let name = nameForStixObject(
                 object, stixIdToName, nameCounts, config
             );
-            let node = makeNodeObject(name, object);
+            let node = makeNodeObject(name, object, observedDataNodes, config);
             nodes.push(node);
 
             let embeddedRelEdges = edgesForEmbeddedRelationships(

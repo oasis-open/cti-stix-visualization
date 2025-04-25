@@ -25,6 +25,9 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     let uploader = document.getElementById('uploader');
     let canvasContainer = document.getElementById('canvas-container');
     let canvas = document.getElementById('canvas');
+    let timelineVersions = null;
+    let cumulativeIdGroups = null;
+    let nonCumulativeIdGroups = null;
 
     /**
      * Build a message and display an alert window, from an exception object.
@@ -145,6 +148,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             let [nodeDataSet, edgeDataSet, stixIdToObject]
                 = stix2viz.makeGraphData(content, customConfig);
 
+            [
+                timelineVersions, cumulativeIdGroups, nonCumulativeIdGroups
+            ] = makeTimelineGroups(nodeDataSet);
+
             let wantsList = false;
             if (nodeDataSet.length > 200)
                 wantsList = confirm(
@@ -177,6 +184,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
                 );
             }
 
+            setupTimelineSlider(timelineVersions);
             populateLegend(...view.legendData);
         }
         catch (err)
@@ -184,6 +192,97 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             console.log(err);
             alertException(err);
         }
+    }
+
+    function makeTimelineGroups(nodeDataSet, edgeDataSet)
+    {
+        // Find all non-null distinct version timestamps, in sorted order
+        let distinctVersions = nodeDataSet.distinct("version");
+        let idxNull = distinctVersions.indexOf(null);
+        if (idxNull > -1)
+            distinctVersions.splice(idxNull, 1);
+
+        distinctVersions.sort((d1, d2) => d1 - d2);
+
+        // Group node IDs by version.  For the cumulative groups, the last
+        // group gets all IDs and previous groups get progressively fewer.
+        let cumulativeIdGroups = [];
+        let nonCumulativeIdGroups = [];
+        for (let _ of distinctVersions)
+        {
+            cumulativeIdGroups.push(new Set());
+            nonCumulativeIdGroups.push(new Set());
+        }
+
+        nodeDataSet.forEach(function(item) {
+            let firstGroup = 0;
+
+            if (item.version !== null)
+                firstGroup = distinctVersions.indexOf(item.version);
+
+            for (let i=firstGroup; i < distinctVersions.length; i++)
+                cumulativeIdGroups[i].add(item.id);
+
+            nonCumulativeIdGroups[firstGroup].add(item.id);
+        });
+
+        //console.log(distinctVersions);
+
+        return [distinctVersions, cumulativeIdGroups, nonCumulativeIdGroups];
+    }
+
+    function setTimelineSliderLabelFor(sliderValue)
+    {
+        let slider = document.getElementById("timeline");
+        let sliderLabel = slider.labels.item(0);
+
+        let selectedVersion = timelineVersions[sliderValue];
+
+        let timestampString = new Date(selectedVersion).toISOString();
+        sliderLabel.textContent = "Timeline: " + timestampString;
+    }
+
+    function setupTimelineSlider(timelineVersions)
+    {
+        let slider = document.getElementById("timeline");
+        let checkbox = document.getElementById("timelineCheckbox");
+
+        if (timelineVersions.length < 1)
+            return;
+
+        slider.min = 0;
+        slider.max = timelineVersions.length - 1;
+        slider.value = slider.max;
+        slider.disabled = false;
+
+        setTimelineSliderLabelFor(slider.value);
+
+        checkbox.disabled = false;
+    }
+
+    function setVisibilityForTimeline()
+    {
+        let timelineSlider = document.getElementById("timeline");
+        let timelineCheckbox = document.getElementById("timelineCheckbox");
+
+        let sliderValue = timelineSlider.value;
+        let cumulative = timelineCheckbox.checked;
+        let idGroups = cumulative ? cumulativeIdGroups : nonCumulativeIdGroups;
+
+        let selectedGroup = idGroups[sliderValue];
+
+        setTimelineSliderLabelFor(sliderValue);
+        view.setVisible(selectedGroup);
+    }
+
+    function sliderChangeHandler(event)
+    {
+        event.stopPropagation();
+
+        // Ignore the event and just read values from the webpage.  This makes
+        // the handler agnostic to which event triggered the change.  You can
+        // hook this handler to any event and it will do the same thing.
+        setVisibilityForTimeline();
     }
 
     /* ----------------------------------------------------- *
@@ -705,6 +804,14 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         eltConnIncoming.replaceChildren();
         eltConnOutgoing.replaceChildren();
 
+        // disable timeline
+        let timeline = document.getElementById("timeline");
+        let timelineCheckbox = document.getElementById("timelineCheckbox");
+        timeline.disabled = true;
+        timelineCheckbox.disabled = true;
+
+        timelineVersions = cumulativeIdGroups = nonCumulativeIdGroups = null;
+
         header.classList.remove('linkish');
       }
     }
@@ -799,6 +906,8 @@ is not serving JSON, or is not running a webserver.\n\nA GitHub Gist can be crea
     uploader.addEventListener('drop', handleFileDrop, false);
     document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
     document.getElementById("legend").addEventListener("click", legendClickHandler, {capture: true});
+    document.getElementById("timeline").addEventListener("input", sliderChangeHandler, false);
+    document.getElementById("timelineCheckbox").addEventListener("change", sliderChangeHandler, false);
 
     fetchJsonFromUrl();
 });

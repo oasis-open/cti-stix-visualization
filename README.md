@@ -2,43 +2,46 @@
 
 *This is an [OASIS TC Open Repository](https://www.oasis-open.org/resources/open-repositories/). See the [Governance](#governance) section for more information.*
 
-The STIX visualization is meant to provide producers and consumers of STIX content with a rapid way to visualize the objects in a STIX JSON file, and the relationships between those objects. The visualization is implemented in HTML, CSS, and JavaScript (using the [D3.js](https://d3js.org/) library), and is suitable for standalone use — either on a hosted server or as a local file — or embedded into other applications. Regardless of how deployed, the JavaScript code in this repository does not transmit STIX data to any server; it is strictly processed within the browser in which the code is running, so it is suitable for data which the user does not wish to share.
+The STIX visualization is meant to provide producers and consumers of STIX content with a rapid way to visualize the objects in a STIX JSON file, and the relationships between those objects. The visualization is implemented in HTML, CSS, and JavaScript (using the [vis.js](https://visjs.org/) library), and is suitable for standalone use — either on a hosted server or as a local file — or embedded into other applications. Regardless of how deployed, the JavaScript code in this repository does not transmit STIX data to any server; it is strictly processed within the browser in which the code is running, so it is suitable for data which the user does not wish to share.
 
-It visualizes STIX 2.0 content using d3, and is 100% browser-based, meaning that you can use it without sending all your data to the server (great!)
+To emphasize, it is 100% browser-based, meaning that you can view a STIX 2.x graph it without sending all your data to the server (great!).
 
 ### How does it work?
 
-This code makes a lot of assumptions! It assumes:
+The source - a file you upload, text you paste, or an external server link is valid JSON.  Run the stix-validator to be sure. For a slightly out-of-date example, look at `test.json`.
 
-- The source - a file you upload, text you paste, or an external server - provides valid JSON
-- That JSON has a bunch of keys and values, some of which are arrays
-- Everything inside those arrays is an SDO, with an ID, type, and ideally title
-- One of those arrays contains a list of relationships between the other SDOs provided
+Click on nodes or paths to get more detailed information for that element. Click on a STIX type in the Legend to make nodes of that type disappear (or appear).
 
-This should match most STIX 2.0 content inside a bundle. For a slightly out-of-date example, look at `test.json`.
-
-### Neat, a graph! What next?
-
-Click on nodes or paths to get more detailed information for that element (and to pin nodes in place). If you want to unpin a pinned node, double-click it.
-
-If you want to load another JSON file, just click on the title at the top of the page to go back to the input options.
+If you want to load another JSON file, just click on the title at the top of the page ("STIX Visualizer") to go back to the input options.
 
 ### How can I use it?
 
-Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-visualization). Upload a JSON file, paste some valid JSON text, or provide the URL for an external JSON file. The URL for an external JSON file can be provided on the main page or as a URL parameter: https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json.
+Go to [http://oasis-open.github.io/cti-stix-visualization](http://oasis-open.github.io/cti-stix-visualization). Upload a JSON file, paste some valid JSON text, or provide the URL for an external JSON file. The URL for an external JSON file can be provided on the main page or as a URL parameter: https://oasis-open.github.io/cti-stix-visualization/?url=https://raw.githubusercontent.com/oasis-open/cti-stix-visualization/master/test.json.  To run STIXViz locally see the section below.
 
 #### Customizing the graph's appearance
-You can also optionally customize the text and icons associated with each object type, shown on the graph. There is a separate field that accepts JSON (format is specified on the visualizer page), and allows you to specify a custom icon and/or a custom property to be shown. You can specify one custom icon and/or display property per type of object; you can overwrite the icon and/or text displayed for existing STIX object types, or for your own custom object types. Note that the custom icon must be located in the visualizer's `icons` directory. Alternatively, you can specify the custom icon via a web URL, in which case you must specify the protocol (e.g. https).
+You can also optionally customize the nodes, text and icons associated with each object type, shown on the graph. The Configuration textarea at the bottom of the page that accepts JSON (format is specified on the visualizer page), allows you to specify a custom icon and/or a custom property to be shown. You can specify one custom icon and/or display property per type of object; you can overwrite the icon and/or text displayed for existing STIX object types, or for your own custom object types. Note that the custom icon must be located in the visualizer's `icons` directory. Alternatively, you can specify the custom icon via a web URL, in which case you must specify the protocol (e.g. https).  Additional customization involves the timeline, which is discussed in the following section.
 
-#### Integrating the visualizer
-You can integrate the visualizer into your own web application. The visualizer is implemented as an [AMD](https://en.wikipedia.org/wiki/Asynchronous_module_definition) module that exports the `Viz` class. You can create a new `Viz` instance and visualize your STIX content using code like the following:
+#### Using the Timeline
+
+Graphs displayed with STIXViz can be unwieldy.  As described above, nodes not of interest can be hidden by using the Legend.  The Timeline feature offers a further option for reducing the nodes and edges that are visible. When a graph is initially displayed, its nodes and edges will be shown according to any customizations, and the timeline selector (shown beneath the graph) will be fully elapsed (expanded all the way to the right).  Sliding the timeline selector left (and right) changes the date of the timeline. By default, the timeline display is cumulative, meaning that nodes and edges with timestamps at or before the timeline date value will be displayed. Unchecking the “Cumulative timeline” option will display only nodes and edges with timestamps matching the specific timeline date. SCOs do not have any timestamp properties themselves but their timestamp may be determined based on their relationship to observed data objects.
+
+### Integrating the visualizer
+You can integrate the visualizer into your own web application. The visualizer is implemented as an [AMD](https://en.wikipedia.org/wiki/Asynchronous_module_definition) module that exports a few functions for making the raw graph data and the visualizations. You can visualize your STIX content using code like the following:
 
 ```javascript
-visualizer = new stix2viz.Viz(mySvgElement);
-visualizer.vizStix(content);
+let [nodeDataSet, edgeDataSet, stixIdToObject]
+    = stix2viz.makeGraphData(stixContent, config);
+
+let view = stix2viz.makeGraphView(
+    domNode, nodeDataSet, edgeDataSet, stixIdToObject,
+    config
+);
 ```
 
-Finally, you can use `visualizer.vizReset()` if you need to clear the graph.
+The first step creates the raw graph data, and the second uses that to
+create the graph view.  The returned view object is an instance of an
+internal class which has some methods useful for eventing, destroying the
+view, etc.  See [README.Javascript.rst](README.Javascript.rst) for details.
 
 #### Technical Details
 
@@ -54,7 +57,12 @@ So you need to add your AMD implementation to your web page, and then use module
 
 ### How do I run it locally?
 
-To run a local copy of the STIX visualizer, just point your browser to index.html after you clone the repo.
+To run a local copy of the STIX visualizer, just point your browser to `index.html` in the top level directory after you clone the STIXViz repository (https://github.com/oasis-open/cti-stix-visualization).  This will open STIXViz running locally in your browser.  
+
+One advantage of running locally is to customize STIXViz more permanently. Customizations made in the configuration textarea are only in effect for that session.  To make more permanent changes to your local STIXViz for some of the customizations, you need to edit the javascript code.  This is often the case when you are using STIX extensions. You need to inform STIXViz what the embedded relationships and timeline timestamp list you want for those extensions.
+Make your additions in `stixviz/stixviz/stixviz.js` to the `embeddedRelationships` variable on line 17 and the `timelineTimestamps` constant on line 803.
+
+Additionally, any icons for STIX object extensions should be added to the `stixviz/stixviz/icons` directory.
 
 ### Acknowlegements
 
