@@ -86,10 +86,10 @@ Initially, the associated TC members have designated one or more persons to serv
 
 **<a id="currentMaintainers">Current Maintainers of this TC Open Repository</a>**
 
- * [Jason Keirstead](mailto:Jason.Keirstead@ca.ibm.com); GitHub ID: [https://github.com/JasonKeirstead](https://github.com/JasonKeirstead); WWW: [IBM](http://www.ibm.com/)
  * [Emily Ratliff](mailto:Emily.Ratliff@ibm.com); GitHub ID: [https://github.com/ejratl](https://github.com/ejratl); WWW: [IBM](http://www.ibm.com/)
  * [Rich Piazza](mailto:rpiazza@mitre.org); GitHub ID: [https://github.com/rpiazza](https://github.com/rpiazza) WWW: [MITRE](http://www.mitre.org/)
-
+* [Alexandre Dulaunoy](mailto:alexandre.dulaunoy@circl.lu); GitHub ID: [https://github.com/adulau](https://github.com/adulau); WWW: [CIRCL](http://www.circl.lu/)
+* [Christian Studer](mailto:christian.studer@circl.lu); GitHub ID: [https://github.com/chrisr3d](https://github.com/chrisr3d); WWW: [CIRCL](http://www.circl.lu/)
 
 ## <a id="aboutOpenRepos">About OASIS TC Open Repositories</a>
 
