@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="STIX X.509 Certificate" focusable="false" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <title>STIX X.509 Certificate</title>
+  <path d="M13 7h30l8 8v42H13zM43 7v8h8M21 22h22M21 30h17"/>
+  <circle cx="32" cy="42" r="7"/>
+  <path d="m28 48-2 9 6-3 6 3-2-9"/>
+</svg>

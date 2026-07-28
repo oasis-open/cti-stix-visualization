@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="STIX Sighting" focusable="false" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <title>STIX Sighting</title>
+  <path d="M6 32s10-17 26-17 26 17 26 17-10 17-26 17S6 32 6 32z"/>
+  <circle cx="32" cy="32" r="8"/>
+  <circle cx="32" cy="32" r="2.5" fill="currentColor" stroke="none"/>
+</svg>

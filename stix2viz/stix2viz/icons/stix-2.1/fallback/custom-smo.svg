@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="Custom STIX Meta Object"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>Custom STIX Meta Object</title>
+  <path d="M8 18h27l21 14-21 14H8z"/>
+  <circle cx="19" cy="32" r="4"/>
+  <path d="M31 27a6 6 0 1 1 5 9c-2 1-2 2-2 4M34 44h.1"/>
+</svg>

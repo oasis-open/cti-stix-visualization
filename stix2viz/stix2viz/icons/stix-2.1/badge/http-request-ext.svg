@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX HTTP Request Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX HTTP Request Extension</title>
+  <circle cx="30" cy="32" r="20"/>
+  <path d="M10 32h40M30 12c7 7 9 31 0 40M30 12c-7 7-9 31 0 40"/>
+  <path d="M42 20h12v12M54 20 41 33"/>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Windows Service Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Windows Service Extension</title>
+  <rect x="8" y="10" width="48" height="42" rx="3"/>
+  <path d="M8 21h48M17 15h1M24 15h1"/>
+  <path d="m24 43 15-15M22 30a8 8 0 0 0 10 10M42 41a8 8 0 0 0-10-10"/>
+  <circle cx="23" cy="29" r="2"/><circle cx="41" cy="42" r="2"/>
+</svg>

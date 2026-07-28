@@ -140,6 +140,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
 
         // Hard-coded working icon directory setting for this application.
         customConfig.iconDir = "stix2viz/stix2viz/icons";
+        customConfig.semanticIconDir =
+            "stix2viz/stix2viz/icons/stix-2.1";
 
         toggleView();
 
@@ -185,6 +187,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             }
 
             setupTimelineSlider(timelineVersions);
+            populateAccessibleNodeList(view.nodeDataSet || nodeDataSet);
             populateLegend(...view.legendData);
         }
         catch (err)
@@ -192,6 +195,22 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             console.log(err);
             alertException(err);
         }
+    }
+
+    /**
+     * Canvas content is not exposed reliably to assistive technology.  Keep a
+     * DOM list of the same node names as an application-level alternative.
+     */
+    function populateAccessibleNodeList(nodeDataSet)
+    {
+        let list = document.getElementById("accessible-node-list");
+        list.replaceChildren();
+
+        nodeDataSet.forEach(function(item) {
+            let li = document.createElement("li");
+            li.textContent = item.accessibleName || item.label;
+            list.append(li);
+        });
     }
 
     function makeTimelineGroups(nodeDataSet, edgeDataSet)
@@ -370,6 +389,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
 
         // style change to remind users what they've hidden.
         td.classList.toggle("typeHidden");
+        td.setAttribute(
+            "aria-pressed",
+            td.classList.contains("typeHidden") ? "true" : "false"
+        );
     }
 
     /* ******************************************************
@@ -403,6 +426,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
                 this.height = "37";
             }
             img.src = iconURL;
+            img.alt = "";
 
             if (colIdx > 1)
             {
@@ -413,8 +437,28 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             td = tr.insertCell();
             ++colIdx;
 
+            let displayType = stixType.charAt(0).toUpperCase()
+                + stixType.substr(1).toLowerCase();
+            td.setAttribute("role", "button");
+            td.setAttribute("tabindex", "0");
+            td.setAttribute("aria-pressed", "false");
+            td.setAttribute(
+                "aria-label", "Toggle " + displayType + " nodes"
+            );
             td.append(img);
-            td.append(stixType.charAt(0).toUpperCase() + stixType.substr(1).toLowerCase());
+            td.append(displayType);
+        }
+    }
+
+    function legendKeyHandler(event)
+    {
+        if (
+            event.target.tagName.toLowerCase() === "td"
+            && (event.key === "Enter" || event.key === " ")
+        )
+        {
+            event.preventDefault();
+            event.target.click();
         }
     }
 
@@ -789,6 +833,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
         document.getElementById('files').value = ""; // reset the files input
         document.getElementById('chosen-files').innerHTML = ""; // reset the subheader text
         document.getElementById('selection').innerHTML = ""; // reset the selected node in the sidebar
+        document.getElementById("accessible-node-list").replaceChildren();
 
         // Reset legend table
         let table = document.getElementById('legend-content');
@@ -906,6 +951,7 @@ is not serving JSON, or is not running a webserver.\n\nA GitHub Gist can be crea
     uploader.addEventListener('drop', handleFileDrop, false);
     document.getElementById('selected').addEventListener('click', selectedNodeClick, false);
     document.getElementById("legend").addEventListener("click", legendClickHandler, {capture: true});
+    document.getElementById("legend").addEventListener("keydown", legendKeyHandler);
     document.getElementById("timeline").addEventListener("input", sliderChangeHandler, false);
     document.getElementById("timelineCheckbox").addEventListener("change", sliderChangeHandler, false);
 

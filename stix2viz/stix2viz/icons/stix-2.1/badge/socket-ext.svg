@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Socket Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Socket Extension</title>
+  <path d="M21 10v15M43 10v15M16 25h32v7a16 16 0 0 1-32 0zM32 48v7"/>
+  <circle cx="26" cy="33" r="2" fill="currentColor" stroke="none"/>
+  <circle cx="38" cy="33" r="2" fill="currentColor" stroke="none"/>
+</svg>

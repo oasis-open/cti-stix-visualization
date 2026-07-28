@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="Custom STIX Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>Custom STIX Extension</title>
+  <path d="M25 9h14v12a7 7 0 1 1 7 7h9v14H43a7 7 0 1 1-7 7v6H22V43a7 7 0 1 1-7-7H9V22h12a7 7 0 1 1 7-7V9z"/>
+</svg>

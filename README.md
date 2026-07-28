@@ -64,9 +64,50 @@ Make your additions in `stixviz/stixviz/stixviz.js` to the `embeddedRelationship
 
 Additionally, any icons for STIX object extensions should be added to the `stixviz/stixviz/icons` directory.
 
-### Acknowlegements
+### STIX 2.1 semantic SVG icons
 
-The icons used in the generated graphs are by Bret Jordan, licensed under the Creative Commons Attribution-ShareAlike (CC BY-SA) License, Version 4.0.
+The `stix2viz/stix2viz/icons/stix-2.1` directory contains 82 self-contained
+SVG assets for canonical STIX 2.1 types and semantic variants. The resolver
+supports:
+
+- all 43 serialized top-level types;
+- Statement, the four canonical STIX TLP markings, and TLP 2.0 CLEAR and
+  AMBER+STRICT compatibility variants;
+- all 12 predefined object-extension badges;
+- the OASIS candidate `event`, `impact`, `task`, and `observed-string` types;
+- CUI, PAP, and IEP marking extensions;
+- defanged, revoked, granular-marking, and language-marking state metadata;
+- historical filename aliases and category-specific custom fallbacks.
+
+Resolver coverage and graph rendering coverage are intentionally different.
+`relationship` resolves to an icon for API and legend consumers but is drawn
+as an edge by this visualizer. `bundle` also resolves to an icon but is
+unpacked before graph nodes are created.
+
+Per-type `displayIcon` configuration remains the highest-priority override,
+including absolute custom URLs. Legacy PNGs remain in place and are used when
+the semantic icon directory is not configured. The SVG files contain their
+own colors because an SVG loaded as an external canvas image cannot inherit
+the page's CSS `currentColor`.
+
+Canvas metadata alone is not sufficient accessibility support. The web
+application provides accessible legend controls and a DOM list containing the
+graph node names; list view items also expose semantic names directly.
+
+Run the dependency-free resolver and asset checks with:
+
+```bash
+node tests/run-tests.js
+```
+
+The SVG source set was imported from the STIX icon project at commit
+`58aad32` and is licensed under this repository's BSD 3-Clause license.
+
+### Acknowledgements
+
+The legacy round PNG icons are by Bret Jordan, licensed under the Creative
+Commons Attribution-ShareAlike (CC BY-SA) License, Version 4.0. The semantic
+SVG set described above is separately licensed under BSD 3-Clause.
 
 ## Governance
 

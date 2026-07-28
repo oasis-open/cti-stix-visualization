@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="STIX Observed Data" focusable="false" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <title>STIX Observed Data</title>
+  <ellipse cx="32" cy="16" rx="19" ry="7"/>
+  <path d="M13 16v16c0 4 8.5 7 19 7s19-3 19-7V16M13 32v16c0 4 8.5 7 19 7s19-3 19-7V32"/>
+</svg>

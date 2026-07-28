@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Raster Image File Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Raster Image File Extension</title>
+  <rect x="9" y="13" width="46" height="38" rx="4"/>
+  <circle cx="22" cy="25" r="4"/>
+  <path d="m13 45 12-12 8 8 7-7 11 11"/>
+</svg>

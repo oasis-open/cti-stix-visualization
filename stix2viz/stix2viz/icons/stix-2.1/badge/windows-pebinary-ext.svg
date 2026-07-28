@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Windows PE Binary File Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Windows PE Binary File Extension</title>
+  <path d="M10 11h20v20H10zM34 11h20v20H34zM10 35h20v18H10zM34 35h20v18H34z"/>
+  <circle cx="20" cy="21" r="2" fill="currentColor" stroke="none"/>
+  <circle cx="44" cy="21" r="2" fill="currentColor" stroke="none"/>
+  <path d="M16 44h8M40 44h8"/>
+</svg>

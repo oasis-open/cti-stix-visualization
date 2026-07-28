@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Defanged State"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Defanged State</title>
+  <path d="M15 11h34v18c0 14-7 22-17 27-10-5-17-13-17-27z"/>
+  <path d="m23 25 5 12 4-8 4 8 5-12M11 53 53 11"/>
+</svg>

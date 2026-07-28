@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="Legacy STIX Victim Target"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>Legacy STIX Victim Target</title>
+  <circle cx="32" cy="32" r="25"/><circle cx="32" cy="32" r="16"/>
+  <circle cx="32" cy="25" r="6"/>
+  <path d="M22 43c1-7 4-11 10-11s9 4 10 11M32 4v7M32 53v7M4 32h7M53 32h7"/>
+</svg>

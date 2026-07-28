@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX File"
+     focusable="false"
+     fill="none"
+     stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX File</title>
+  <path d="M17 8h20l11 11v37H17z"/>
+  <path d="M37 8v11h11"/>
+  <path d="M24 30h17M24 38h17M24 46h10"/>
+  <circle cx="40" cy="46" r="1.5" fill="currentColor" stroke="none"/>
+</svg>
