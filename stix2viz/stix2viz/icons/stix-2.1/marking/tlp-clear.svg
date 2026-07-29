@@ -1,13 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      viewBox="0 0 64 64"
      role="img"
-     aria-label="TLP CLEAR Marking"
+     aria-label="STIX TLP CLEAR Marking"
      focusable="false"
      fill="none"
      stroke-width="3"
      stroke-linecap="round"
      stroke-linejoin="round">
-  <title>TLP CLEAR Marking</title>
-  <rect x="6" y="12" width="52" height="40" rx="6" fill="#000000" stroke="#FFFFFF"/>
-  <g stroke="#FFFFFF"><path d="M43 25a13 13 0 1 0 0 14"/></g>
+  <title>STIX TLP CLEAR Marking</title>
+  <path d="M7 16h28l21 16-21 16H7z"
+        fill="#FFFFFF" stroke="#111827"/>
+  <circle cx="17" cy="32" r="4" fill="#111827" stroke="none"/>
+  <g fill="none" stroke="#111827" stroke-width="3"
+     stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="38" cy="32" r="9"/>
+    <path d="M29 32h18M38 23c3 3 4 15 0 18M38 23c-3 3-4 15 0 18"/>
+  </g>
 </svg>

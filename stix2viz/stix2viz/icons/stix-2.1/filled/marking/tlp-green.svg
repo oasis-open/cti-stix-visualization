@@ -11,6 +11,14 @@
      stroke-linejoin="round">
   <title>STIX TLP GREEN Marking filled icon</title>
   <circle cx="32" cy="32" r="31" fill="#000000" stroke="none"/>
-  <rect x="6" y="12" width="52" height="40" rx="6" fill="#000000" stroke="#33FF00"/>
-  <g stroke="#33FF00"><path d="M43 25a13 13 0 1 0 0 14v-8H33"/></g>
+  <path d="M7 16h28l21 16-21 16H7z"
+        fill="#33FF00" stroke="#111827"/>
+  <circle cx="17" cy="32" r="4" fill="#111827" stroke="none"/>
+  <g fill="none" stroke="#111827" stroke-width="3"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="m33 32 7-6M33 32l7 6"/>
+    <circle cx="31" cy="32" r="3" fill="#111827" stroke="none"/>
+    <circle cx="42" cy="25" r="3" fill="#111827" stroke="none"/>
+    <circle cx="42" cy="39" r="3" fill="#111827" stroke="none"/>
+  </g>
 </svg>

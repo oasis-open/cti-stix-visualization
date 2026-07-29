@@ -113,8 +113,9 @@ node tests/run-tests.js
 ```
 
 The original glyph source set was imported from the STIX icon project at
-commit `58aad32`. The filled variants are byte-identical to canonical commit
-`b26bae8`. Both are licensed under this repository's BSD 3-Clause license.
+commit `58aad32`. The filled variants and redesigned TLP marking assets are
+byte-identical to canonical commit `74dcd7b`. Both are licensed under this
+repository's BSD 3-Clause license.
 
 ### Acknowledgements
 

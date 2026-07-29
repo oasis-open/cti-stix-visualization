@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      viewBox="0 0 64 64"
      role="img"
-     aria-label="STIX TLP WHITE Marking filled icon"
+     aria-label="STIX TLP WHITE Compatibility Marking filled icon"
      focusable="false"
      fill="none"
      stroke="none"
@@ -9,8 +9,13 @@
      stroke-width="3"
      stroke-linecap="round"
      stroke-linejoin="round">
-  <title>STIX TLP WHITE Marking filled icon</title>
+  <title>STIX TLP WHITE Compatibility Marking filled icon</title>
   <circle cx="32" cy="32" r="31" fill="#000000" stroke="none"/>
-  <rect x="6" y="12" width="52" height="40" rx="6" fill="#000000" stroke="#FFFFFF"/>
-  <g stroke="#FFFFFF"><path d="M19 22 23 42 28 29 32 42 37 29 41 42 45 22"/></g>
+  <path d="M7 16h28l21 16-21 16H7z"
+        fill="#FFFFFF" stroke="#111827"/>
+  <circle cx="17" cy="32" r="4" fill="#111827" stroke="none"/>
+  <g fill="none" stroke="#111827" stroke-width="3"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="m31 27 8-4M31 33l12-6M35 39l8-4"/>
+  </g>
 </svg>
