@@ -114,12 +114,16 @@ const view = stix2viz.makeGraphView(
 );
 const tlpNode = view.nodeDataSet.get(tlpId);
 assert.strictEqual(tlpNode.image, "/semantic/marking/tlp-green.svg");
+assert.strictEqual(tlpNode.shape, "circularImage");
+assert.strictEqual(tlpNode.label, "TLP green");
 assert.match(tlpNode.accessibleName, /tlp-green/);
 
 const fileNode = view.nodeDataSet.get(
     "file--00000000-0000-4000-8000-000000000001"
 );
 assert.strictEqual(fileNode.image, "/semantic/sco/file.svg");
+assert.strictEqual(fileNode.shape, "circularImage");
+assert.strictEqual(fileNode.label, "sample.bin");
 assert.deepStrictEqual(
     Array.from(fileNode.iconMetadata.badges, badge => badge.key),
     ["archive-ext"]
@@ -144,5 +148,10 @@ const legend = view.legendData[0];
 assert.strictEqual(legend.get("marking-definition"), "/semantic/marking/tlp-green.svg");
 assert.strictEqual(legend.get("file"), "/semantic/sco/file.svg");
 assert.strictEqual(legend.get("tool"), "https://example.test/custom-tool.svg");
+assert.strictEqual(
+    view.graph.options.nodes.color.background,
+    "#97c2fc",
+    "transparent glyphs need an explicit filled graph-node background"
+);
 
 console.log("stix2viz semantic integration tests passed");

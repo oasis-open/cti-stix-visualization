@@ -427,6 +427,8 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             }
             img.src = iconURL;
             img.alt = "";
+            img.width = "37";
+            img.height = "37";
 
             if (colIdx > 1)
             {

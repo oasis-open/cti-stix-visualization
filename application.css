@@ -72,7 +72,15 @@ body {
 }
 
 #legend-content img {
+    background-color: #97c2fc;
+    border: 1px solid black;
+    border-radius: 50%;
+    box-sizing: border-box;
+    height: 37px;
+    object-fit: contain;
+    padding: 2px;
     vertical-align: middle;
+    width: 37px;
     margin-right: 0.5em;
 }
 

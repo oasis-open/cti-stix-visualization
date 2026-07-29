@@ -94,6 +94,14 @@ Canvas metadata alone is not sufficient accessibility support. The web
 application provides accessible legend controls and a DOM list containing the
 graph node names; list view items also expose semantic names directly.
 
+The graph deliberately uses the glyph-only SVGs rather than SVGs with embedded
+labels. `circularImage` supplies a filled, high-contrast background and
+vis-network renders each object's instance label underneath. The legend uses
+the same filled glyph treatment and supplies the STIX type as native adjacent
+text. Embedding either label in the image would duplicate visible text, be
+clipped in circular graph nodes, and provide no additional accessible name to
+the canvas.
+
 Run the dependency-free resolver and asset checks with:
 
 ```bash

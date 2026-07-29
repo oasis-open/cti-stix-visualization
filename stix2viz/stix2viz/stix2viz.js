@@ -1449,7 +1449,12 @@ class GraphView extends STIXContentView
             groups: groups,
             nodes: {
                 color: {
-                    border: "black"
+                    border: "black",
+                    // Semantic SVGs are transparent glyphs.  circularImage
+                    // draws this fill behind them and the native node label
+                    // underneath, so a second label inside the SVG would be
+                    // redundant and would be clipped by the circle.
+                    background: "#97c2fc"
                 },
                 font: {
                     size: 20
