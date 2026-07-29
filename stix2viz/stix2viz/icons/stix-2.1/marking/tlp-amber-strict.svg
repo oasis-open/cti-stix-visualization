@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX TLP AMBER STRICT Marking"
+     focusable="false"
+     fill="none"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX TLP AMBER STRICT Marking</title>
+  <path d="M7 16h28l21 16-21 16H7z"
+        fill="#FFC000" stroke="#111827"/>
+  <circle cx="17" cy="32" r="4" fill="#111827" stroke="none"/>
+  <g fill="none" stroke="#111827" stroke-width="3"
+     stroke-linecap="round" stroke-linejoin="round">
+    <rect x="30" y="24" width="14" height="17" rx="1"
+           fill="#111827" stroke="none"/>
+    <rect x="33" y="27" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="39" y="27" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="33" y="32" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="39" y="32" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="36" y="36" width="3" height="5" fill="#FFC000" stroke="none"/>
+    <path d="M28 41h18"/>
+  </g>
+</svg>

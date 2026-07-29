@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="OASIS STIX Event Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>OASIS STIX Event Extension</title>
+  <rect x="9" y="14" width="46" height="40" rx="4"/>
+  <path d="M9 25h46M20 9v10M44 9v10"/>
+  <path d="m32 31 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
+</svg>

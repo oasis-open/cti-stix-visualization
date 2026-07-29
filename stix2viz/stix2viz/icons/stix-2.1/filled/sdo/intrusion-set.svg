@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Intrusion Set filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Intrusion Set filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#245B86" stroke="none"/>
+  <circle cx="32" cy="32" r="8"/>
+  <circle cx="12" cy="17" r="4"/><circle cx="52" cy="17" r="4"/><circle cx="12" cy="47" r="4"/><circle cx="52" cy="47" r="4"/>
+  <path d="m16 20 10 8M48 20l-10 8M16 44l10-8M48 44l-10-8"/>
+  <path d="m22 25 4 3-4 1M42 25l-4 3 4 1M22 39l4-3-4-1M42 39l-4-3 4-1"/>
+</svg>

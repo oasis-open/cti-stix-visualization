@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Software filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Software filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#374151" stroke="none"/>
+  <rect x="8" y="9" width="48" height="46" rx="4"/>
+  <path d="M8 19h48M15 14h.01M21 14h.01"/>
+  <rect x="17" y="28" width="12" height="12" rx="2"/>
+  <circle cx="42" cy="38" r="7"/><path d="M42 27v4M42 45v4M31 38h4M49 38h4M34 30l3 3M47 43l3 3M50 30l-3 3M37 43l-3 3"/>
+</svg>

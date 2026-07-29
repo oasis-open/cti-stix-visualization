@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="OASIS STIX Observed String Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>OASIS STIX Observed String Extension</title>
+  <path d="M6 31s9-15 26-15 26 15 26 15-9 15-26 15S6 31 6 31z"/>
+  <circle cx="32" cy="31" r="7"/>
+  <path d="M18 52h28"/>
+</svg>

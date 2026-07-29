@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX User Account filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX User Account filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#5B616B" stroke="none"/>
+  <circle cx="32" cy="21" r="10"/>
+  <path d="M10 54c2-13 10-20 22-20s20 7 22 20"/>
+</svg>

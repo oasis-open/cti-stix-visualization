@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="Legacy STIX Source"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>Legacy STIX Source</title>
+  <circle cx="20" cy="32" r="10"/>
+  <path d="M30 32h26M47 23l9 9-9 9M20 22V10M14 15l6-6 6 6"/>
+</svg>

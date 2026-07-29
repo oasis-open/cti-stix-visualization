@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="OASIS STIX Task Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>OASIS STIX Task Extension</title>
+  <rect x="10" y="9" width="44" height="46" rx="4"/>
+  <path d="M19 21h4M31 21h15M19 32h4M31 32h15M19 43h4M31 43h15"/>
+  <path d="m17 31 4 4 7-8"/>
+</svg>

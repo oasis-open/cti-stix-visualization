@@ -72,7 +72,15 @@ body {
 }
 
 #legend-content img {
+    background-color: #97c2fc;
+    border: 1px solid black;
+    border-radius: 50%;
+    box-sizing: border-box;
+    height: 37px;
+    object-fit: contain;
+    padding: 2px;
     vertical-align: middle;
+    width: 37px;
     margin-right: 0.5em;
 }
 
@@ -83,6 +91,10 @@ body {
 #legend-content .typeHidden {
     font-style: italic;
     color: gray;
+}
+
+#legend-content .typeHidden img {
+    opacity: 0.45;
 }
 
 .selected-object-object-content {
@@ -150,4 +162,16 @@ body {
 
 #timeline {
   width: 100%;
+}
+.visually-hidden {
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
 }

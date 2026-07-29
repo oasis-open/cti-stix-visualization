@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX NTFS File Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX NTFS File Extension</title>
+  <path d="M14 10h25l11 11v33H14zM39 10v12h11"/>
+  <circle cx="25" cy="33" r="3"/><circle cx="39" cy="42" r="3"/>
+  <path d="M28 33h5c3 0 6 3 6 6"/>
+</svg>

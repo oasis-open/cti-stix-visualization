@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX PAP Marking Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX PAP Marking Extension</title>
+  <circle cx="32" cy="19" r="7"/><circle cx="16" cy="40" r="7"/><circle cx="48" cy="40" r="7"/>
+  <path d="M26 23 21 34M38 23l5 11M23 40h18"/>
+  <path d="M10 54c1-5 3-7 6-7s5 2 6 7M42 54c1-5 3-7 6-7s5 2 6 7"/>
+</svg>

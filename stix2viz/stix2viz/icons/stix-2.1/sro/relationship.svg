@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Relationship"
+     focusable="false"
+     fill="none"
+     stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Relationship</title>
+  <circle cx="15" cy="20" r="7"/>
+  <circle cx="49" cy="44" r="7"/>
+  <path d="m21 24 7 5M36 35l7 5"/>
+  <path d="m32 27 5 5-5 5-5-5z"/>
+  <path d="m39 39 4 1-1 4M25 25l-4-1 1-4"/>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="STIX Language Content" focusable="false" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <title>STIX Language Content</title>
+  <path d="M8 10h48v34H32L19 55V44H8z"/>
+  <circle cx="32" cy="27" r="11"/>
+  <path d="M21 27h22M32 16c4 4 6 7 6 11s-2 7-6 11M32 16c-4 4-6 7-6 11s2 7 6 11"/>
+</svg>

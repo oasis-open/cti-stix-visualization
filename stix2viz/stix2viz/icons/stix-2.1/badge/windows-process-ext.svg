@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Windows Process Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Windows Process Extension</title>
+  <rect x="8" y="10" width="48" height="42" rx="3"/>
+  <path d="M8 21h48M17 15h1M24 15h1"/>
+  <circle cx="33" cy="36" r="8"/>
+  <path d="M33 25v3M33 44v3M22 36h3M41 36h3M25 28l2 2M39 42l2 2M41 28l-2 2M27 42l-2 2"/>
+</svg>

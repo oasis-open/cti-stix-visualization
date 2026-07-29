@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Language Marking"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Language Marking</title>
+  <path d="M8 12h36v29H25L14 51V41H8z"/>
+  <circle cx="26" cy="26" r="9"/>
+  <path d="M17 26h18M26 17c3 3 4 15 0 18M26 17c-3 3-4 15 0 18M46 31h10v21H39v-6"/>
+</svg>

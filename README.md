@@ -64,9 +64,64 @@ Make your additions in `stixviz/stixviz/stixviz.js` to the `embeddedRelationship
 
 Additionally, any icons for STIX object extensions should be added to the `stixviz/stixviz/icons` directory.
 
-### Acknowlegements
+### STIX 2.1 semantic SVG icons
 
-The icons used in the generated graphs are by Bret Jordan, licensed under the Creative Commons Attribution-ShareAlike (CC BY-SA) License, Version 4.0.
+The `stix2viz/stix2viz/icons/stix-2.1` directory contains 82 glyph SVGs and
+50 self-contained filled SVGs for canonical STIX 2.1 types and semantic
+marking variants. The resolver supports:
+
+- all 43 serialized top-level types;
+- Statement, the four canonical STIX TLP markings, and TLP 2.0 CLEAR and
+  AMBER+STRICT compatibility variants;
+- all 12 predefined object-extension badges;
+- the OASIS candidate `event`, `impact`, `task`, and `observed-string` types;
+- CUI, PAP, and IEP marking extensions;
+- defanged, revoked, granular-marking, and language-marking state metadata;
+- historical filename aliases and category-specific custom fallbacks.
+
+Resolver coverage and graph rendering coverage are intentionally different.
+`relationship` resolves to an icon for API and legend consumers but is drawn
+as an edge by this visualizer. `bundle` also resolves to an icon but is
+unpacked before graph nodes are created.
+
+Per-type `displayIcon` configuration remains the highest-priority override,
+including absolute custom URLs. Legacy PNGs remain in place and are used when
+the semantic icon directory is not configured. Pass `{variant: "filled"}` to
+`resolveIcon()` to select the circular, white-on-color presentation for the
+43 top-level types and seven Statement/TLP variants. Types without a filled
+asset continue to resolve to their glyph file. The filled SVGs contain their
+own foreground and background colors because an external canvas image cannot
+inherit the page's CSS `currentColor`.
+
+Canvas metadata alone is not sufficient accessibility support. The web
+application provides accessible legend controls and a DOM list containing the
+graph node names; list view items also expose semantic names directly.
+
+The graph deliberately uses filled SVGs without embedded labels.
+`circularImage` renders each object's instance label underneath, while each
+canonical type keeps its established visualizer-compatible hue. The legend
+uses the same filled asset and supplies the STIX type as native adjacent text.
+Hover and selection preserve the type hue and use border width and shadow as
+separate state channels. Embedding a second label in the image would duplicate
+visible text, be clipped in circular graph nodes, and provide no additional
+accessible name to the canvas.
+
+Run the dependency-free resolver and asset checks with:
+
+```bash
+node tests/run-tests.js
+```
+
+The original glyph source set was imported from the STIX icon project at
+commit `58aad32`. The filled variants and redesigned TLP marking assets are
+byte-identical to canonical commit `14fd9b4`. Both are licensed under this
+repository's BSD 3-Clause license.
+
+### Acknowledgements
+
+The legacy round PNG icons are by Bret Jordan, licensed under the Creative
+Commons Attribution-ShareAlike (CC BY-SA) License, Version 4.0. The semantic
+SVG set described above is separately licensed under BSD 3-Clause.
 
 ## Governance
 

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Domain Name filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Domain Name filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#1664AD" stroke="none"/>
+  <circle cx="32" cy="32" r="23"/>
+  <path d="M9 32h46M32 9c7 7 11 14 11 23S39 48 32 55M32 9c-7 7-11 14-11 23s4 16 11 23M14 20h36M14 44h36"/>
+</svg>

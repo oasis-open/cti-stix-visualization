@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="STIX Process" focusable="false" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <title>STIX Process</title>
+  <rect x="9" y="8" width="46" height="48" rx="4"/>
+  <path d="M9 18h46M16 13h.01M22 13h.01"/>
+  <circle cx="24" cy="31" r="4"/><circle cx="40" cy="31" r="4"/><circle cx="32" cy="45" r="4"/>
+  <path d="M28 31h8M26 35l4 7M38 35l-4 7"/>
+</svg>

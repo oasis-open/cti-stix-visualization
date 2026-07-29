@@ -21,6 +21,9 @@ setup(
         "stix2viz": [
             "d3/*",
             "stix2viz/icons/*",
+            "stix2viz/icons/stix-2.1/*/*.svg",
+            "stix2viz/icons/stix-2.1/filled/*/*.svg",
+            "stix2viz/semantic-icons.js",
             "stix2viz/stix2viz.js",
         ],
     }

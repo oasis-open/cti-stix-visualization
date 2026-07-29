@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Windows Registry Key filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Windows Registry Key filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#374151" stroke="none"/>
+  <circle cx="18" cy="32" r="9"/>
+  <path d="M27 32h28M45 32v8h-7M51 32v-7h4"/>
+  <circle cx="18" cy="32" r="2"/>
+</svg>

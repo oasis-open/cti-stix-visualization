@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX PDF File Extension"
+     focusable="false"
+     fill="none" stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX PDF File Extension</title>
+  <path d="M15 9h23l11 11v35H15zM38 9v12h11"/>
+  <path d="M22 42c8-3 14-9 17-17-2 10-1 17 5 22-8-6-15-7-22-5z"/>
+</svg>

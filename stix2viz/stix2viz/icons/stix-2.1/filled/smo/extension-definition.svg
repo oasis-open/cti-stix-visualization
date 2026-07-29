@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Extension Definition filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Extension Definition filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#67459A" stroke="none"/>
+  <path d="M9 13h17v8a6 6 0 1 0 12 0v-8h17v17h-8a6 6 0 1 0 0 12h8v9H9v-9h8a6 6 0 1 0 0-12H9z"/>
+</svg>

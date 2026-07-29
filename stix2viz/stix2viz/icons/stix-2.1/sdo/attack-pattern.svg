@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Attack Pattern"
+     focusable="false"
+     fill="none"
+     stroke="currentColor"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Attack Pattern</title>
+  <circle cx="32" cy="32" r="22"/>
+  <circle cx="32" cy="32" r="12"/>
+  <circle cx="32" cy="32" r="3" fill="currentColor" stroke="none"/>
+  <path d="M32 6v8M32 50v8M6 32h8M50 32h8"/>
+</svg>

@@ -1,5 +1,8 @@
 "use strict";
 
+// Initialized by the AMD module factory at the end of this file.
+let semanticIconsModule;
+
 /*
 Configure how embedded relationships (ref properties) are mapped to graph
 edges.  This map maps a STIX type to a list of triples, where each triple
@@ -765,12 +768,90 @@ function stixTypeToIconURL(stixType, iconPath, iconFileName)
             + stixType.replaceAll("-", "_")
             + "_icon_tiny_round_v1.png";
 
-    if (iconPath === null || iconPath === undefined)
+    // Preserve configured absolute/custom URLs.  These must not be prefixed
+    // with the local icon directory.
+    if (
+        /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(iconFileName)
+        || iconPath === null || iconPath === undefined
+    )
         iconUrl = iconFileName;
     else
         iconUrl = iconPath + "/" + iconFileName;
 
     return iconUrl;
+}
+
+
+/**
+ * Resolve an icon and semantic badge/state metadata for a complete STIX
+ * object.  A per-type displayIcon remains the highest-priority override.
+ */
+function resolveIconForObject(stixObject, config=null)
+{
+    let stixType = stixObject.get("type");
+    let iconPath = config ? config.get("iconDir") : null;
+    let semanticIconPath = config ? config.get("semanticIconDir") : null;
+    let iconFileName;
+
+    if (config)
+    {
+        let typeConfig = config.get(stixType);
+        if (typeConfig)
+            iconFileName = typeConfig.get("displayIcon");
+    }
+
+    if (iconFileName)
+        return {
+            url: stixTypeToIconURL(stixType, iconPath, iconFileName),
+            semantic: null,
+            source: "displayIcon"
+        };
+
+    if (!semanticIconPath && iconPath)
+        semanticIconPath = iconPath + "/stix-2.1";
+
+    if (semanticIconsModule && semanticIconPath)
+    {
+        let semantic = semanticIconsModule.resolveIcon(
+            stixObject, {variant: "filled"}
+        );
+        return {
+            url: semanticIconsModule.joinURL(
+                semanticIconPath, semantic.primary.path
+            ),
+            semantic: semantic,
+            presentation: semantic.primary.presentation || null,
+            source: "semantic"
+        };
+    }
+
+    return {
+        url: stixTypeToIconURL(stixType, iconPath, null),
+        semantic: null,
+        source: "legacy"
+    };
+}
+
+
+function semanticDescription(stixType, semantic)
+{
+    let descriptions = [stixType];
+
+    if (semantic)
+    {
+        if (semantic.primary.kind === "marking")
+            descriptions.push(semantic.primary.key);
+        if (semantic.badges.length)
+            descriptions.push(
+                "extensions: " + semantic.badges.map(item => item.key).join(", ")
+            );
+        if (semantic.states.length)
+            descriptions.push(
+                "states: " + semantic.states.map(item => item.key).join(", ")
+            );
+    }
+
+    return descriptions.join("; ");
 }
 
 
@@ -977,35 +1058,27 @@ function makeLegendData(stixIdToObject, config=null)
 
     let defaultIconURL = getDefaultIconURL(iconPath);
 
-    let stixTypes = new Set();
+    let stixTypes = new Map();
 
     // collect our types
     for (let object of stixIdToObject.values())
     {
         let stixType = object.get("type");
-        if (isStixTypeValidForNode(stixType))
-            stixTypes.add(stixType);
+        if (isStixTypeValidForNode(stixType) && !stixTypes.has(stixType))
+            stixTypes.set(stixType, object);
     }
 
     let iconURLs = new Map();
-    for (let type of stixTypes)
+    let iconPresentations = new Map();
+    for (let [type, object] of stixTypes)
     {
-        // Choose an icon file according to config settings
-        let iconFileName;
-
-        if (config)
-        {
-            let typeConfig = config.get(type);
-            if (typeConfig)
-                iconFileName = typeConfig.get("displayIcon");
-        }
-
-        let iconURL = stixTypeToIconURL(type, iconPath, iconFileName);
-
-        iconURLs.set(type, iconURL);
+        let icon = resolveIconForObject(object, config);
+        iconURLs.set(type, icon.url);
+        if (icon.presentation)
+            iconPresentations.set(type, icon.presentation);
     }
 
-    return [iconURLs, defaultIconURL];
+    return [iconURLs, defaultIconURL, iconPresentations];
 }
 
 
@@ -1196,10 +1269,16 @@ class ListView extends STIXContentView
         nodeDataSet.forEach((item, id) => {
             let stixObject = stixIdToObject.get(id);
             let itemText = stixObject.get("type") + ": " + item.label;
+            let icon = resolveIconForObject(stixObject, config);
+            let accessibleName = semanticDescription(
+                stixObject.get("type"), icon.semantic
+            ) + ": " + item.label;
 
             let li = doc.createElement("li");
             li.id = id;
             li.className = "list-view-item";
+            li.setAttribute("aria-label", accessibleName);
+            li.setAttribute("data-stix-type", stixObject.get("type"));
             ol.append(li);
             li.append(itemText);
         });
@@ -1347,9 +1426,40 @@ class GraphView extends STIXContentView
         this.#nodeDataSet = new visjs.DataSet();
 
         nodeDataSet.forEach((item, id) => {
+            let stixObject = stixIdToObject.get(id);
+            let icon = resolveIconForObject(stixObject, config);
+            let stixType = stixObject.get("type");
+            let accessibleName = semanticDescription(stixType, icon.semantic)
+                + ": " + item.label;
+            let nodeColor;
+            if (icon.presentation)
+            {
+                let background = icon.presentation.background;
+                nodeColor = {
+                    background: background,
+                    border: "black",
+                    highlight: {
+                        background: background,
+                        border: "black"
+                    },
+                    hover: {
+                        background: background,
+                        border: "black"
+                    }
+                };
+            }
             this.#nodeDataSet.add({
                 ...item,
-                group: stixIdToObject.get(id).get("type")
+                group: stixType,
+                shape: "circularImage",
+                image: icon.url,
+                brokenImage: getDefaultIconURL(
+                    config ? config.get("iconDir") : null
+                ),
+                iconMetadata: icon.semantic,
+                title: accessibleName,
+                accessibleName: accessibleName,
+                ...(nodeColor ? {color: nodeColor} : {})
             });
         });
 
@@ -1364,7 +1474,11 @@ class GraphView extends STIXContentView
             groups: groups,
             nodes: {
                 color: {
-                    border: "black"
+                    border: "black",
+                    // Filled semantic SVGs override this legacy/custom
+                    // fallback per node.  Their hover and selected states
+                    // retain the type hue rather than reverting to visjs blue.
+                    background: "#97c2fc"
                 },
                 font: {
                     size: 20
@@ -2052,17 +2166,22 @@ function makeGraphView(
 /**
  * Create and return an object which is this file's module.
  */
-function makeModule(visjs)
+function makeModule(visjs, semanticIcons)
 {
+    semanticIconsModule = semanticIcons;
     let module = {
         makeGraphData: (stixContent, config=null) =>
             makeGraphData(visjs, stixContent, config),
         makeGraphView: (...args) => makeGraphView(visjs, ...args),
-        makeListView: (...args) => new ListView(...args)
+        makeListView: (...args) => new ListView(...args),
+        resolveIcon: semanticIcons.resolveIcon
     };
 
     return module;
 }
 
 
-define(["nbextensions/stix2viz/vis-network"], makeModule);
+define(
+    ["nbextensions/stix2viz/vis-network", "./semantic-icons"],
+    makeModule
+);
