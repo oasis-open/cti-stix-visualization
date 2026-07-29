@@ -13,6 +13,7 @@
   <circle cx="17" cy="32" r="4" fill="#111827" stroke="none"/>
   <g fill="none" stroke="#111827" stroke-width="3"
      stroke-linecap="round" stroke-linejoin="round">
-    <path d="m31 27 8-4M31 33l12-6M35 39l8-4"/>
+    <circle cx="38" cy="32" r="9"/>
+    <path d="M38 27v6l4 2"/>
   </g>
 </svg>

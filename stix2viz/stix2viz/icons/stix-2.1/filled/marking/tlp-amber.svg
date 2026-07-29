@@ -16,9 +16,14 @@
   <circle cx="17" cy="32" r="4" fill="#111827" stroke="none"/>
   <g fill="none" stroke="#111827" stroke-width="3"
      stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="36" cy="27" r="3" fill="#111827" stroke="none"/>
-    <circle cx="30" cy="31" r="2.5" fill="#111827" stroke="none"/>
-    <circle cx="42" cy="31" r="2.5" fill="#111827" stroke="none"/>
-    <path d="M30 40c.5-5 2.5-8 6-8s5.5 3 6 8M26 40c.3-3 1.5-5 4-5M46 40c-.3-3-1.5-5-4-5"/>
+    <rect x="27" y="25" width="9" height="16" rx="1"
+           fill="#111827" stroke="none"/>
+    <rect x="29" y="28" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="33" y="28" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="29" y="33" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="33" y="33" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="31" y="37" width="3" height="4" fill="#FFC000" stroke="none"/>
+    <circle cx="41" cy="28.5" r="2.5" fill="#111827" stroke="none"/>
+    <path d="M37.5 39c.4-4.2 1.6-6.5 3.5-6.5s3.1 2.3 3.5 6.5"/>
   </g>
 </svg>

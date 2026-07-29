@@ -16,6 +16,13 @@
   <circle cx="17" cy="32" r="4" fill="#111827" stroke="none"/>
   <g fill="none" stroke="#111827" stroke-width="3"
      stroke-linecap="round" stroke-linejoin="round">
-    <path d="M30 41V29l7-5 7 5v12M34 41V30h6v11M28 41h18"/>
+    <rect x="30" y="24" width="14" height="17" rx="1"
+           fill="#111827" stroke="none"/>
+    <rect x="33" y="27" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="39" y="27" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="33" y="32" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="39" y="32" width="2" height="2" fill="#FFC000" stroke="none"/>
+    <rect x="36" y="36" width="3" height="5" fill="#FFC000" stroke="none"/>
+    <path d="M28 41h18"/>
   </g>
 </svg>
