@@ -812,12 +812,15 @@ function resolveIconForObject(stixObject, config=null)
 
     if (semanticIconsModule && semanticIconPath)
     {
-        let semantic = semanticIconsModule.resolveIcon(stixObject);
+        let semantic = semanticIconsModule.resolveIcon(
+            stixObject, {variant: "filled"}
+        );
         return {
             url: semanticIconsModule.joinURL(
                 semanticIconPath, semantic.primary.path
             ),
             semantic: semantic,
+            presentation: semantic.primary.presentation || null,
             source: "semantic"
         };
     }
@@ -1066,12 +1069,16 @@ function makeLegendData(stixIdToObject, config=null)
     }
 
     let iconURLs = new Map();
+    let iconPresentations = new Map();
     for (let [type, object] of stixTypes)
     {
-        iconURLs.set(type, resolveIconForObject(object, config).url);
+        let icon = resolveIconForObject(object, config);
+        iconURLs.set(type, icon.url);
+        if (icon.presentation)
+            iconPresentations.set(type, icon.presentation);
     }
 
-    return [iconURLs, defaultIconURL];
+    return [iconURLs, defaultIconURL, iconPresentations];
 }
 
 
@@ -1424,6 +1431,23 @@ class GraphView extends STIXContentView
             let stixType = stixObject.get("type");
             let accessibleName = semanticDescription(stixType, icon.semantic)
                 + ": " + item.label;
+            let nodeColor;
+            if (icon.presentation)
+            {
+                let background = icon.presentation.background;
+                nodeColor = {
+                    background: background,
+                    border: "black",
+                    highlight: {
+                        background: background,
+                        border: "black"
+                    },
+                    hover: {
+                        background: background,
+                        border: "black"
+                    }
+                };
+            }
             this.#nodeDataSet.add({
                 ...item,
                 group: stixType,
@@ -1434,7 +1458,8 @@ class GraphView extends STIXContentView
                 ),
                 iconMetadata: icon.semantic,
                 title: accessibleName,
-                accessibleName: accessibleName
+                accessibleName: accessibleName,
+                ...(nodeColor ? {color: nodeColor} : {})
             });
         });
 
@@ -1450,10 +1475,9 @@ class GraphView extends STIXContentView
             nodes: {
                 color: {
                     border: "black",
-                    // Semantic SVGs are transparent glyphs.  circularImage
-                    // draws this fill behind them and the native node label
-                    // underneath, so a second label inside the SVG would be
-                    // redundant and would be clipped by the circle.
+                    // Filled semantic SVGs override this legacy/custom
+                    // fallback per node.  Their hover and selected states
+                    // retain the type hue rather than reverting to visjs blue.
                     background: "#97c2fc"
                 },
                 font: {

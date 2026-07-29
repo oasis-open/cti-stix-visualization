@@ -137,6 +137,65 @@
         "unix-account-ext": "badge/unix-account-ext.svg"
     };
 
+    // Non-normative colors adapted from the established OASIS visualizer
+    // palette.  Filled assets bake the matching color and a white glyph into
+    // the SVG because external images cannot inherit currentColor.
+    const typeColors = {
+        "attack-pattern": "#0069B8",
+        "campaign": "#245B86",
+        "course-of-action": "#08783F",
+        "grouping": "#08736D",
+        "identity": "#6B5E51",
+        "incident": "#A94B00",
+        "indicator": "#2949B8",
+        "infrastructure": "#5B616B",
+        "intrusion-set": "#245B86",
+        "location": "#005A92",
+        "malware": "#C52A1A",
+        "malware-analysis": "#C52A1A",
+        "note": "#377514",
+        "observed-data": "#3566A8",
+        "opinion": "#087783",
+        "report": "#5E6078",
+        "threat-actor": "#C62D1D",
+        "tool": "#851B12",
+        "vulnerability": "#68691E",
+        "artifact": "#374151",
+        "autonomous-system": "#1664AD",
+        "directory": "#374151",
+        "domain-name": "#1664AD",
+        "email-addr": "#7046A8",
+        "email-message": "#7046A8",
+        "file": "#374151",
+        "ipv4-addr": "#1664AD",
+        "ipv6-addr": "#1664AD",
+        "mac-addr": "#1664AD",
+        "mutex": "#374151",
+        "network-traffic": "#1664AD",
+        "process": "#374151",
+        "software": "#374151",
+        "url": "#374151",
+        "user-account": "#5B616B",
+        "windows-registry-key": "#374151",
+        "x509-certificate": "#374151",
+        "relationship": "#08783F",
+        "sighting": "#7046A8",
+        "extension-definition": "#67459A",
+        "language-content": "#71502F",
+        "marking-definition": "#5B616B",
+        "bundle": "#76502C"
+    };
+
+    const filledMarkingColors = {
+        "statement-marking": "#475569",
+        "tlp-white": "#000000",
+        "tlp-green": "#000000",
+        "tlp-amber": "#000000",
+        "tlp-red": "#000000",
+        "tlp-clear": "#000000",
+        "tlp-amber-strict": "#000000"
+    };
+
     function valueAt(object, key) {
         return object instanceof Map ? object.get(key) : object && object[key];
     }
@@ -159,6 +218,27 @@
 
     function pairAsset(pair, kind, reason) {
         return asset(pair[0], pair[1], kind, reason);
+    }
+
+    function filledAsset(primary, type) {
+        let background = null;
+        if (primary.kind === "entity")
+            background = typeColors[type];
+        else if (primary.kind === "marking")
+            background = filledMarkingColors[primary.key];
+
+        if (!background)
+            return primary;
+
+        return {
+            ...primary,
+            path: "filled/" + primary.path,
+            variant: "filled",
+            presentation: {
+                background: background,
+                foreground: "#FFFFFF"
+            }
+        };
     }
 
     function resolveIcon(input, options) {
@@ -303,6 +383,9 @@
                 "state-badge", "property:lang"
             ));
 
+        if (options.variant === "filled")
+            primary = filledAsset(primary, type);
+
         return {primary: primary, badges: badges, states: states};
     }
 
@@ -317,6 +400,7 @@
         entityPaths: entityPaths,
         extensionBadgePaths: extensionBadgePaths,
         extensionObjectPaths: extensionObjectPaths,
+        typeColors: typeColors,
         joinURL: joinURL,
         resolveIcon: resolveIcon
     };

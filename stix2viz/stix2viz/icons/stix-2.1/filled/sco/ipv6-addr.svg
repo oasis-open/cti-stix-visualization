@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX IPv6 Address filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX IPv6 Address filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#1664AD" stroke="none"/>
+  <path d="m13 20 8-5 8 5v9l-8 5-8-5zM35 20l8-5 8 5v9l-8 5-8-5zM24 39l8-5 8 5v9l-8 5-8-5z"/>
+  <path d="M29 24h6M25 32l4 4M39 32l-4 4"/>
+</svg>

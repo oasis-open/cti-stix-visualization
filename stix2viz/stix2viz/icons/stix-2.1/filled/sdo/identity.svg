@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Identity filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Identity filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#6B5E51" stroke="none"/>
+  <rect x="10" y="13" width="44" height="38" rx="5"/>
+  <circle cx="25" cy="28" r="7"/>
+  <path d="M15 44c2-6 6-9 10-9s8 3 10 9M40 25h8M40 32h8M40 39h5"/>
+</svg>

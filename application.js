@@ -398,7 +398,7 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
     /* ******************************************************
      * Adds icons and information to the legend.
      * ******************************************************/
-    function populateLegend(iconURLMap, defaultIconURL) {
+    function populateLegend(iconURLMap, defaultIconURL, presentationMap) {
         let tbody, tr, td;
         let colIdx = 0;
         let table = document.getElementById('legend-content');
@@ -429,6 +429,10 @@ require(["domReady!", "stix2viz/stix2viz/stix2viz"], function (document, stix2vi
             img.alt = "";
             img.width = "37";
             img.height = "37";
+            let presentation = presentationMap
+                ? presentationMap.get(stixType) : null;
+            if (presentation)
+                img.style.backgroundColor = presentation.background;
 
             if (colIdx > 1)
             {

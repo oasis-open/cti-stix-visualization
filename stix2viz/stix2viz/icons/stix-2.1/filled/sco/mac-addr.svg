@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX MAC Address filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX MAC Address filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#1664AD" stroke="none"/>
+  <rect x="13" y="15" width="38" height="34" rx="4"/>
+  <path d="M20 15V9M28 15V9M36 15V9M44 15V9M20 55v-6M28 55v-6M36 55v-6M44 55v-6"/>
+  <circle cx="22" cy="28" r="2"/><circle cx="32" cy="28" r="2"/><circle cx="42" cy="28" r="2"/>
+  <circle cx="22" cy="38" r="2"/><circle cx="32" cy="38" r="2"/><circle cx="42" cy="38" r="2"/>
+</svg>

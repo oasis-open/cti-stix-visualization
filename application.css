@@ -93,6 +93,10 @@ body {
     color: gray;
 }
 
+#legend-content .typeHidden img {
+    opacity: 0.45;
+}
+
 .selected-object-object-content {
     margin-left: 2em;  /* affects indentation of object properties */
 }

@@ -113,17 +113,23 @@ const view = stix2viz.makeGraphView(
     {}, nodeData, new DataSet(), stixObjects, config
 );
 const tlpNode = view.nodeDataSet.get(tlpId);
-assert.strictEqual(tlpNode.image, "/semantic/marking/tlp-green.svg");
+assert.strictEqual(tlpNode.image, "/semantic/filled/marking/tlp-green.svg");
 assert.strictEqual(tlpNode.shape, "circularImage");
 assert.strictEqual(tlpNode.label, "TLP green");
 assert.match(tlpNode.accessibleName, /tlp-green/);
+assert.strictEqual(tlpNode.color.background, "#000000");
+assert.strictEqual(tlpNode.color.highlight.background, "#000000");
+assert.strictEqual(tlpNode.color.hover.background, "#000000");
 
 const fileNode = view.nodeDataSet.get(
     "file--00000000-0000-4000-8000-000000000001"
 );
-assert.strictEqual(fileNode.image, "/semantic/sco/file.svg");
+assert.strictEqual(fileNode.image, "/semantic/filled/sco/file.svg");
 assert.strictEqual(fileNode.shape, "circularImage");
 assert.strictEqual(fileNode.label, "sample.bin");
+assert.strictEqual(fileNode.color.background, "#374151");
+assert.strictEqual(fileNode.color.highlight.background, "#374151");
+assert.strictEqual(fileNode.color.hover.background, "#374151");
 assert.deepStrictEqual(
     Array.from(fileNode.iconMetadata.badges, badge => badge.key),
     ["archive-ext"]
@@ -145,9 +151,23 @@ assert.strictEqual(
 );
 
 const legend = view.legendData[0];
-assert.strictEqual(legend.get("marking-definition"), "/semantic/marking/tlp-green.svg");
-assert.strictEqual(legend.get("file"), "/semantic/sco/file.svg");
+assert.strictEqual(
+    legend.get("marking-definition"),
+    "/semantic/filled/marking/tlp-green.svg"
+);
+assert.strictEqual(legend.get("file"), "/semantic/filled/sco/file.svg");
 assert.strictEqual(legend.get("tool"), "https://example.test/custom-tool.svg");
+const legendPresentations = view.legendData[2];
+assert.strictEqual(
+    legendPresentations.get("marking-definition").background,
+    "#000000"
+);
+assert.strictEqual(legendPresentations.get("file").background, "#374151");
+assert.strictEqual(
+    legendPresentations.has("tool"),
+    false,
+    "custom displayIcon styling must remain under consumer control"
+);
 assert.strictEqual(
     view.graph.options.nodes.color.background,
     "#97c2fc",

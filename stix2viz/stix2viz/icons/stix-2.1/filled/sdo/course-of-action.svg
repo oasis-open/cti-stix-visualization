@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Course of Action filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Course of Action filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#08783F" stroke="none"/>
+  <path d="M32 7 51 14v15c0 13-8 22-19 28-11-6-19-15-19-28V14z"/>
+  <path d="m22 32 7 7 14-15"/>
+</svg>

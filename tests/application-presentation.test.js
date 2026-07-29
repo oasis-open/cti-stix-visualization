@@ -25,6 +25,16 @@ assert.match(
 );
 assert.match(
     application,
+    /img\.style\.backgroundColor = presentation\.background/,
+    "legend items need the same per-type background as graph nodes"
+);
+assert.match(
+    css,
+    /#legend-content \.typeHidden img\s*\{[^}]*opacity:\s*0\.45;/s,
+    "hidden types need a non-color-only muted icon treatment"
+);
+assert.match(
+    application,
     /td\.setAttribute\(\s*"aria-label", "Toggle " \+ displayType \+ " nodes"\s*\);/s,
     "the native legend control must retain its accessible type label"
 );

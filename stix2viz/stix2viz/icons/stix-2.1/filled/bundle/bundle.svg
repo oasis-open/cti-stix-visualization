@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Bundle filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Bundle filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#76502C" stroke="none"/>
+  <rect x="8" y="8" width="21" height="21" rx="3"/>
+  <rect x="35" y="8" width="21" height="21" rx="3"/>
+  <rect x="8" y="35" width="21" height="21" rx="3"/>
+  <rect x="35" y="35" width="21" height="21" rx="3"/>
+</svg>

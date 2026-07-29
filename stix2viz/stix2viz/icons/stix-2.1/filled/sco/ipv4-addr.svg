@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX IPv4 Address filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX IPv4 Address filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#1664AD" stroke="none"/>
+  <rect x="7" y="25" width="10" height="14" rx="2"/><rect x="20" y="25" width="10" height="14" rx="2"/>
+  <rect x="34" y="25" width="10" height="14" rx="2"/><rect x="47" y="25" width="10" height="14" rx="2"/>
+  <path d="M17 32h3M30 32h4M44 32h3"/>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Infrastructure filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Infrastructure filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#5B616B" stroke="none"/>
+  <rect x="18" y="8" width="28" height="13" rx="2"/><rect x="18" y="26" width="28" height="13" rx="2"/>
+  <path d="M24 15h.01M30 15h10M24 33h.01M30 33h10M32 39v8M18 55h28M20 47h24v8"/>
+</svg>

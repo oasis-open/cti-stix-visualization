@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 64 64"
+     role="img"
+     aria-label="STIX Opinion filled icon"
+     focusable="false"
+     fill="none"
+     stroke="#FFFFFF"
+     color="#FFFFFF"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+  <title>STIX Opinion filled icon</title>
+  <circle cx="32" cy="32" r="31" fill="#087783" stroke="none"/>
+  <path d="M9 11h46v32H31L18 54V43H9z"/>
+  <path d="M20 25h24M20 33h17"/>
+</svg>

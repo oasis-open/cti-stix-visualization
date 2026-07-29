@@ -27,9 +27,52 @@ assert.strictEqual(
     43,
     "mapping must cover all 43 serialized top-level types"
 );
+assert.strictEqual(
+    Object.keys(icons.typeColors).length,
+    43,
+    "filled palette must cover all 43 serialized top-level types"
+);
+
+function relativeLuminance(hex) {
+    const channels = [1, 3, 5].map(index =>
+        parseInt(hex.slice(index, index + 2), 16) / 255
+    ).map(channel =>
+        channel <= 0.04045
+            ? channel / 12.92
+            : ((channel + 0.055) / 1.055) ** 2.4
+    );
+    return 0.2126 * channels[0]
+        + 0.7152 * channels[1]
+        + 0.0722 * channels[2];
+}
+
+function contrastRatio(first, second) {
+    const luminances = [
+        relativeLuminance(first), relativeLuminance(second)
+    ].sort((left, right) => right - left);
+    return (luminances[0] + 0.05) / (luminances[1] + 0.05);
+}
 
 for (const type of Object.keys(icons.entityPaths))
     assertAssetExists(resolved({type: type}).primary);
+
+for (const [type, expectedColor] of Object.entries(icons.typeColors)) {
+    assert.ok(
+        contrastRatio(expectedColor, "#FFFFFF") >= 4.5,
+        type + " must provide 4.5:1 contrast with its white glyph"
+    );
+    const result = resolved({type: type}, {variant: "filled"});
+    assert.strictEqual(
+        result.primary.path,
+        "filled/" + icons.entityPaths[type]
+    );
+    assert.strictEqual(result.primary.variant, "filled");
+    assert.deepStrictEqual(result.primary.presentation, {
+        background: expectedColor,
+        foreground: "#FFFFFF"
+    });
+    assertAssetExists(result.primary);
+}
 
 // Relationship is represented as an edge and bundle is unpacked by the
 // visualizer.  Both still need resolver coverage for direct API consumers.
@@ -68,7 +111,29 @@ for (const value of [
     });
     assert.strictEqual(result.primary.kind, "marking");
     assertAssetExists(result.primary);
+
+    const filled = resolved({
+        type: "marking-definition",
+        definition_type: "tlp",
+        definition: {tlp: value}
+    }, {variant: "filled"});
+    assert.match(filled.primary.path, /^filled\/marking\/tlp-/);
+    assert.strictEqual(filled.primary.presentation.background, "#000000");
+    assertAssetExists(filled.primary);
 }
+const filledStatement = resolved({
+    type: "marking-definition",
+    definition_type: "statement",
+    definition: {statement: "Internal only"}
+}, {variant: "filled"});
+assert.strictEqual(
+    filledStatement.primary.path,
+    "filled/marking/statement-marking.svg"
+);
+assert.strictEqual(
+    filledStatement.primary.presentation.background,
+    "#475569"
+);
 assert.strictEqual(
     resolved({type: "marking-definition", name: "TLP:GREEN"}).primary.key,
     "tlp-green"
@@ -93,6 +158,11 @@ for (const type of ["event", "impact", "task", "observed-string"]) {
     const result = resolved({type: type});
     assert.strictEqual(result.primary.kind, "extension-object");
     assertAssetExists(result.primary);
+    assert.strictEqual(
+        resolved({type: type}, {variant: "filled"}).primary.path,
+        result.primary.path,
+        "types without a filled asset must retain their glyph path"
+    );
 }
 
 const candidateExtensionIds = {
@@ -173,7 +243,9 @@ function collectSVGs(directory) {
     }
 }
 collectSVGs(assetRoot);
-assert.strictEqual(svgFiles.length, 82, "expected the complete 82-asset set");
+assert.strictEqual(
+    svgFiles.length, 132, "expected 82 glyphs and 50 filled assets"
+);
 for (const svgPath of svgFiles) {
     const source = fs.readFileSync(svgPath, "utf8");
     assert.match(source, /<svg\b/);
@@ -183,6 +255,21 @@ for (const svgPath of svgFiles) {
         source,
         /(?:href|src)\s*=\s*["'](?:https?:|javascript:|data:)/i
     );
+}
+
+const filledFiles = svgFiles.filter(svgPath =>
+    svgPath.includes(path.join("stix-2.1", "filled"))
+);
+assert.strictEqual(filledFiles.length, 50);
+for (const svgPath of filledFiles) {
+    const source = fs.readFileSync(svgPath, "utf8");
+    assert.match(
+        source,
+        /<circle cx="32" cy="32" r="31" fill="#[0-9A-F]{6}" stroke="none"\/>/,
+        path.relative(assetRoot, svgPath)
+            + " needs a self-contained circular background"
+    );
+    assert.doesNotMatch(source, /<text\b|font-family|<script\b/i);
 }
 
 console.log("semantic icon tests passed (" + svgFiles.length + " SVG assets)");
